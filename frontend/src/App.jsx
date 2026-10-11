@@ -2,7 +2,7 @@ import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
 import AppShell from './components/AppShell.jsx'
 import PlaceholderPage from './components/PlaceholderPage.jsx'
 import { competencies, learners } from './data/mock.js'
-import { bandFor, percent } from './lib/mastery.js'
+import StudentDashboard from './pages/StudentDashboard.jsx'
 
 const studentLinks = [
   { to: '/student', label: 'My progress', end: true },
@@ -15,8 +15,6 @@ const teacherLinks = [
   { to: '/teacher/learner', label: 'Learner view' },
   { to: '/teacher/graph', label: 'Prerequisite graph' },
 ]
-
-const target = learners[0].mastery.c7
 
 export default function App() {
   return (
@@ -41,15 +39,7 @@ export default function App() {
         />
 
         <Route path="/student" element={<AppShell links={studentLinks} userLabel="Learner 01 · Grade 7" home="/student" />}>
-          <Route
-            index
-            element={
-              <PlaceholderPage
-                title="My progress"
-                note={`Learner 01 · Solve linear equations: ${percent(target)}% (${bandFor(target)})`}
-              />
-            }
-          />
+          <Route index element={<StudentDashboard />} />
           <Route path="practice" element={<PlaceholderPage title="Practice" note="Coming in a later step." />} />
           <Route path="path" element={<PlaceholderPage title="Review path" note="Coming in a later step." />} />
         </Route>
