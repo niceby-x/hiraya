@@ -1,9 +1,10 @@
-import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import AppShell from './components/AppShell.jsx'
 import GraphReview from './pages/GraphReview.jsx'
 import LearnerView from './pages/LearnerView.jsx'
 import Practice from './pages/Practice.jsx'
 import ReviewPath from './pages/ReviewPath.jsx'
+import SignIn from './pages/SignIn.jsx'
 import StudentDashboard from './pages/StudentDashboard.jsx'
 import TeacherDashboard from './pages/TeacherDashboard.jsx'
 
@@ -23,23 +24,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route
-          path="/"
-          element={
-            <main className="mx-auto max-w-xl p-8">
-              <h1 className="font-display text-4xl font-bold text-brand">HIRAYA</h1>
-              <p className="mt-2 text-muted">Sign in (placeholder)</p>
-              <div className="mt-6 flex gap-3">
-                <Link to="/student" className="rounded-lg bg-brand px-6 py-3 font-bold text-white">
-                  Continue as student
-                </Link>
-                <Link to="/teacher" className="rounded-lg border-2 border-brand px-6 py-3 font-bold text-brand">
-                  Continue as teacher
-                </Link>
-              </div>
-            </main>
-          }
-        />
+        <Route path="/" element={<SignIn />} />
 
         <Route path="/student" element={<AppShell links={studentLinks} userLabel="Learner 01 · Grade 7" home="/student" />}>
           <Route index element={<StudentDashboard />} />
