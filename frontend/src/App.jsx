@@ -3,6 +3,7 @@ import AppShell from './components/AppShell.jsx'
 import PlaceholderPage from './components/PlaceholderPage.jsx'
 import { competencies, learners } from './data/mock.js'
 import Practice from './pages/Practice.jsx'
+import ReviewPath from './pages/ReviewPath.jsx'
 import StudentDashboard from './pages/StudentDashboard.jsx'
 
 const studentLinks = [
@@ -42,7 +43,7 @@ export default function App() {
         <Route path="/student" element={<AppShell links={studentLinks} userLabel="Learner 01 · Grade 7" home="/student" />}>
           <Route index element={<StudentDashboard />} />
           <Route path="practice" element={<Practice />} />
-          <Route path="path" element={<PlaceholderPage title="Review path" note="Coming in a later step." />} />
+          <Route path="path" element={<ReviewPath />} />
         </Route>
 
         <Route path="/teacher" element={<AppShell links={teacherLinks} userLabel="Teacher · Grade 7 Mathematics" home="/teacher" />}>
