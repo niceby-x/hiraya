@@ -1,6 +1,7 @@
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
 import AppShell from './components/AppShell.jsx'
 import PlaceholderPage from './components/PlaceholderPage.jsx'
+import LearnerView from './pages/LearnerView.jsx'
 import Practice from './pages/Practice.jsx'
 import ReviewPath from './pages/ReviewPath.jsx'
 import StudentDashboard from './pages/StudentDashboard.jsx'
@@ -48,7 +49,7 @@ export default function App() {
 
         <Route path="/teacher" element={<AppShell links={teacherLinks} userLabel="Teacher · Grade 7 Mathematics" home="/teacher" />}>
           <Route index element={<TeacherDashboard />} />
-          <Route path="learner" element={<PlaceholderPage title="Learner view" note="Coming in a later step." />} />
+          <Route path="learner" element={<LearnerView />} />
           <Route path="graph" element={<PlaceholderPage title="Prerequisite graph" note="Coming in a later step." />} />
         </Route>
       </Routes>
