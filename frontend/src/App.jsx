@@ -1,10 +1,10 @@
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
 import AppShell from './components/AppShell.jsx'
 import PlaceholderPage from './components/PlaceholderPage.jsx'
-import { competencies, learners } from './data/mock.js'
 import Practice from './pages/Practice.jsx'
 import ReviewPath from './pages/ReviewPath.jsx'
 import StudentDashboard from './pages/StudentDashboard.jsx'
+import TeacherDashboard from './pages/TeacherDashboard.jsx'
 
 const studentLinks = [
   { to: '/student', label: 'My progress', end: true },
@@ -47,15 +47,7 @@ export default function App() {
         </Route>
 
         <Route path="/teacher" element={<AppShell links={teacherLinks} userLabel="Teacher · Grade 7 Mathematics" home="/teacher" />}>
-          <Route
-            index
-            element={
-              <PlaceholderPage
-                title="Class overview"
-                note={`${learners.length} learners, ${competencies.length} skills loaded.`}
-              />
-            }
-          />
+          <Route index element={<TeacherDashboard />} />
           <Route path="learner" element={<PlaceholderPage title="Learner view" note="Coming in a later step." />} />
           <Route path="graph" element={<PlaceholderPage title="Prerequisite graph" note="Coming in a later step." />} />
         </Route>
