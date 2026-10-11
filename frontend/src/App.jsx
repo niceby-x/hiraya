@@ -2,6 +2,7 @@ import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
 import AppShell from './components/AppShell.jsx'
 import PlaceholderPage from './components/PlaceholderPage.jsx'
 import { competencies, learners } from './data/mock.js'
+import Practice from './pages/Practice.jsx'
 import StudentDashboard from './pages/StudentDashboard.jsx'
 
 const studentLinks = [
@@ -40,7 +41,7 @@ export default function App() {
 
         <Route path="/student" element={<AppShell links={studentLinks} userLabel="Learner 01 · Grade 7" home="/student" />}>
           <Route index element={<StudentDashboard />} />
-          <Route path="practice" element={<PlaceholderPage title="Practice" note="Coming in a later step." />} />
+          <Route path="practice" element={<Practice />} />
           <Route path="path" element={<PlaceholderPage title="Review path" note="Coming in a later step." />} />
         </Route>
 

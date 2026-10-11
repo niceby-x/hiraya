@@ -48,7 +48,7 @@ export default function StudentDashboard() {
               : `${toReview} skill${toReview === 1 ? '' : 's'} to review before ${target.name}. Later skills build on this one, so it comes first.`}
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Link to="/student/practice" className="rounded-lg bg-white px-6 py-3 font-bold text-brand">
+            <Link to={`/student/practice?skill=${first.id}`} className="rounded-lg bg-white px-6 py-3 font-bold text-brand">
               Practice this skill
             </Link>
             <Link
