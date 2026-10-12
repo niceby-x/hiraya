@@ -1,0 +1,95 @@
+/* HIRAYA sign-in. Type comes from the app: --font-display (headings), --font-body (text). */
+.lg-root { position: relative; min-height: 100vh; overflow: hidden; color: #fff; font-family: var(--font-body, system-ui, sans-serif);
+  background: radial-gradient(60rem 40rem at 15% 10%, #0f5a63 0%, transparent 60%), radial-gradient(50rem 40rem at 90% 100%, #0b4a45 0%, transparent 55%), #072228; }
+.lg-canvas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.lg-main { position: relative; z-index: 1; display: flex; min-height: 100vh; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1rem; text-align: center; }
+.lg-root :focus-visible { outline: 3px solid #7ff0dc; outline-offset: 2px; }
+
+/* Header */
+.lg-brand { display: flex; flex-direction: column; align-items: center; gap: .75rem; margin-bottom: 1.25rem; }
+.lg-tile { display: grid; place-items: center; height: 4.5rem; width: 4.5rem; border-radius: 1.25rem; color: #5ee3d2; background: #123b42; border: 1px solid rgb(94 227 210 / .25); box-shadow: 0 10px 30px rgb(0 0 0 / .3); }
+.lg-brand-name { font-family: var(--font-display, system-ui, sans-serif); font-size: 1.6rem; font-weight: 700; letter-spacing: .12em; }
+.lg-title { margin: 0; font-family: var(--font-display, system-ui, sans-serif); font-size: clamp(1.5rem, 3.6vw, 2.1rem); font-weight: 700; letter-spacing: -.01em; line-height: 1.2; }
+.lg-sub { margin: .75rem 0 0; max-width: 36rem; font-size: 1.05rem; line-height: 1.5; color: rgb(255 255 255 / .75); text-wrap: balance; }
+.lg-rule { width: 100%; max-width: 46rem; margin: 1.75rem 0; border: 0; height: 1px; background: rgb(255 255 255 / .14); }
+
+/* Role cards: two solid cards; picking one expands it into the form */
+.lg-roles { display: grid; width: 100%; max-width: 46rem; grid-template-columns: 1fr 1fr; gap: 1.5rem; transition: grid-template-columns .5s ease, gap .5s ease, max-width .5s ease; }
+.lg-roles[data-picked='student'] { grid-template-columns: 1fr 0fr; gap: 0; }
+.lg-roles[data-picked='teacher'] { grid-template-columns: 0fr 1fr; gap: 0; }
+.lg-roles[data-picked='student'], .lg-roles[data-picked='teacher'] { max-width: 28rem; }
+.lg-card { min-width: 0; overflow: hidden; text-align: left; border-radius: 1.25rem; background-color: #133b41; background-image: linear-gradient(180deg, rgb(19 59 65 / 0) 25%, #133b41 100%), linear-gradient(rgb(94 227 210 / .1) 1px, transparent 1px), linear-gradient(90deg, rgb(94 227 210 / .1) 1px, transparent 1px); background-size: 100% 100%, 24px 24px, 24px 24px; border: 1px solid rgb(94 227 210 / .18);
+  box-shadow: 0 20px 50px rgb(0 0 0 / .3); transition: opacity .35s ease, transform .25s ease, border-color .2s; }
+.lg-card.is-away { opacity: 0; transform: scale(.94); pointer-events: none; border-width: 0; }
+.lg-card:not(.is-open):hover { transform: translateY(-3px); border-color: rgb(94 227 210 / .55); }
+.lg-pick { display: grid; width: 100%; height: 100%; grid-template-columns: auto 1fr; grid-template-areas: 'icon title' 'blurb blurb' 'btn btn'; grid-template-rows: auto auto 1fr; align-items: center; column-gap: .75rem; padding: 1.75rem; color: inherit; font: inherit; text-align: left; background: none; border: 0; cursor: pointer; }
+.lg-plain-icon { grid-area: icon; display: grid; place-items: center; height: 2.75rem; width: 2.75rem; border-radius: .8rem; color: #5ee3d2; background: rgb(94 227 210 / .14); }
+.lg-plain-icon svg { display: block; height: 1.5rem; width: 1.5rem; }
+.lg-pick-title { grid-area: title; font-family: var(--font-display, system-ui, sans-serif); font-size: 1.3rem; font-weight: 700; }
+.lg-pick-blurb { grid-area: blurb; margin: 1rem 0 1.25rem; font-size: 1rem; line-height: 1.5; color: rgb(255 255 255 / .8); }
+.lg-btn { display: flex; width: 100%; align-items: center; justify-content: center; gap: .5rem; grid-area: btn; align-self: end; padding: .8rem 1rem; border-radius: .7rem; font-weight: 700; white-space: nowrap;
+  color: #fff; background: rgb(255 255 255 / .08); border: 1px solid rgb(255 255 255 / .2); transition: background .2s; }
+.lg-btn svg { flex-shrink: 0; transition: transform .2s ease; }
+.lg-btn.is-primary { color: #08262c; background: #66e5d3; border-color: #66e5d3; }
+.lg-card:hover .lg-btn { background: rgb(255 255 255 / .16); }
+.lg-card:hover .lg-btn.is-primary { background: #86efe0; }
+.lg-card:hover .lg-btn svg { transform: translateX(4px); }
+
+/* Form */
+.lg-icon { display: grid; place-items: center; border-radius: .8rem; background: rgb(94 227 210 / .15); color: #7ff0dc; }
+.lg-icon.sm { height: 2.75rem; width: 2.75rem; }
+.lg-icon.sm svg { height: 1.5rem; width: 1.5rem; }
+.lg-form { display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem; }
+.lg-form-head { display: flex; align-items: center; gap: .75rem; font-family: var(--font-display, system-ui, sans-serif); font-weight: 700; font-size: 1.15rem; }
+.lg-form-head p { margin: 0; flex: 1; }
+.lg-field { position: relative; }
+.lg-field input { width: 100%; box-sizing: border-box; padding: 1.5rem 1rem .6rem; font: inherit; font-size: 1rem; color: #fff; border-radius: .9rem; border: 1.5px solid rgb(255 255 255 / .3); background: rgb(3 24 29 / .45); }
+.lg-field input:focus { outline: none; border-color: #5ee3d2; box-shadow: 0 0 0 3px rgb(94 227 210 / .3); }
+.lg-field label { position: absolute; left: 1rem; top: 1.05rem; color: rgb(255 255 255 / .75); pointer-events: none; transition: all .15s ease; }
+.lg-field input:focus + label, .lg-field input:not(:placeholder-shown) + label { top: .4rem; font-size: .75rem; font-weight: 700; color: #9ff0c9; }
+.lg-field input[aria-invalid='true'] { border-color: #ff9d8a; }
+.lg-err { margin: .4rem 0 0 .25rem; font-size: .875rem; color: #ffc0b3; }
+.lg-shake { animation: lg-shake .4s; }
+@keyframes lg-shake { 20%, 60% { transform: translateX(-7px); } 40%, 80% { transform: translateX(7px); } }
+.lg-forgot { position: relative; display: flex; justify-content: flex-end; }
+.lg-link { background: none; border: 0; padding: .25rem 0; font: inherit; font-weight: 700; color: #9ff0c9; text-decoration: underline; cursor: pointer; }
+.lg-tip { position: absolute; right: 0; bottom: calc(100% + .45rem); margin: 0; padding: .5rem .75rem; border-radius: .6rem; background: #fff; color: #072228; font-size: .85rem; font-weight: 700; box-shadow: 0 8px 20px rgb(0 0 0 / .3); }
+.lg-tip::after { content: ''; position: absolute; right: 1.6rem; top: 100%; border: 6px solid transparent; border-top-color: #fff; }
+.lg-help { margin: 0; font-size: .875rem; color: rgb(255 255 255 / .85); }
+.lg-primary, .lg-sso { display: flex; align-items: center; justify-content: center; gap: .6rem; padding: .85rem 1.25rem; border-radius: .7rem; font: inherit; font-weight: 700; cursor: pointer; }
+.lg-primary { font-family: var(--font-display, system-ui, sans-serif); border: 0; color: #08262c; background: #66e5d3; }
+.lg-primary:hover { background: #86efe0; }
+.lg-sso { color: #fff; background: transparent; border: 1.5px solid rgb(255 255 255 / .4); }
+.lg-sso:hover { background: rgb(255 255 255 / .1); }
+.lg-or { display: flex; align-items: center; gap: .75rem; font-size: .85rem; color: rgb(255 255 255 / .7); }
+.lg-or::before, .lg-or::after { content: ''; flex: 1; height: 1px; background: rgb(255 255 255 / .25); }
+.lg-note { margin: 0; font-size: .8rem; color: rgb(255 255 255 / .7); }
+
+@media (max-width: 640px) {
+  .lg-roles { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+  .lg-roles[data-picked='student'] { grid-template-columns: 1fr; grid-template-rows: 1fr 0fr; }
+  .lg-roles[data-picked='teacher'] { grid-template-columns: 1fr; grid-template-rows: 0fr 1fr; }
+  .lg-roles[data-picked='student'], .lg-roles[data-picked='teacher'] { max-width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .lg-shake { animation: none; } .lg-roles, .lg-card, .lg-field label, .lg-btn svg { transition: none; } }
+
+/* Entrance: the headline builds word by word, then both sentences catch a soft light */
+.lg-line { display: inline; }
+.lg-line + .lg-line { margin-left: .28em; }
+.lg-word { display: inline-block; margin-right: .28em; animation: lg-rise .7s cubic-bezier(.2, .8, .2, 1) calc(var(--i) * 90ms + 200ms) both; }
+.lg-line .lg-word:last-child { margin-right: 0; }
+.lg-line { --grad: linear-gradient(100deg, #c4f5ec 25%, #ffffff 45%, #c4f5ec 65%); }
+.lg-line.is-accent { --grad: linear-gradient(100deg, #5ee3d2 25%, #dcfff6 45%, #5ee3d2 65%); }
+.lg-line .lg-word { color: transparent; background: var(--grad); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text;
+  animation: lg-rise .7s cubic-bezier(.2, .8, .2, 1) calc(var(--i) * 90ms + 200ms) both, lg-shimmer 5s linear 1.8s infinite; }
+.lg-brand { animation: lg-fade .6s ease both; }
+.lg-sub { animation: lg-fade .8s ease 1s both; }
+.lg-rule { transform-origin: center; animation: lg-grow-x .9s ease 1.1s both; }
+.lg-roles { animation: lg-fade .8s ease 1.25s both; }
+@keyframes lg-rise { from { opacity: 0; transform: translateY(.55em); filter: blur(8px); } to { opacity: 1; transform: none; filter: blur(0); } }
+@keyframes lg-shimmer { to { background-position: -220% 0; } }
+@keyframes lg-fade { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes lg-grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .lg-word, .lg-brand, .lg-sub, .lg-rule, .lg-roles { animation: none !important; opacity: 1; transform: none; filter: none; }
+}

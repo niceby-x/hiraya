@@ -4,7 +4,7 @@ import GraphReview from './pages/GraphReview.jsx'
 import LearnerView from './pages/LearnerView.jsx'
 import Practice from './pages/Practice.jsx'
 import ReviewPath from './pages/ReviewPath.jsx'
-import SignIn from './pages/SignIn.jsx'
+import SignIn from './pages/Login.jsx'
 import StudentDashboard from './pages/StudentDashboard.jsx'
 import TeacherDashboard from './pages/TeacherDashboard.jsx'
 
