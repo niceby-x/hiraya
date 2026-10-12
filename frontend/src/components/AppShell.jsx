@@ -4,20 +4,20 @@ import Logo from './Logo.jsx'
 export default function AppShell({ links, userLabel, home }) {
   return (
     <div className="min-h-screen bg-surface">
-      <header className="flex flex-wrap items-center gap-x-8 gap-y-2 border-b border-line bg-white px-8 py-2">
-        <Link to={home} className="flex items-center gap-2.5">
+      <header className="flex flex-wrap items-center gap-x-6 gap-y-1 border-b border-line bg-white px-4 py-2 sm:px-8">
+        <Link to={home} className="flex items-center gap-2.5 py-1">
           <Logo />
           <span className="font-display text-xl font-bold tracking-widest text-ink">HIRAYA</span>
         </Link>
 
-        <nav className="flex flex-1 flex-wrap gap-2">
+        <nav className="order-last flex w-full gap-1 overflow-x-auto sm:order-none sm:w-auto sm:flex-1">
           {links.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
               end={link.end}
               className={({ isActive }) =>
-                `rounded-lg px-3.5 py-3 ${
+                `whitespace-nowrap rounded-lg px-3 py-2.5 sm:px-3.5 sm:py-3 ${
                   isActive ? 'bg-brand-soft font-bold text-brand' : 'font-medium text-ink'
                 }`
               }
@@ -27,15 +27,15 @@ export default function AppShell({ links, userLabel, home }) {
           ))}
         </nav>
 
-        <div className="flex items-center gap-4 text-sm">
-          <span>{userLabel}</span>
+        <div className="ml-auto flex items-center gap-4 text-sm sm:ml-0">
+          <span className="hidden sm:inline">{userLabel}</span>
           <Link to="/" className="py-3 font-bold text-brand">
             Sign out
           </Link>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[1180px] px-8 py-10">
+      <main className="mx-auto w-full max-w-295 px-4 py-6 sm:px-8 sm:py-10">
         <Outlet />
       </main>
     </div>

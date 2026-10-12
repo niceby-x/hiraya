@@ -13,7 +13,7 @@ const cellStyles = {
 }
 
 const gridStyle = {
-  gridTemplateColumns: `150px repeat(${competencies.length}, minmax(0, 1fr))`,
+  gridTemplateColumns: `120px repeat(${competencies.length}, minmax(0, 1fr))`,
 }
 
 function Stat({ label, value }) {
@@ -75,9 +75,11 @@ export default function TeacherDashboard() {
           Skills run from the earliest prerequisite to the target skill, left to right.
         </p>
 
-        <div className="mt-6 overflow-x-auto">
+        <p className="mt-3 text-sm font-bold text-muted lg:hidden">Swipe sideways to see every skill.</p>
+
+        <div className="mt-3 overflow-x-auto lg:mt-6">
           <div className="grid min-w-190 items-center gap-2" style={gridStyle}>
-            <p className="text-sm font-bold text-muted">Learner</p>
+            <p className="sticky left-0 bg-white text-sm font-bold text-muted">Learner</p>
             {competencies.map((c) => (
               <p key={c.id} className="text-center text-sm font-bold text-muted">
                 {c.short}
@@ -86,7 +88,10 @@ export default function TeacherDashboard() {
 
             {learners.map((l) => (
               <Fragment key={l.id}>
-                <Link to={`/teacher/learner?learner=${l.id}`} className="font-bold text-brand">
+                <Link
+                  to={`/teacher/learner?learner=${l.id}`}
+                  className="sticky left-0 bg-white py-1 font-bold text-brand"
+                >
                   {l.name}
                 </Link>
                 {competencies.map((c) => {

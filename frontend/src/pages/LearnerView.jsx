@@ -14,7 +14,7 @@ const nodeStyles = {
 const legend = [
   { band: 'mastered', label: 'Mastered', text: `${percent(THRESHOLD)}% or higher` },
   { band: 'gap', label: 'Needs review', text: `60% to below ${percent(THRESHOLD)}%` },
-  { band: 'low', label: 'Needs review', text: 'below 60%' },
+  { band: 'low', label: 'Low mastery', text: 'below 60%' },
 ]
 
 export default function LearnerView() {
@@ -96,13 +96,14 @@ export default function LearnerView() {
           Arrows point from a prerequisite to the skill that builds on it. Teal arrows and numbered circles
           show the suggested review order.
         </p>
+        <p className="mt-1 text-sm font-bold text-muted lg:hidden">Swipe sideways to see the whole graph.</p>
 
         <div className="mt-6 overflow-x-auto">
           <svg
             viewBox={`0 0 ${VIEW.w} ${VIEW.h}`}
             role="img"
             aria-label={`Prerequisite graph for ${learner.name}`}
-            className="h-auto w-full min-w-190"
+            className="h-auto w-full min-w-225"
           >
             <defs>
               <marker
