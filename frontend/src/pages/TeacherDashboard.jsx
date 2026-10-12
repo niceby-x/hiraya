@@ -2,7 +2,8 @@ import { Fragment, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { competencies, learners, THRESHOLD } from '../data/mock.js'
 import { masteredCount, topGaps } from '../lib/classStats.js'
-import { bandFor, percent } from '../lib/mastery.js'
+import { bandFor, LOW_LINE, percent } from '../lib/mastery.js'
+import Card from '../components/Card.jsx'
 
 const options = [THRESHOLD, 0.98]
 
@@ -34,7 +35,7 @@ export default function TeacherDashboard() {
     <div className="flex flex-col gap-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-4xl font-bold">Class overview</h1>
+          <h1 className="font-display text-3xl font-bold sm:text-4xl">Class overview</h1>
           <p className="mt-2 text-muted">Grade 7 Mathematics · sample class</p>
         </div>
 
@@ -69,7 +70,7 @@ export default function TeacherDashboard() {
         <Stat label={`Skills mastered at ${percent(theta)}%`} value={`${masteredCount(theta)} of ${total}`} />
       </div>
 
-      <section className="rounded-2xl border border-line bg-white p-8">
+      <Card>
         <h2 className="font-display text-2xl font-bold">Mastery by learner and skill</h2>
         <p className="mt-1 text-sm text-muted">
           Skills run from the earliest prerequisite to the target skill, left to right.
@@ -112,11 +113,11 @@ export default function TeacherDashboard() {
         </div>
 
         <p className="mt-6 text-sm text-muted">
-          Green: mastered at {percent(theta)}% or higher. Amber: 60% to below {percent(theta)}%. Red: below 60%.
+          Green: mastered at {percent(theta)}% or higher. Amber: {percent(LOW_LINE)}% to below {percent(theta)}%. Red: below {percent(LOW_LINE)}%.
         </p>
-      </section>
+      </Card>
 
-      <section className="rounded-2xl border border-line bg-white p-8">
+      <Card>
         <h2 className="font-display text-2xl font-bold">Most common gaps</h2>
         <p className="mt-1 text-sm text-muted">
           Learners below the {percent(theta)}% mastery line, by skill.
@@ -137,7 +138,7 @@ export default function TeacherDashboard() {
             </li>
           ))}
         </ul>
-      </section>
+      </Card>
 
       <p className="text-sm text-muted">HIRAYA suggests; the teacher decides. Sample data for the prototype.</p>
     </div>

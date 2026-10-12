@@ -2,6 +2,8 @@ const styles = {
   mastered: 'bg-mastered-soft text-mastered-ink',
   gap: 'bg-gap-soft text-gap-ink',
   low: 'bg-low-soft text-low-ink',
+  focus: 'bg-brand-soft text-brand',
+  next: 'bg-brand text-white',
 }
 
 const defaultLabels = {

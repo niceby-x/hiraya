@@ -18,7 +18,7 @@ export default function AppShell({ links, userLabel, home }) {
               end={link.end}
               className={({ isActive }) =>
                 `whitespace-nowrap rounded-lg px-3 py-2.5 sm:px-3.5 sm:py-3 ${
-                  isActive ? 'bg-brand-soft font-bold text-brand' : 'font-medium text-ink'
+                  isActive ? 'bg-brand-soft font-bold text-brand' : 'font-medium text-ink hover:bg-surface'
                 }`
               }
             >
@@ -29,7 +29,7 @@ export default function AppShell({ links, userLabel, home }) {
 
         <div className="ml-auto flex items-center gap-4 text-sm sm:ml-0">
           <span className="hidden sm:inline">{userLabel}</span>
-          <Link to="/" className="py-3 font-bold text-brand">
+          <Link to="/" className="py-3 font-bold text-brand hover:underline">
             Sign out
           </Link>
         </div>

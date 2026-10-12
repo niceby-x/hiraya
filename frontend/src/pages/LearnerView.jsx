@@ -2,8 +2,9 @@ import { Link, useSearchParams } from 'react-router-dom'
 import StatusPill from '../components/StatusPill.jsx'
 import { competencies, learners, THRESHOLD } from '../data/mock.js'
 import { NODE, positions, VIEW } from '../data/graphLayout.js'
-import { bandFor, percent } from '../lib/mastery.js'
+import { bandFor, LOW_LINE, percent } from '../lib/mastery.js'
 import { getCompetency, remediationPath, TARGET_ID } from '../lib/path.js'
+import Card from '../components/Card.jsx'
 
 const nodeStyles = {
   mastered: 'fill-mastered-soft stroke-mastered',
@@ -13,8 +14,8 @@ const nodeStyles = {
 
 const legend = [
   { band: 'mastered', label: 'Mastered', text: `${percent(THRESHOLD)}% or higher` },
-  { band: 'gap', label: 'Needs review', text: `60% to below ${percent(THRESHOLD)}%` },
-  { band: 'low', label: 'Low mastery', text: 'below 60%' },
+  { band: 'gap', label: 'Needs review', text: `${percent(LOW_LINE)}% to below ${percent(THRESHOLD)}%` },
+  { band: 'low', label: 'Low mastery', text: `below ${percent(LOW_LINE)}%` },
 ]
 
 export default function LearnerView() {
@@ -63,7 +64,7 @@ export default function LearnerView() {
           <Link to="/teacher" className="text-sm font-bold text-brand">
             ← Class overview
           </Link>
-          <h1 className="mt-3 font-display text-4xl font-bold">{learner.name}</h1>
+          <h1 className="mt-3 font-display text-3xl font-bold sm:text-4xl">{learner.name}</h1>
           <p className="mt-2 text-muted">
             {path.length === 0
               ? `All skills on the way to ${target.name} are mastered.`
@@ -90,7 +91,7 @@ export default function LearnerView() {
         </div>
       </div>
 
-      <section className="rounded-2xl border border-line bg-white p-8">
+      <Card>
         <h2 className="font-display text-2xl font-bold">Prerequisite graph</h2>
         <p className="mt-1 text-sm text-muted">
           Arrows point from a prerequisite to the skill that builds on it. Teal arrows and numbered circles
@@ -182,9 +183,9 @@ export default function LearnerView() {
             </div>
           ))}
         </div>
-      </section>
+      </Card>
 
-      <section className="rounded-2xl border border-line bg-white p-8">
+      <Card>
         <h2 className="font-display text-2xl font-bold">Suggested review order</h2>
         {path.length === 0 ? (
           <p className="mt-2 text-muted">Nothing to review for this learner.</p>
@@ -206,7 +207,7 @@ export default function LearnerView() {
             })}
           </ol>
         )}
-      </section>
+      </Card>
 
       <p className="text-sm text-muted">HIRAYA suggests; the teacher decides. Sample data for the prototype.</p>
     </div>

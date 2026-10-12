@@ -3,6 +3,8 @@ import StatusPill from '../components/StatusPill.jsx'
 import { learners, THRESHOLD } from '../data/mock.js'
 import { bandFor, percent } from '../lib/mastery.js'
 import { dependencyOrder, getCompetency, remediationPath, TARGET_ID } from '../lib/path.js'
+import Card from '../components/Card.jsx'
+import { buttonClass } from '../lib/buttonClass.js'
 
 const learner = learners[0]
 
@@ -22,7 +24,7 @@ export default function ReviewPath() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="font-display text-4xl font-bold">My review path</h1>
+        <h1 className="font-display text-3xl font-bold sm:text-4xl">My review path</h1>
         <p className="mt-2 text-muted">Suggested order to reach {target.name}</p>
       </div>
 
@@ -39,9 +41,9 @@ export default function ReviewPath() {
       </section>
 
       {path.length === 0 ? (
-        <p className="rounded-2xl border border-line bg-white p-8 text-muted">
+        <Card as="p" className="text-muted">
           Every skill on the way to {target.name} is mastered. Nothing to review.
-        </p>
+        </Card>
       ) : (
         <ol>
           {path.map((id, i) => {
@@ -66,7 +68,7 @@ export default function ReviewPath() {
                 <div className={`flex-1 rounded-2xl border border-line bg-white p-6 ${isLast ? '' : 'mb-6'}`}>
                   <div className="flex flex-wrap items-center gap-3">
                     <h3 className="font-display text-xl font-bold">{c.name}</h3>
-                    <StatusPill band={bandFor(p)} label={labelFor(id, i)} />
+                    <StatusPill band={id === TARGET_ID ? 'focus' : i === 0 ? 'next' : bandFor(p)} label={labelFor(id, i)} />
                   </div>
                   <p className="mt-1 text-muted">
                     {percent(p)}% now · mastery line {percent(THRESHOLD)}%
@@ -82,7 +84,7 @@ export default function ReviewPath() {
                   )}
                   <Link
                     to={`/student/practice?skill=${id}`}
-                    className="mt-4 inline-block rounded-lg border-2 border-brand px-4 py-2 font-bold text-brand"
+                    className={`mt-4 ${buttonClass('outline', 'sm')}`}
                   >
                     Practice this skill
                   </Link>

@@ -8,7 +8,7 @@ const fills = {
   low: 'bg-low',
 }
 
-export default function MasteryBar({ competency, p, label }) {
+export default function MasteryBar({ competency, p, label, pillBand }) {
   const band = bandFor(p)
 
   return (
@@ -32,7 +32,7 @@ export default function MasteryBar({ competency, p, label }) {
 
       <p className="w-12 text-right font-bold">{percent(p)}%</p>
       <div className="w-32">
-        <StatusPill band={band} label={label} />
+        <StatusPill band={pillBand ?? band} label={label} />
       </div>
     </li>
   )

@@ -3,6 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { learners } from '../data/mock.js'
 import { questions } from '../data/questions.js'
 import { getCompetency, remediationPath, TARGET_ID } from '../lib/path.js'
+import Card from '../components/Card.jsx'
+import { buttonClass } from '../lib/buttonClass.js'
 
 const learner = learners[0]
 const letters = ['A', 'B', 'C', 'D']
@@ -30,7 +32,7 @@ function PracticeSession({ competency, items }) {
         ← My progress
       </Link>
       <p className="mt-4 text-sm font-bold uppercase tracking-widest text-muted">Practice</p>
-      <h1 className="mt-1 font-display text-4xl font-bold">{competency.name}</h1>
+      <h1 className="mt-1 font-display text-3xl font-bold sm:text-4xl">{competency.name}</h1>
     </div>
   )
 
@@ -38,9 +40,9 @@ function PracticeSession({ competency, items }) {
     return (
       <div className="flex flex-col gap-6">
         {header}
-        <p className="rounded-2xl border border-line bg-white p-8 text-muted">
+        <Card as="p" className="text-muted">
           Practice questions for this skill are not loaded yet.
-        </p>
+        </Card>
       </div>
     )
   }
@@ -49,7 +51,7 @@ function PracticeSession({ competency, items }) {
     return (
       <div className="flex flex-col gap-6">
         {header}
-        <section className="rounded-2xl border border-line bg-white p-8">
+        <Card>
           <h2 className="font-display text-2xl font-bold">Practice complete</h2>
           <p className="mt-2 text-lg">
             You answered {correctCount} of {items.length} correctly.
@@ -66,15 +68,15 @@ function PracticeSession({ competency, items }) {
                 setSubmitted(false)
                 setCorrectCount(0)
               }}
-              className="rounded-lg bg-brand px-6 py-3 font-bold text-white"
+              className={buttonClass('primary')}
             >
               Practice again
             </button>
-            <Link to="/student/path" className="rounded-lg border-2 border-brand px-6 py-3 font-bold text-brand">
+            <Link to="/student/path" className={buttonClass('outline')}>
               See my review path
             </Link>
           </div>
-        </section>
+        </Card>
       </div>
     )
   }
@@ -98,7 +100,7 @@ function PracticeSession({ competency, items }) {
     <div className="flex flex-col gap-6">
       {header}
 
-      <section className="rounded-2xl border border-line bg-white p-8">
+      <Card>
         <div className="flex items-center gap-4">
           <p className="text-sm font-bold text-muted">
             Question {index + 1} of {items.length}
@@ -155,17 +157,17 @@ function PracticeSession({ competency, items }) {
               type="button"
               onClick={submit}
               disabled={picked === null}
-              className="rounded-lg bg-brand px-6 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+              className={buttonClass('primary')}
             >
               Submit answer
             </button>
           ) : (
-            <button type="button" onClick={next} className="rounded-lg bg-brand px-6 py-3 font-bold text-white">
+            <button type="button" onClick={next} className={buttonClass('primary')}>
               {isLast ? 'See results' : 'Next question'}
             </button>
           )}
         </div>
-      </section>
+      </Card>
     </div>
   )
 }
@@ -179,7 +181,7 @@ export default function Practice() {
   if (!competency) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="font-display text-4xl font-bold">Practice</h1>
+        <h1 className="font-display text-3xl font-bold sm:text-4xl">Practice</h1>
         <p className="text-muted">That skill was not found.</p>
         <Link to="/student" className="font-bold text-brand">
           ← My progress

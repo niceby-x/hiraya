@@ -4,14 +4,16 @@ import StatusPill from '../components/StatusPill.jsx'
 import { competencies, learners, THRESHOLD } from '../data/mock.js'
 import { bandFor, percent } from '../lib/mastery.js'
 import { getCompetency, remediationPath, TARGET_ID } from '../lib/path.js'
+import Card from '../components/Card.jsx'
+import { buttonClass } from '../lib/buttonClass.js'
 
 const learner = learners[0]
 
 const legend = [
   { band: 'mastered', label: 'Mastered', text: `${percent(THRESHOLD)}% or higher` },
   { band: 'gap', label: 'Needs review', text: `below ${percent(THRESHOLD)}%` },
-  { band: 'gap', label: 'Review next', text: 'the skill to start with' },
-  { band: 'low', label: 'Focus topic', text: 'the skill you are working toward' },
+  { band: 'next', label: 'Review next', text: 'the skill to start with' },
+  { band: 'focus', label: 'Focus topic', text: 'the skill you are working toward' },
 ]
 
 export default function StudentDashboard() {
@@ -29,17 +31,23 @@ export default function StudentDashboard() {
     return undefined
   }
 
+  const pillBandFor = (id) => {
+    if (id === TARGET_ID) return 'focus'
+    if (path[0] === id) return 'next'
+    return undefined
+  }
+
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="font-display text-4xl font-bold">Hello, {learner.name}</h1>
+        <h1 className="font-display text-3xl font-bold sm:text-4xl">Hello, {learner.name}</h1>
         <p className="mt-2 text-muted">
           Grade 7 Mathematics · {masteredCount} of {competencies.length} skills mastered
         </p>
       </div>
 
       {first && (
-        <section className="rounded-2xl bg-brand p-8 text-white">
+        <section className="on-dark rounded-2xl bg-brand p-5 text-white sm:p-8">
           <p className="text-sm font-bold uppercase tracking-widest text-brand-soft">Start here</p>
           <h2 className="mt-2 font-display text-3xl font-bold">{first.name}</h2>
           <p className="mt-2 max-w-2xl text-brand-soft">
@@ -48,12 +56,12 @@ export default function StudentDashboard() {
               : `${toReview} skill${toReview === 1 ? '' : 's'} to review before ${target.name}. Later skills build on this one, so it comes first.`}
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Link to={`/student/practice?skill=${first.id}`} className="rounded-lg bg-white px-6 py-3 font-bold text-brand">
+            <Link to={`/student/practice?skill=${first.id}`} className={buttonClass('onBrand')}>
               Practice this skill
             </Link>
             <Link
               to="/student/path"
-              className="rounded-lg border-2 border-white/60 px-6 py-3 font-bold text-white"
+              className={buttonClass('onBrandOutline')}
             >
               See my review path
             </Link>
@@ -61,17 +69,17 @@ export default function StudentDashboard() {
         </section>
       )}
 
-      <section className="rounded-2xl border border-line bg-white p-8">
+      <Card>
         <h2 className="font-display text-2xl font-bold">My skills</h2>
         <p className="mt-1 text-sm text-muted">
           Listed from earliest to latest. The line on each bar marks {percent(THRESHOLD)}% mastery.
         </p>
         <ul className="mt-4 divide-y divide-line">
           {competencies.map((c) => (
-            <MasteryBar key={c.id} competency={c} p={learner.mastery[c.id]} label={labelFor(c.id)} />
+            <MasteryBar key={c.id} competency={c} p={learner.mastery[c.id]} label={labelFor(c.id)} pillBand={pillBandFor(c.id)} />
           ))}
         </ul>
-      </section>
+      </Card>
 
       <section aria-label="Legend" className="flex flex-wrap gap-x-8 gap-y-3 text-sm text-muted">
         {legend.map((item) => (

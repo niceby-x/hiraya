@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+@theme static {
+  /* sign-in screen palette */
+  --color-night: #072228;
+  --color-night-card: #133b41;
+  --color-night-ink: #08262c;
+  --color-aqua: #66e5d3;
+  --color-aqua-hover: #86efe0;
+}
+
 @theme {
   --font-display: "Bricolage Grotesque Variable", system-ui, sans-serif;
   --font-body: "DM Sans Variable", system-ui, sans-serif;
@@ -29,4 +38,13 @@ body {
   font-family: var(--font-body);
   color: var(--color-ink);
   background: var(--color-surface);
+}
+
+/* Keyboard focus: visible everywhere, white on the teal hero card */
+:focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 2px;
+}
+.on-dark :focus-visible {
+  outline-color: #fff;
 }

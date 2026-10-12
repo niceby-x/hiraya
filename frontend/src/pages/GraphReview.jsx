@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { prerequisiteLinks as links } from '../lib/links.js'
 import { getCompetency } from '../lib/path.js'
+import Card from '../components/Card.jsx'
+import { buttonClass } from '../lib/buttonClass.js'
 
 const ratingMeta = {
   valid: {
@@ -38,7 +40,7 @@ export default function GraphReview() {
 
   const header = (
     <div>
-      <h1 className="font-display text-4xl font-bold">Prerequisite graph review</h1>
+      <h1 className="font-display text-3xl font-bold sm:text-4xl">Prerequisite graph review</h1>
       <p className="mt-2 text-muted">
         Rate each prerequisite link before the graph is used for recommendations.
       </p>
@@ -49,7 +51,7 @@ export default function GraphReview() {
     return (
       <div className="flex flex-col gap-8">
         {header}
-        <section className="rounded-2xl border border-line bg-white p-8">
+        <Card>
           <h2 className="font-display text-2xl font-bold">Ratings recorded</h2>
           <p className="mt-2 max-w-2xl text-muted">
             In this prototype the ratings are not saved. In the full system they are stored with the
@@ -64,11 +66,11 @@ export default function GraphReview() {
               setIndex(0)
               setView('review')
             }}
-            className="mt-6 rounded-lg bg-brand px-6 py-3 font-bold text-white"
+            className={`mt-6 ${buttonClass('primary')}`}
           >
             Review again
           </button>
-        </section>
+        </Card>
       </div>
     )
   }
@@ -79,7 +81,7 @@ export default function GraphReview() {
     return (
       <div className="flex flex-col gap-8">
         {header}
-        <section className="rounded-2xl border border-line bg-white p-8">
+        <Card>
           <h2 className="font-display text-2xl font-bold">Review summary</h2>
 
           <div className="mt-4 grid gap-4 sm:grid-cols-3">
@@ -116,19 +118,19 @@ export default function GraphReview() {
             <button
               type="button"
               onClick={() => setView('review')}
-              className="rounded-lg border-2 border-brand px-6 py-3 font-bold text-brand"
+              className={buttonClass('outline')}
             >
               Back to links
             </button>
             <button
               type="button"
               onClick={() => setView('submitted')}
-              className="rounded-lg bg-brand px-6 py-3 font-bold text-white"
+              className={buttonClass('primary')}
             >
               Submit ratings
             </button>
           </div>
-        </section>
+        </Card>
       </div>
     )
   }
@@ -145,7 +147,7 @@ export default function GraphReview() {
       {header}
 
       <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
-        <section className="rounded-2xl border border-line bg-white p-8">
+        <Card>
           <p className="text-sm font-bold text-muted">
             Link {index + 1} of {links.length} · Teacher 1 of 3 · sample
           </p>
@@ -204,7 +206,7 @@ export default function GraphReview() {
               type="button"
               onClick={() => setIndex((i) => i - 1)}
               disabled={index === 0}
-              className="rounded-lg border-2 border-brand px-6 py-3 font-bold text-brand disabled:cursor-not-allowed disabled:opacity-40"
+              className={buttonClass('outline')}
             >
               Previous
             </button>
@@ -212,7 +214,7 @@ export default function GraphReview() {
               type="button"
               onClick={() => (isLast ? setView('summary') : setIndex((i) => i + 1))}
               disabled={nextDisabled}
-              className="rounded-lg bg-brand px-6 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+              className={buttonClass('primary')}
             >
               {isLast ? 'Review summary' : 'Next link'}
             </button>
@@ -223,7 +225,7 @@ export default function GraphReview() {
               </p>
             )}
           </div>
-        </section>
+        </Card>
 
         <aside className="h-fit rounded-2xl border border-line bg-white p-6">
           <h2 className="font-display text-xl font-bold">All links</h2>
