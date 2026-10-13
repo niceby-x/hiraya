@@ -97,3 +97,10 @@ export function candidatePath(mastery, targetId, theta) {
 export function prerequisitesOf(targetId) {
   return hasCompetency(targetId) ? dependencyOrder(targetId).filter((id) => id !== targetId) : []
 }
+
+// Column order for the class grid: the target's dependency chain first (earliest
+// prerequisite to the target), then every other skill in the original list order.
+export function displayOrder(targetId) {
+  const chain = hasCompetency(targetId) ? dependencyOrder(targetId) : []
+  return [...chain, ...competencies.map((c) => c.id).filter((id) => !chain.includes(id))]
+}

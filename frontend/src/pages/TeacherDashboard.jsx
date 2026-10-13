@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { competencies } from '../data/mock.js'
 import { classWideReview, masteredCount, targetSummary } from '../lib/classStats.js'
 import { formatPercent, percent, statusFor } from '../lib/mastery.js'
-import { getCompetency } from '../lib/path.js'
+import { displayOrder, getCompetency } from '../lib/path.js'
 import { useLearners } from '../lib/store.js'
 import { contextQuery, learnerLink, readContext, THRESHOLD_OPTIONS } from '../lib/teacherContext.js'
 import Card from '../components/Card.jsx'
@@ -70,6 +70,7 @@ export default function TeacherDashboard() {
   const learners = useLearners()
   const { target: targetId, theta, invalid } = readContext(params, learners.map((l) => l.id))
   const target = getCompetency(targetId)
+  const columns = displayOrder(targetId).map(getCompetency)
 
   // Every control change rewrites the URL with a complete, valid target + threshold.
   const update = (change) =>
@@ -165,8 +166,8 @@ export default function TeacherDashboard() {
           <Card>
             <h2 className="font-display text-2xl font-bold">Mastery by learner and skill</h2>
             <p className="mt-1 text-sm text-muted">
-              Skills run from the earliest prerequisite to the target skill, left to right. The selected target is
-              marked in its column header.
+              The selected target and its prerequisites come first, from the earliest prerequisite to the target
+              (marked in its column header). Skills that are not prerequisites of the target follow.
             </p>
 
             <p className="mt-3 text-sm font-bold text-muted lg:hidden">Swipe sideways to see every skill.</p>
@@ -174,7 +175,7 @@ export default function TeacherDashboard() {
             <div className="mt-3 overflow-x-auto lg:mt-6">
               <div className="grid min-w-190 items-center gap-2" style={gridStyle}>
                 <p className="sticky left-0 bg-white text-sm font-bold text-muted">Learner</p>
-                {competencies.map((c) => (
+                {columns.map((c) => (
                   <p
                     key={c.id}
                     className={`text-center text-sm font-bold ${c.id === targetId ? 'text-brand' : 'text-muted'}`}
@@ -192,7 +193,7 @@ export default function TeacherDashboard() {
                     >
                       {l.name}
                     </Link>
-                    {competencies.map((c) => {
+                    {columns.map((c) => {
                       const p = l.mastery?.[c.id]
                       const s = statusFor(p, theta)
                       return (

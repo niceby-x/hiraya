@@ -2,7 +2,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { learners } from '../data/mock.js'
-import { candidatePath, dependencyOrder, hasCompetency, prerequisitesOf, remediationPath } from './path.js'
+import { candidatePath, dependencyOrder, displayOrder, hasCompetency, prerequisitesOf, remediationPath } from './path.js'
 
 const byLearner = Object.fromEntries(learners.map((l) => [l.id, l.mastery]))
 // All skills mastered, then override what a test needs.
@@ -95,4 +95,18 @@ test('missing data: no estimate for the target is "no-data"; missing prerequisit
 test('the student-side remediationPath is unchanged', () => {
   assert.deepEqual(remediationPath(byLearner.l01, 'c7', 0.95), ['c2', 'c3', 'c5', 'c6', 'c7'])
   assert.deepEqual(remediationPath(mastery(), 'c7', 0.95), [])
+})
+
+test('grid column order: the target chain first, then the other skills in list order', () => {
+  assert.deepEqual(displayOrder('c7'), ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7'])
+  assert.deepEqual(displayOrder('c4'), ['c1', 'c4', 'c2', 'c3', 'c5', 'c6', 'c7'])
+  assert.deepEqual(displayOrder('c3'), ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7'])
+  assert.deepEqual(displayOrder('c1'), ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7'])
+  // every target: each skill appears exactly once, and the chain keeps dependency order
+  for (const t of ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7']) {
+    const order = displayOrder(t)
+    assert.deepEqual([...order].sort(), ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7'])
+    assert.deepEqual(order.slice(0, dependencyOrder(t).length), dependencyOrder(t))
+  }
+  assert.deepEqual(displayOrder('nope'), ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7'])
 })

@@ -38,6 +38,7 @@ Scripts, run from the project root:
 | `npm run dev` | Start the dev server |
 | `npm run build` | Production build |
 | `npm run lint` | Run ESLint |
+| `npm test` | Run the unit tests (Node's built-in test runner). Also works as `npm test` inside `frontend/` |
 
 ## Screens
 
@@ -76,6 +77,8 @@ Stack: React, Vite, Tailwind CSS v4, React Router.
 2. Walk backward through its prerequisites.
 3. Keep the prerequisites whose mastery is below the threshold (0.95 by default).
 4. Order them so every skill comes after the skills it builds on (topological order), and put the target last.
+
+On the teacher pages (`candidatePath()` in the same file) the target is appended only when its own mastery is below the threshold. If the target already meets the threshold, the path is empty for that learner and target. The student pages still use `remediationPath()`, which does not make this check.
 
 ## Connecting the backend (second semester)
 
