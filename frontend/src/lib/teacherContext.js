@@ -57,4 +57,10 @@ export function contextQuery({ target, theta, learnerId }) {
 export const learnerLink = ({ learnerId, target, theta }) =>
   `/teacher/learner?${contextQuery({ learnerId, target, theta })}`
 
-export const overviewLink = ({ target, theta }) => `/teacher?${contextQuery({ target, theta })}`
+// learnerId is optional: pass the last-viewed learner so the overview and learner pages keep it.
+export const overviewLink = ({ target, theta, learnerId }) => `/teacher?${contextQuery({ target, theta, learnerId })}`
+
+// Which state the learner page is in: 'selected' (a known learner is in the link),
+// 'none' (no learner chosen yet) or 'invalid' (the link names a learner who is not in the class).
+export const learnerSelection = ({ learnerId, invalid }) =>
+  invalid.learner ? 'invalid' : learnerId ? 'selected' : 'none'

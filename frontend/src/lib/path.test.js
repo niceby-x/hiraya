@@ -92,9 +92,36 @@ test('missing data: no estimate for the target is "no-data"; missing prerequisit
   assert.deepEqual(r.unknown, ['c1', 'c2', 'c3', 'c4', 'c5'])
 })
 
-test('the student-side remediationPath is unchanged', () => {
+test('student remediationPath keeps its results for the sample learner and the all-mastered case', () => {
   assert.deepEqual(remediationPath(byLearner.l01, 'c7', 0.95), ['c2', 'c3', 'c5', 'c6', 'c7'])
   assert.deepEqual(remediationPath(mastery(), 'c7', 0.95), [])
+})
+
+test('target met but a prerequisite below the line: student and teacher both give no path', () => {
+  const m = mastery({ c3: 0.5, c7: 0.99 })
+  assert.deepEqual(remediationPath(m, 'c7', 0.95), [])
+  assert.deepEqual(candidatePath(m, 'c7', 0.95).path, [])
+  // Same estimates at 0.98: the target (0.99) still meets the line, so still no path.
+  assert.deepEqual(remediationPath(m, 'c7', 0.98), [])
+})
+
+test('student and teacher paths are identical for every learner, target and threshold', () => {
+  for (const theta of [0.95, 0.98]) {
+    for (const target of ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7']) {
+      for (const l of learners) {
+        assert.deepEqual(remediationPath(l.mastery, target, theta), candidatePath(l.mastery, target, theta).path)
+      }
+    }
+  }
+})
+
+test('student path is also identical on synthetic estimates where the target meets the line but prerequisites do not', () => {
+  const cases = [mastery({ c3: 0.5, c7: 0.99 }), mastery({ c1: 0.2, c2: 0.3, c5: 0.4, c6: 0.99 }), mastery({ c7: 0.5 })]
+  for (const m of cases) {
+    for (const target of ['c3', 'c5', 'c6', 'c7']) {
+      assert.deepEqual(remediationPath(m, target, 0.95), candidatePath(m, target, 0.95).path)
+    }
+  }
 })
 
 test('grid column order: the target chain first, then the other skills in list order', () => {

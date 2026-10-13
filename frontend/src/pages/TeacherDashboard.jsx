@@ -1,7 +1,7 @@
-import { Fragment } from 'react'
+import { Fragment, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { competencies } from '../data/mock.js'
-import { classWideReview, masteredCount, targetSummary } from '../lib/classStats.js'
+import { classWideReview, masteredCount, targetSummary, visibleRows } from '../lib/classStats.js'
 import { formatPercent, percent, statusFor } from '../lib/mastery.js'
 import { displayOrder, getCompetency } from '../lib/path.js'
 import { useLearners } from '../lib/store.js'
@@ -18,6 +18,16 @@ const cellStyles = {
 
 const marker = { meets: '✓', below: '▼', none: '' }
 const statusText = { meets: 'meets the threshold', below: 'below the threshold', none: 'no data' }
+
+// Short note under a learner's name: their candidate-gap count for the selected target.
+const gapNote = (status, gaps) =>
+  status === 'needs-review'
+    ? `${gaps.length} gap${gaps.length === 1 ? '' : 's'}`
+    : status === 'target-met'
+      ? 'Target met'
+      : status === 'no-data'
+        ? 'No data'
+        : ''
 
 const gridStyle = {
   gridTemplateColumns: `120px repeat(${competencies.length}, minmax(0, 1fr))`,
@@ -68,17 +78,22 @@ function CountBar({ count, total }) {
 export default function TeacherDashboard() {
   const [params, setParams] = useSearchParams()
   const learners = useLearners()
-  const { target: targetId, theta, invalid } = readContext(params, learners.map((l) => l.id))
+  // Search and order only change which learners are listed. They never touch mastery data or the class summaries.
+  const [query, setQuery] = useState('')
+  const [sort, setSort] = useState('roster')
+  const { target: targetId, theta, learnerId, invalid } = readContext(params, learners.map((l) => l.id))
   const target = getCompetency(targetId)
   const columns = displayOrder(targetId).map(getCompetency)
 
-  // Every control change rewrites the URL with a complete, valid target + threshold.
+  // Every control change rewrites the URL with a complete, valid target + threshold, keeping the
+  // last-viewed learner, and replaces the history entry so Back leaves the page.
   const update = (change) =>
-    setParams(contextQuery({ target: targetId, theta, ...change }), { replace: true })
+    setParams(contextQuery({ target: targetId, theta, learnerId, ...change }), { replace: true })
 
   const total = learners.length * competencies.length
   const classWide = classWideReview(learners, theta).filter((r) => r.count > 0)
   const summary = targetSummary(learners, targetId, theta)
+  const rows = visibleRows(summary.rows, { query, sort })
 
   return (
     <div className="flex flex-col gap-8">
@@ -164,6 +179,49 @@ export default function TeacherDashboard() {
           </div>
 
           <Card>
+            <div className="flex flex-wrap items-end gap-4">
+              <div className="min-w-56 flex-1">
+                <label htmlFor="learner-search" className="mb-1 block text-sm font-bold text-muted">
+                  Search learners
+                </label>
+                <input
+                  id="learner-search"
+                  type="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Name or ID (e.g. Learner 03)"
+                  autoComplete="off"
+                  className="block w-full rounded-lg border border-line bg-white px-4 py-2.5"
+                />
+              </div>
+              <div>
+                <label htmlFor="learner-sort" className="mb-1 block text-sm font-bold text-muted">
+                  Order learners by
+                </label>
+                <select
+                  id="learner-sort"
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value)}
+                  className="block max-w-full rounded-lg border border-line bg-white px-4 py-2.5 font-bold"
+                >
+                  <option value="roster">Class list order</option>
+                  <option value="gaps">Most candidate gaps first</option>
+                </select>
+              </div>
+              {query !== '' && (
+                <button type="button" onClick={() => setQuery('')} className="py-2.5 font-bold text-brand">
+                  Clear search
+                </button>
+              )}
+            </div>
+            <p className="mt-3 text-sm text-muted" aria-live="polite">
+              Showing {rows.length} of {learners.length} learners in the mastery grid and the learner list below.
+              Gap counts are candidate prerequisite gaps for {target.name} at {percent(theta)}%. The class totals
+              and summaries always cover all {learners.length} learners.
+            </p>
+          </Card>
+
+          <Card>
             <h2 className="font-display text-2xl font-bold">Mastery by learner and skill</h2>
             <p className="mt-1 text-sm text-muted">
               The selected target and its prerequisites come first, from the earliest prerequisite to the target
@@ -185,14 +243,14 @@ export default function TeacherDashboard() {
                   </p>
                 ))}
 
-                {learners.map((l) => (
+                {rows.map(({ learner: l, status, gaps }) => (
                   <Fragment key={l.id}>
-                    <Link
-                      to={learnerLink({ learnerId: l.id, target: targetId, theta })}
-                      className="sticky left-0 bg-white py-1 font-bold text-brand"
-                    >
-                      {l.name}
-                    </Link>
+                    <div className="sticky left-0 bg-white py-1">
+                      <Link to={learnerLink({ learnerId: l.id, target: targetId, theta })} className="font-bold text-brand">
+                        {l.name}
+                      </Link>
+                      <p className="text-xs text-muted">{gapNote(status, gaps)}</p>
+                    </div>
                     {columns.map((c) => {
                       const p = l.mastery?.[c.id]
                       const s = statusFor(p, theta)
@@ -212,6 +270,10 @@ export default function TeacherDashboard() {
                 ))}
               </div>
             </div>
+
+            {rows.length === 0 && (
+              <p className="mt-4 text-muted">No learners match “{query}”. Clear the search to see the whole class.</p>
+            )}
 
             <p className="mt-6 text-sm text-muted">
               ✓ Meets the threshold: estimate at or above {percent(theta)}%. ▼ Below the threshold: estimate below{' '}
@@ -280,7 +342,7 @@ export default function TeacherDashboard() {
               A learner whose target estimate already meets the threshold has no remediation path for this target.
             </p>
             <ul className="mt-2 divide-y divide-line">
-              {summary.rows.map(({ learner, status, gaps }) => {
+              {rows.map(({ learner, status, gaps }) => {
                 const p = learner.mastery?.[targetId]
                 const text =
                   status === 'needs-review'
@@ -307,6 +369,9 @@ export default function TeacherDashboard() {
                 )
               })}
             </ul>
+            {rows.length === 0 && (
+              <p className="mt-4 text-muted">No learners match “{query}”. Clear the search to see the whole class.</p>
+            )}
           </Card>
         </>
       )}

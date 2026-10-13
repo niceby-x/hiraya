@@ -52,18 +52,18 @@ export function dependencyOrder(targetId = TARGET_ID) {
   return order
 }
 
-// Keep only prerequisites below the mastery line, then put the target last.
+// Remediation path for one learner and one target, used by the student pages.
+// Delegates to candidatePath() so student and teacher pages always agree: the path is
+// the candidate gaps (dependency order) followed by the target, and it is empty when the
+// target already meets the mastery line (even if a prerequisite is below it).
 export function remediationPath(mastery, targetId = TARGET_ID, theta = THRESHOLD) {
-  const order = dependencyOrder(targetId)
-  const gaps = order.filter((id) => id !== targetId && mastery[id] < theta)
-  if (gaps.length === 0 && mastery[targetId] >= theta) return []
-  return [...gaps, targetId]
+  return candidatePath(mastery, targetId, theta).path
 }
 
 // ---------------------------------------------------------------------------
-// Teacher-side path (Sprint 01). `remediationPath` above is left as it was so the
-// student pages behave exactly as before. This version adds the target check:
-// a learner whose target already meets the threshold gets no remediation path.
+// Candidate gaps and path (Sprint 01, shared with the student pages in Sprint 02).
+// A learner whose target already meets the threshold gets no remediation path: the
+// target is only treated as the "struggling" competency while its estimate is below theta.
 // ---------------------------------------------------------------------------
 
 export const hasCompetency = (id) => typeof id === 'string' && Object.hasOwn(byId, id)

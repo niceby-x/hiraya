@@ -5,7 +5,7 @@ import { NODE, positions, VIEW } from '../data/graphLayout.js'
 import { formatPercent, percent, statusFor } from '../lib/mastery.js'
 import { candidatePath, dependencyOrder, getCompetency, prerequisitesOf } from '../lib/path.js'
 import { useLearners } from '../lib/store.js'
-import { contextQuery, learnerLink, overviewLink, readContext } from '../lib/teacherContext.js'
+import { contextQuery, learnerLink, learnerSelection, overviewLink, readContext } from '../lib/teacherContext.js'
 import Card from '../components/Card.jsx'
 import Notice from '../components/Notice.jsx'
 
@@ -17,13 +17,66 @@ const nodeStyles = {
 
 const nodeWord = { meets: '✓ Meets', below: '▼ Below', none: 'No data' }
 
+// Shown when no learner has been chosen yet, or the link names a learner who is not in the class.
+// Choosing here replaces this history entry, so Back leaves the page instead of returning to the list.
+function LearnerPicker({ state, learners, target, theta, invalid, backLink }) {
+  return (
+    <div className="flex flex-col gap-6">
+      <Link to={backLink} className="text-sm font-bold text-brand">
+        ← Class overview
+      </Link>
+      {invalid.target && (
+        <Notice>The target competency in the link was not recognized, so the default target is shown.</Notice>
+      )}
+      {invalid.theta && (
+        <Notice>The mastery threshold in the link was not recognized, so {percent(theta)}% is used.</Notice>
+      )}
+      <Card>
+        <h1 className="font-display text-2xl font-bold">
+          {state === 'invalid' ? 'Learner not found' : 'Choose a learner'}
+        </h1>
+        <p className="mt-2 max-w-3xl text-muted">
+          {state === 'invalid'
+            ? 'The learner in this link is not in the class. Choose a learner below, or return to the class overview.'
+            : 'No learner is selected yet. Choose a learner to see their mastery estimates, prerequisite graph and suggested review order.'}
+        </p>
+        <p className="mt-2 text-sm text-muted">
+          Target competency: <strong className="text-ink">{target.name}</strong> · Mastery threshold:{' '}
+          <strong className="text-ink">{percent(theta)}%</strong>
+        </p>
+        <ul className="mt-4 divide-y divide-line">
+          {learners.map((l) => {
+            const p = l.mastery?.[target.id]
+            return (
+              <li key={l.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-3">
+                <p className="w-28 font-bold">{l.name}</p>
+                <p className="w-16 font-bold">{formatPercent(p, theta)}</p>
+                <StatusPill band={statusFor(p, theta)} />
+                <Link
+                  to={learnerLink({ learnerId: l.id, target: target.id, theta })}
+                  replace
+                  className="ml-auto font-bold text-brand"
+                >
+                  Open learner view
+                  <span className="sr-only"> for {l.name}</span> →
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
+        <p className="mt-4 text-sm text-muted">Percentages are each learner's BKT estimate for the target competency.</p>
+      </Card>
+    </div>
+  )
+}
+
 export default function LearnerView() {
   const [params, setParams] = useSearchParams()
   const learners = useLearners()
   const ctx = readContext(params, learners.map((l) => l.id))
   const { target: targetId, theta, invalid } = ctx
   const target = getCompetency(targetId)
-  const backLink = overviewLink({ target: targetId, theta })
+  const backLink = overviewLink({ target: targetId, theta, learnerId: ctx.learnerId })
 
   if (learners.length === 0) {
     return (
@@ -39,35 +92,21 @@ export default function LearnerView() {
     )
   }
 
-  if (invalid.learner) {
+  const selection = learnerSelection(ctx)
+  if (selection !== 'selected') {
     return (
-      <div className="flex flex-col gap-6">
-        <Link to={backLink} className="text-sm font-bold text-brand">
-          ← Class overview
-        </Link>
-        <Card>
-          <h1 className="font-display text-2xl font-bold">Learner not found</h1>
-          <p className="mt-2 text-muted">
-            The learner in this link is not in the class. Choose a learner below, or return to the class overview.
-          </p>
-          <ul className="mt-4 flex flex-wrap gap-2">
-            {learners.map((l) => (
-              <li key={l.id}>
-                <Link
-                  to={learnerLink({ learnerId: l.id, target: targetId, theta })}
-                  className="inline-block rounded-full border border-line px-3 py-1 font-bold text-brand"
-                >
-                  {l.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      </div>
+      <LearnerPicker
+        state={selection}
+        learners={learners}
+        target={target}
+        theta={theta}
+        invalid={invalid}
+        backLink={backLink}
+      />
     )
   }
 
-  const learner = learners.find((l) => l.id === ctx.learnerId) ?? learners[0]
+  const learner = learners.find((l) => l.id === ctx.learnerId)
   const mastery = learner.mastery ?? {}
 
   // Same function the class overview uses for its target-specific counts.
@@ -146,7 +185,9 @@ export default function LearnerView() {
           <select
             id="learner"
             value={learner.id}
-            onChange={(e) => setParams(contextQuery({ learnerId: e.target.value, target: targetId, theta }))}
+            onChange={(e) =>
+              setParams(contextQuery({ learnerId: e.target.value, target: targetId, theta }), { replace: true })
+            }
             className="mt-1 block rounded-lg border border-line bg-white px-4 py-2 font-bold"
           >
             {learners.map((l) => (

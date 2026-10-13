@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { contextQuery, learnerLink, overviewLink, parseTheta, readContext } from './teacherContext.js'
+import { contextQuery, learnerLink, learnerSelection, overviewLink, parseTheta, readContext } from './teacherContext.js'
 import { formatPercent, statusFor } from './mastery.js'
 
 const ids = ['l01', 'l02']
@@ -67,4 +67,28 @@ test('displayed percentage never shows the threshold itself for an estimate belo
   assert.equal(formatPercent(0.95, 0.95), '95%')
   assert.equal(formatPercent(0.58, 0.95), '58%')
   assert.equal(formatPercent(undefined, 0.95), '—')
+})
+
+test('learner page state: none chosen, chosen, or unknown (never a silent default learner)', () => {
+  assert.equal(learnerSelection(read('')), 'none')
+  assert.equal(learnerSelection(read('target=c4&theta=0.98')), 'none')
+  assert.equal(learnerSelection(read('learner=l02')), 'selected')
+  assert.equal(learnerSelection(read('learner=l99')), 'invalid')
+  assert.equal(learnerSelection(read('learner=__proto__')), 'invalid')
+})
+
+test('the overview link can carry the last-viewed learner, and a missing learner stays missing', () => {
+  const withLearner = overviewLink({ target: 'c4', theta: 0.98, learnerId: 'l02' })
+  assert.equal(withLearner, '/teacher?learner=l02&target=c4&theta=0.98')
+  const back = read(withLearner.split('?')[1])
+  assert.deepEqual([back.learnerId, back.target, back.theta], ['l02', 'c4', 0.98])
+  assert.equal(overviewLink({ target: 'c4', theta: 0.98, learnerId: null }), '/teacher?target=c4&theta=0.98')
+})
+
+test('changing target or threshold keeps the learner in the link; an unknown learner is dropped', () => {
+  const ctx = read('learner=l01&target=c7&theta=0.95')
+  const changed = read(contextQuery({ theta: ctx.theta, learnerId: ctx.learnerId, target: 'c5' }))
+  assert.deepEqual([changed.learnerId, changed.target, changed.theta], ['l01', 'c5', 0.95])
+  const bad = read('learner=l99&target=c7&theta=0.95')
+  assert.equal(read(contextQuery({ target: bad.target, theta: bad.theta, learnerId: bad.learnerId })).learnerId, null)
 })

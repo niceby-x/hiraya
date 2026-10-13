@@ -58,3 +58,29 @@ export function targetSummary(learners, targetId, theta) {
     withGaps: rows.filter((r) => r.gaps.length > 0).length,
   }
 }
+
+// ---- Teacher dashboard list controls (Sprint 02) ----
+// These only choose which learners are LISTED and in what order. They take the rows from
+// targetSummary() and return a new array of the same row objects. They never change a
+// learner's mastery, and the class totals and summaries are always computed from the full roster.
+
+const normalize = (text) => String(text ?? '').toLowerCase().replace(/\s+/g, ' ').trim()
+
+// Case-insensitive match on the learner's name or id. An empty search matches everyone.
+export function matchesLearner(learner, query) {
+  const q = normalize(query)
+  if (!q) return true
+  return normalize(learner?.name).includes(q) || normalize(learner?.id).includes(q)
+}
+
+// rows: targetSummary(...).rows. sort: 'roster' (original order) or 'gaps' (most candidate
+// prerequisite gaps first). Learners with the same gap count keep their roster order.
+// Learners whose target already meets the threshold, or who have no data, have 0 gaps.
+export function visibleRows(rows, { query = '', sort = 'roster' } = {}) {
+  const found = rows.filter((row) => matchesLearner(row.learner, query))
+  if (sort !== 'gaps') return found
+  return found
+    .map((row, index) => ({ row, index }))
+    .sort((a, b) => b.row.gaps.length - a.row.gaps.length || a.index - b.index)
+    .map(({ row }) => row)
+}

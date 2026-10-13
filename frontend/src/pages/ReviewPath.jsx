@@ -43,7 +43,7 @@ export default function ReviewPath() {
 
       {path.length === 0 ? (
         <Card as="p" className="text-muted">
-          Every skill on the way to {target.name} is mastered. Nothing to review.
+          You have reached the mastery line for {target.name}. No review path is needed for this goal.
         </Card>
       ) : (
         <ol>

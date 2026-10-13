@@ -78,7 +78,7 @@ Stack: React, Vite, Tailwind CSS v4, React Router.
 3. Keep the prerequisites whose mastery is below the threshold (0.95 by default).
 4. Order them so every skill comes after the skills it builds on (topological order), and put the target last.
 
-On the teacher pages (`candidatePath()` in the same file) the target is appended only when its own mastery is below the threshold. If the target already meets the threshold, the path is empty for that learner and target. The student pages still use `remediationPath()`, which does not make this check.
+`candidatePath()` appends the target only when its own mastery is below the threshold. If the target already meets the threshold, the path is empty for that learner and target, even when a prerequisite is below the threshold (those estimates stay visible on the teacher pages). The student pages use `remediationPath()`, which returns `candidatePath().path`, so teacher and student pages never disagree.
 
 ## Connecting the backend (second semester)
 
