@@ -1,18 +1,23 @@
-import { Fragment, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { competencies, THRESHOLD } from '../data/mock.js'
-import { masteredCount, topGaps } from '../lib/classStats.js'
-import { bandFor, LOW_LINE, percent } from '../lib/mastery.js'
+import { Fragment } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { competencies } from '../data/mock.js'
+import { classWideReview, masteredCount, targetSummary } from '../lib/classStats.js'
+import { formatPercent, percent, statusFor } from '../lib/mastery.js'
+import { getCompetency } from '../lib/path.js'
 import { useLearners } from '../lib/store.js'
+import { contextQuery, learnerLink, readContext, THRESHOLD_OPTIONS } from '../lib/teacherContext.js'
 import Card from '../components/Card.jsx'
-
-const options = [THRESHOLD, 0.98]
+import Notice from '../components/Notice.jsx'
+import StatusPill from '../components/StatusPill.jsx'
 
 const cellStyles = {
-  mastered: 'bg-mastered-soft text-mastered-ink',
-  gap: 'bg-gap-soft text-gap-ink',
-  low: 'bg-low-soft text-low-ink',
+  meets: 'bg-mastered-soft text-mastered-ink',
+  below: 'bg-gap-soft text-gap-ink',
+  none: 'bg-line text-ink',
 }
+
+const marker = { meets: '✓', below: '▼', none: '' }
+const statusText = { meets: 'meets the threshold', below: 'below the threshold', none: 'no data' }
 
 const gridStyle = {
   gridTemplateColumns: `120px repeat(${competencies.length}, minmax(0, 1fr))`,
@@ -27,11 +32,52 @@ function Stat({ label, value }) {
   )
 }
 
+// Collapsible list of learners, each linking to that learner's view with the current target and threshold.
+function LearnerLinks({ learners, target, theta }) {
+  if (learners.length === 0) return null
+  return (
+    <details className="w-full text-sm">
+      <summary className="cursor-pointer py-1 font-bold text-brand">Show learners</summary>
+      <ul className="mt-2 flex flex-wrap gap-2 pb-1">
+        {learners.map((l) => (
+          <li key={l.id}>
+            <Link
+              to={learnerLink({ learnerId: l.id, target, theta })}
+              className="inline-block rounded-full border border-line px-3 py-1 font-bold text-brand"
+            >
+              {l.name}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </details>
+  )
+}
+
+function CountBar({ count, total }) {
+  return (
+    <div className="h-3 min-w-40 flex-1 rounded-full bg-line">
+      <div
+        className="h-full rounded-full bg-gap"
+        style={{ width: `${total ? (count / total) * 100 : 0}%` }}
+      />
+    </div>
+  )
+}
+
 export default function TeacherDashboard() {
+  const [params, setParams] = useSearchParams()
   const learners = useLearners()
-  const [theta, setTheta] = useState(THRESHOLD)
-  const gaps = topGaps(learners, theta)
+  const { target: targetId, theta, invalid } = readContext(params, learners.map((l) => l.id))
+  const target = getCompetency(targetId)
+
+  // Every control change rewrites the URL with a complete, valid target + threshold.
+  const update = (change) =>
+    setParams(contextQuery({ target: targetId, theta, ...change }), { replace: true })
+
   const total = learners.length * competencies.length
+  const classWide = classWideReview(learners, theta).filter((r) => r.count > 0)
+  const summary = targetSummary(learners, targetId, theta)
 
   return (
     <div className="flex flex-col gap-8">
@@ -41,108 +87,232 @@ export default function TeacherDashboard() {
           <p className="mt-2 text-muted">Grade 7 Mathematics · sample class</p>
         </div>
 
-        <div>
-          <p className="mb-1 text-sm font-bold text-muted">Mastery line</p>
-          <div
-            role="radiogroup"
-            aria-label="Mastery line"
-            className="inline-flex rounded-lg border border-line bg-white p-1"
-          >
-            {options.map((o) => (
-              <button
-                key={o}
-                type="button"
-                role="radio"
-                aria-checked={theta === o}
-                onClick={() => setTheta(o)}
-                className={`rounded-md px-4 py-2 font-bold ${
-                  theta === o ? 'bg-brand text-white' : 'text-ink'
-                }`}
-              >
-                {percent(o)}%
-              </button>
-            ))}
+        <div className="flex flex-wrap items-end gap-4">
+          <div>
+            <label htmlFor="target" className="mb-1 block text-sm font-bold text-muted">
+              Target competency
+            </label>
+            <select
+              id="target"
+              value={targetId}
+              onChange={(e) => update({ target: e.target.value })}
+              className="block max-w-full rounded-lg border border-line bg-white px-4 py-2.5 font-bold"
+            >
+              {competencies.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
           </div>
-        </div>
-      </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Stat label="Learners" value={learners.length} />
-        <Stat label="Skills tracked" value={competencies.length} />
-        <Stat label={`Skills mastered at ${percent(theta)}%`} value={`${masteredCount(learners, theta)} of ${total}`} />
-      </div>
-
-      <Card>
-        <h2 className="font-display text-2xl font-bold">Mastery by learner and skill</h2>
-        <p className="mt-1 text-sm text-muted">
-          Skills run from the earliest prerequisite to the target skill, left to right.
-        </p>
-
-        <p className="mt-3 text-sm font-bold text-muted lg:hidden">Swipe sideways to see every skill.</p>
-
-        <div className="mt-3 overflow-x-auto lg:mt-6">
-          <div className="grid min-w-190 items-center gap-2" style={gridStyle}>
-            <p className="sticky left-0 bg-white text-sm font-bold text-muted">Learner</p>
-            {competencies.map((c) => (
-              <p key={c.id} className="text-center text-sm font-bold text-muted">
-                {c.short}
-              </p>
-            ))}
-
-            {learners.map((l) => (
-              <Fragment key={l.id}>
-                <Link
-                  to={`/teacher/learner?learner=${l.id}`}
-                  className="sticky left-0 bg-white py-1 font-bold text-brand"
+          <div>
+            <p id="theta-label" className="mb-1 text-sm font-bold text-muted">
+              Mastery threshold
+            </p>
+            <div
+              role="radiogroup"
+              aria-labelledby="theta-label"
+              className="inline-flex rounded-lg border border-line bg-white p-1"
+            >
+              {THRESHOLD_OPTIONS.map((o) => (
+                <button
+                  key={o}
+                  type="button"
+                  role="radio"
+                  aria-checked={theta === o}
+                  onClick={() => update({ theta: o })}
+                  className={`rounded-md px-4 py-2 font-bold ${
+                    theta === o ? 'bg-brand text-white' : 'text-ink'
+                  }`}
                 >
-                  {l.name}
-                </Link>
-                {competencies.map((c) => {
-                  const p = l.mastery[c.id]
-                  return (
-                    <div
-                      key={c.id}
-                      title={`${l.name} · ${c.name}: ${percent(p)}%`}
-                      className={`rounded-lg py-3 text-center font-bold ${cellStyles[bandFor(p, theta)]}`}
-                    >
-                      {percent(p)}%
-                    </div>
-                  )
-                })}
-              </Fragment>
-            ))}
+                  {percent(o)}%
+                </button>
+              ))}
+            </div>
           </div>
         </div>
+      </div>
 
-        <p className="mt-6 text-sm text-muted">
-          Green: mastered at {percent(theta)}% or higher. Amber: {percent(LOW_LINE)}% to below {percent(theta)}%. Red: below {percent(LOW_LINE)}%.
-        </p>
-      </Card>
+      {invalid.target && (
+        <Notice>The target competency in the link was not recognized, so the default target is shown.</Notice>
+      )}
+      {invalid.theta && (
+        <Notice>The mastery threshold in the link was not recognized, so {percent(theta)}% is used.</Notice>
+      )}
 
-      <Card>
-        <h2 className="font-display text-2xl font-bold">Most common gaps</h2>
-        <p className="mt-1 text-sm text-muted">
-          Learners below the {percent(theta)}% mastery line, by skill.
-        </p>
-        <ul className="mt-4 divide-y divide-line">
-          {gaps.map(({ competency, count }) => (
-            <li key={competency.id} className="flex flex-wrap items-center gap-x-5 gap-y-1 py-3">
-              <p className="w-full font-bold sm:w-72">{competency.name}</p>
-              <div className="h-3 min-w-40 flex-1 rounded-full bg-line">
-                <div
-                  className="h-full rounded-full bg-gap"
-                  style={{ width: `${(count / learners.length) * 100}%` }}
-                />
+      <p className="text-sm text-muted">
+        Showing <strong className="text-ink">{target.name}</strong> as the target, with a mastery threshold of{' '}
+        <strong className="text-ink">{percent(theta)}%</strong>. Mastery figures are BKT estimates of how likely
+        a learner is to have mastered a skill. They are not test scores. Changing the threshold changes how the
+        estimates are classified, not the estimates themselves.
+      </p>
+
+      {learners.length === 0 ? (
+        <Card>
+          <h2 className="font-display text-2xl font-bold">No learners yet</h2>
+          <p className="mt-2 text-muted">There are no learners in this class, so there are no mastery estimates to show.</p>
+        </Card>
+      ) : (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Stat label="Learners" value={learners.length} />
+            <Stat label="Skills tracked" value={competencies.length} />
+            <Stat label={`Estimates at or above ${percent(theta)}%`} value={`${masteredCount(learners, theta)} of ${total}`} />
+            <Stat label="Learners below the threshold on the target" value={`${summary.needsReview} of ${learners.length}`} />
+          </div>
+
+          <Card>
+            <h2 className="font-display text-2xl font-bold">Mastery by learner and skill</h2>
+            <p className="mt-1 text-sm text-muted">
+              Skills run from the earliest prerequisite to the target skill, left to right. The selected target is
+              marked in its column header.
+            </p>
+
+            <p className="mt-3 text-sm font-bold text-muted lg:hidden">Swipe sideways to see every skill.</p>
+
+            <div className="mt-3 overflow-x-auto lg:mt-6">
+              <div className="grid min-w-190 items-center gap-2" style={gridStyle}>
+                <p className="sticky left-0 bg-white text-sm font-bold text-muted">Learner</p>
+                {competencies.map((c) => (
+                  <p
+                    key={c.id}
+                    className={`text-center text-sm font-bold ${c.id === targetId ? 'text-brand' : 'text-muted'}`}
+                  >
+                    {c.short}
+                    {c.id === targetId && <span className="block text-xs">Target</span>}
+                  </p>
+                ))}
+
+                {learners.map((l) => (
+                  <Fragment key={l.id}>
+                    <Link
+                      to={learnerLink({ learnerId: l.id, target: targetId, theta })}
+                      className="sticky left-0 bg-white py-1 font-bold text-brand"
+                    >
+                      {l.name}
+                    </Link>
+                    {competencies.map((c) => {
+                      const p = l.mastery?.[c.id]
+                      const s = statusFor(p, theta)
+                      return (
+                        <div
+                          key={c.id}
+                          title={`${l.name} · ${c.name}: ${formatPercent(p, theta)} (${statusText[s]})`}
+                          className={`relative rounded-lg py-3 text-center font-bold ${cellStyles[s]}`}
+                        >
+                          {marker[s] && <span aria-hidden="true">{marker[s]} </span>}
+                          {formatPercent(p, theta)}
+                          <span className="sr-only"> {statusText[s]}</span>
+                        </div>
+                      )
+                    })}
+                  </Fragment>
+                ))}
               </div>
-              <p className="w-28 text-right text-sm font-bold">
-                {count} of {learners.length}
-              </p>
-            </li>
-          ))}
-        </ul>
-      </Card>
+            </div>
 
-      <p className="text-sm text-muted">HIRAYA suggests; the teacher decides. Sample data for the prototype.</p>
+            <p className="mt-6 text-sm text-muted">
+              ✓ Meets the threshold: estimate at or above {percent(theta)}%. ▼ Below the threshold: estimate below{' '}
+              {percent(theta)}%. Select a learner's name to open their view with this target and threshold.
+            </p>
+          </Card>
+
+          <Card>
+            <h2 className="font-display text-2xl font-bold">Competencies that may need review across the class</h2>
+            <p className="mt-1 text-sm text-muted">
+              Learners with an estimate below {percent(theta)}%, for each skill, whatever the target. This is a
+              class-wide view. It is separate from the prerequisite gaps for the selected target below.
+            </p>
+            {classWide.length === 0 ? (
+              <p className="mt-4 text-muted">No learner has an estimate below {percent(theta)}% for any skill.</p>
+            ) : (
+              <ul className="mt-4 divide-y divide-line">
+                {classWide.map(({ competency, count, learners: affected }) => (
+                  <li key={competency.id} className="flex flex-wrap items-center gap-x-5 gap-y-1 py-3">
+                    <p className="w-full font-bold sm:w-72">{competency.name}</p>
+                    <CountBar count={count} total={learners.length} />
+                    <p className="w-28 text-right text-sm font-bold">
+                      {count} of {learners.length}
+                    </p>
+                    <LearnerLinks learners={affected} target={targetId} theta={theta} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Card>
+
+          <Card>
+            <h2 className="font-display text-2xl font-bold">Candidate prerequisite gaps for {target.name}</h2>
+            <p className="mt-1 text-sm text-muted">
+              Only direct and indirect prerequisites of the selected target with an estimate below {percent(theta)}%
+              are counted, listed from the earliest prerequisite. These are candidate review priorities to support
+              your judgment, not diagnoses. The counts come from the same path logic as each learner's view.
+            </p>
+
+            {summary.prerequisites.length === 0 ? (
+              <p className="mt-4 text-muted">This competency has no prerequisites in the sample graph.</p>
+            ) : (
+              <>
+                {summary.withGaps === 0 && (
+                  <p className="mt-4 text-muted">
+                    No prerequisite competencies below the selected threshold were identified for this target.
+                  </p>
+                )}
+                <ul className="mt-4 divide-y divide-line">
+                  {summary.prerequisites.map(({ competency, count, learners: affected }) => (
+                    <li key={competency.id} className="flex flex-wrap items-center gap-x-5 gap-y-1 py-3">
+                      <p className="w-full font-bold sm:w-72">{competency.name}</p>
+                      <CountBar count={count} total={learners.length} />
+                      <p className="w-28 text-right text-sm font-bold">
+                        {count} of {learners.length}
+                      </p>
+                      <LearnerLinks learners={affected} target={targetId} theta={theta} />
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+
+            <h3 className="mt-8 font-display text-xl font-bold">Learners and the target</h3>
+            <p className="mt-1 text-sm text-muted">
+              A learner whose target estimate already meets the threshold has no remediation path for this target.
+            </p>
+            <ul className="mt-2 divide-y divide-line">
+              {summary.rows.map(({ learner, status, gaps }) => {
+                const p = learner.mastery?.[targetId]
+                const text =
+                  status === 'needs-review'
+                    ? gaps.length === 0
+                      ? 'No prerequisite gaps below the threshold; the target is below it'
+                      : `${gaps.length} candidate prerequisite gap${gaps.length === 1 ? '' : 's'}`
+                    : status === 'target-met'
+                      ? 'Target meets the threshold; no remediation path'
+                      : 'No mastery data for this target'
+                return (
+                  <li key={learner.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-3">
+                    <p className="w-28 font-bold">{learner.name}</p>
+                    <p className="w-16 font-bold">{formatPercent(p, theta)}</p>
+                    <StatusPill band={statusFor(p, theta)} />
+                    <p className="min-w-48 flex-1 text-sm text-muted">{text}</p>
+                    <Link
+                      to={learnerLink({ learnerId: learner.id, target: targetId, theta })}
+                      className="font-bold text-brand"
+                    >
+                      Open learner view
+                      <span className="sr-only"> for {learner.name}</span> →
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          </Card>
+        </>
+      )}
+
+      <p className="text-sm text-muted">
+        HIRAYA suggests candidate review priorities; the teacher decides. Sample data for the prototype.
+      </p>
     </div>
   )
 }

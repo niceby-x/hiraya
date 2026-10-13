@@ -59,3 +59,41 @@ export function remediationPath(mastery, targetId = TARGET_ID, theta = THRESHOLD
   if (gaps.length === 0 && mastery[targetId] >= theta) return []
   return [...gaps, targetId]
 }
+
+// ---------------------------------------------------------------------------
+// Teacher-side path (Sprint 01). `remediationPath` above is left as it was so the
+// student pages behave exactly as before. This version adds the target check:
+// a learner whose target already meets the threshold gets no remediation path.
+// ---------------------------------------------------------------------------
+
+export const hasCompetency = (id) => typeof id === 'string' && Object.hasOwn(byId, id)
+
+const hasEstimate = (p) => typeof p === 'number' && Number.isFinite(p)
+
+// Candidate prerequisite gaps and the remediation path for one learner and one target.
+//
+// Returns { status, gaps, path, unknown }
+//   status  'invalid-target'  the target id is not in the graph
+//           'no-data'         the learner has no estimate for the target
+//           'target-met'      target estimate >= theta: path is empty (target is not a struggling skill)
+//           'needs-review'    target estimate < theta: path = candidate gaps in dependency order, target last
+//   gaps    prerequisite ids (direct and indirect) whose estimate is below theta, earliest prerequisite first
+//   path    gaps followed by the target ([] unless status is 'needs-review')
+//   unknown prerequisite ids with no estimate. They are neither gaps nor mastered, so they are reported separately.
+export function candidatePath(mastery, targetId, theta) {
+  if (!hasCompetency(targetId)) return { status: 'invalid-target', gaps: [], path: [], unknown: [] }
+
+  const estimates = mastery ?? {}
+  if (!hasEstimate(estimates[targetId])) return { status: 'no-data', gaps: [], path: [], unknown: [] }
+  if (estimates[targetId] >= theta) return { status: 'target-met', gaps: [], path: [], unknown: [] }
+
+  const prerequisites = dependencyOrder(targetId).filter((id) => id !== targetId)
+  const unknown = prerequisites.filter((id) => !hasEstimate(estimates[id]))
+  const gaps = prerequisites.filter((id) => hasEstimate(estimates[id]) && estimates[id] < theta)
+  return { status: 'needs-review', gaps, path: [...gaps, targetId], unknown }
+}
+
+// Every direct and indirect prerequisite of the target, earliest first (the target is not included).
+export function prerequisitesOf(targetId) {
+  return hasCompetency(targetId) ? dependencyOrder(targetId).filter((id) => id !== targetId) : []
+}

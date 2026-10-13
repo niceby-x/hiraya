@@ -12,7 +12,7 @@ HIRAYA estimates what each Grade 7 learner has mastered (Bayesian Knowledge Trac
 | Part | State |
 | --- | --- |
 | Frontend prototype (7 screens) | Done, runs on sample data |
-| BKT module and tests | Planned, second semester |
+| BKT update logic and tests (frontend) | Done with sample parameters. Fitting from response data is planned, second semester |
 | Prerequisite graph module | Planned, second semester |
 | Backend API and database | Planned, second semester |
 
@@ -47,8 +47,8 @@ Scripts, run from the project root:
 | `/student` | Student | My progress |
 | `/student/practice?skill=c2` | Student | Practice |
 | `/student/path` | Student | Review path |
-| `/teacher` | Teacher | Class overview with 95% / 98% mastery line |
-| `/teacher/learner?learner=l01` | Teacher | Learner view with prerequisite graph |
+| `/teacher?target=c7&theta=0.95` | Teacher | Class overview with a target competency and a 95% / 98% mastery threshold |
+| `/teacher/learner?learner=l01&target=c7&theta=0.95` | Teacher | Learner view with prerequisite graph |
 | `/teacher/graph` | Teacher | Prerequisite graph review |
 
 ## Project structure

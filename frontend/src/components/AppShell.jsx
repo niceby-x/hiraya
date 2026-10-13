@@ -1,7 +1,9 @@
-import { Link, NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import Logo from './Logo.jsx'
 
 export default function AppShell({ links, userLabel, home }) {
+  const { search } = useLocation()
+
   return (
     <div className="min-h-screen bg-surface">
       <header className="on-dark flex flex-wrap items-center gap-x-6 gap-y-1 bg-night px-4 py-2 text-white sm:px-8">
@@ -14,7 +16,7 @@ export default function AppShell({ links, userLabel, home }) {
           {links.map((link) => (
             <NavLink
               key={link.to}
-              to={link.to}
+              to={{ pathname: link.to, search: link.keepSearch ? search : '' }}
               end={link.end}
               className={({ isActive }) =>
                 `whitespace-nowrap rounded-lg px-3 py-2.5 sm:px-3.5 sm:py-3 ${

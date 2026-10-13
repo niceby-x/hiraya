@@ -15,8 +15,8 @@ const studentLinks = [
 ]
 
 const teacherLinks = [
-  { to: '/teacher', label: 'Class overview', end: true },
-  { to: '/teacher/learner', label: 'Learner view' },
+  { to: '/teacher', label: 'Class overview', end: true, keepSearch: true },
+  { to: '/teacher/learner', label: 'Learner view', keepSearch: true },
   { to: '/teacher/graph', label: 'Prerequisite graph' },
 ]
 
