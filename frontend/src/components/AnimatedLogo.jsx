@@ -38,6 +38,9 @@ export default function AnimatedLogo({ size = 110, onActivate }) {
     }
 
     const frame = () => {
+      // React clears the refs before this effect's cleanup runs, so one last frame can
+      // fire while the logo is leaving the page (for example right after sign-in).
+      if (!svg.current || !outer.current || !center.current) return
       cur.x += (mouse.x - cur.x) * 0.08
       cur.y += (mouse.y - cur.y) * 0.08
       outer.current.setAttribute('transform', `translate(${cur.x * 4.5} ${cur.y * 4.5})`)
@@ -53,8 +56,10 @@ export default function AnimatedLogo({ size = 110, onActivate }) {
         const p = pulls[i]
         p.x += ((dx / dist) * strength - p.x) * 0.1
         p.y += ((dy / dist) * strength - p.y) * 0.1
-        nodes.current[i].setAttribute('transform', `translate(${p.x} ${p.y})`)
-        nodes.current[i].classList.toggle('is-near', dist < 220)
+        const node = nodes.current[i]
+        if (!node) return
+        node.setAttribute('transform', `translate(${p.x} ${p.y})`)
+        node.classList.toggle('is-near', dist < 220)
       })
       raf = requestAnimationFrame(frame)
     }

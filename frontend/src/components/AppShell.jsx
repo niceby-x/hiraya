@@ -4,7 +4,7 @@ import Logo from './Logo.jsx'
 export default function AppShell({ links, userLabel, home }) {
   return (
     <div className="min-h-screen bg-surface">
-      <header className="flex flex-wrap items-center gap-x-6 gap-y-1 bg-night px-4 py-2 text-white sm:px-8">
+      <header className="on-dark flex flex-wrap items-center gap-x-6 gap-y-1 bg-night px-4 py-2 text-white sm:px-8">
         <Link to={home} className="flex items-center gap-2.5 py-1">
           <Logo className="text-aqua" />
           <span className="font-display text-xl font-bold tracking-widest text-white">HIRAYA</span>
