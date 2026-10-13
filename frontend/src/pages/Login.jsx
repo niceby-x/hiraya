@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import KnowledgeBackdrop from '../components/KnowledgeBackdrop.jsx'
-import HirayaMark from '../components/HirayaMark.jsx'
+import Logo from '../components/Logo.jsx'
 import './login.css'
 
 const SAMPLE_PASSWORD = 'sample1234'
@@ -115,7 +115,7 @@ export default function Login() {
 
       <main className="lg-main">
         <header className="lg-brand">
-          <span className="lg-tile"><HirayaMark size={40} /></span>
+          <span className="lg-tile"><Logo size={42} className="" /></span>
           <span className="lg-brand-name">HIRAYA</span>
         </header>
 

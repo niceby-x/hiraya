@@ -7,7 +7,7 @@
 
 /* Header */
 .lg-brand { display: flex; flex-direction: column; align-items: center; gap: .75rem; margin-bottom: 1.25rem; }
-.lg-tile { display: grid; place-items: center; height: 4.5rem; width: 4.5rem; border-radius: 1.25rem; color: #5ee3d2; background: #123b42; border: 1px solid rgb(94 227 210 / .25); box-shadow: 0 10px 30px rgb(0 0 0 / .3); }
+.lg-tile { display: grid; place-items: center; height: 4.5rem; width: 4.5rem; border-radius: 1.25rem; color: #5ee3d2; background: var(--color-night-card); border: 1px solid rgb(94 227 210 / .25); box-shadow: 0 10px 30px rgb(0 0 0 / .3); }
 .lg-brand-name { font-family: var(--font-display, system-ui, sans-serif); font-size: 1.6rem; font-weight: 700; letter-spacing: .12em; }
 .lg-title { margin: 0; font-family: var(--font-display, system-ui, sans-serif); font-size: clamp(1.5rem, 3.6vw, 2.1rem); font-weight: 700; letter-spacing: -.01em; line-height: 1.2; }
 .lg-sub { margin: .75rem 0 0; max-width: 36rem; font-size: 1.05rem; line-height: 1.5; color: rgb(255 255 255 / .75); text-wrap: balance; }
