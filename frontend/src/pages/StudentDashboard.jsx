@@ -1,14 +1,14 @@
 import { Link } from 'react-router-dom'
 import MasteryBar from '../components/MasteryBar.jsx'
 import StatusPill from '../components/StatusPill.jsx'
-import { competencies, learners, THRESHOLD } from '../data/mock.js'
+import { competencies, THRESHOLD } from '../data/mock.js'
 import { bandFor, percent } from '../lib/mastery.js'
 import { getCompetency, remediationPath, TARGET_ID } from '../lib/path.js'
+import { resetLearners, useLearner } from '../lib/store.js'
 import RouteLine from '../components/RouteLine.jsx'
 import Card from '../components/Card.jsx'
 import { buttonClass } from '../lib/buttonClass.js'
 
-const learner = learners[0]
 
 const legend = [
   { band: 'mastered', label: 'Mastered', text: `${percent(THRESHOLD)}% or higher` },
@@ -18,6 +18,7 @@ const legend = [
 ]
 
 export default function StudentDashboard() {
+  const learner = useLearner('l01')
   const target = getCompetency(TARGET_ID)
   const path = remediationPath(learner.mastery, TARGET_ID)
   const first = path.length > 0 ? getCompetency(path[0]) : null
@@ -94,7 +95,12 @@ export default function StudentDashboard() {
         ))}
       </section>
 
-      <p className="text-sm text-muted">Sample data for the prototype.</p>
+      <p className="text-sm text-muted">
+        Sample data for the prototype.{' '}
+        <button type="button" onClick={resetLearners} className="font-bold text-brand underline">
+          Reset demo
+        </button>
+      </p>
     </div>
   )
 }

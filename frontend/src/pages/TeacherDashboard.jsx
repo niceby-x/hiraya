@@ -1,8 +1,9 @@
 import { Fragment, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { competencies, learners, THRESHOLD } from '../data/mock.js'
+import { competencies, THRESHOLD } from '../data/mock.js'
 import { masteredCount, topGaps } from '../lib/classStats.js'
 import { bandFor, LOW_LINE, percent } from '../lib/mastery.js'
+import { useLearners } from '../lib/store.js'
 import Card from '../components/Card.jsx'
 
 const options = [THRESHOLD, 0.98]
@@ -27,8 +28,9 @@ function Stat({ label, value }) {
 }
 
 export default function TeacherDashboard() {
+  const learners = useLearners()
   const [theta, setTheta] = useState(THRESHOLD)
-  const gaps = topGaps(theta)
+  const gaps = topGaps(learners, theta)
   const total = learners.length * competencies.length
 
   return (
@@ -67,7 +69,7 @@ export default function TeacherDashboard() {
       <div className="grid gap-4 sm:grid-cols-3">
         <Stat label="Learners" value={learners.length} />
         <Stat label="Skills tracked" value={competencies.length} />
-        <Stat label={`Skills mastered at ${percent(theta)}%`} value={`${masteredCount(theta)} of ${total}`} />
+        <Stat label={`Skills mastered at ${percent(theta)}%`} value={`${masteredCount(learners, theta)} of ${total}`} />
       </div>
 
       <Card>

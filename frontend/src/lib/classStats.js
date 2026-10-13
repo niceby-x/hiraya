@@ -1,8 +1,8 @@
-import { competencies, learners } from '../data/mock.js'
+import { competencies } from '../data/mock.js'
 
 // Skills ranked by how many learners are below the mastery line (most first).
 // Ties keep the original skill order.
-export function topGaps(theta, limit = 5) {
+export function topGaps(learners, theta, limit = 5) {
   return competencies
     .map((c) => ({
       competency: c,
@@ -13,7 +13,7 @@ export function topGaps(theta, limit = 5) {
 }
 
 // Number of learner-skill pairs at or above the mastery line.
-export function masteredCount(theta) {
+export function masteredCount(learners, theta) {
   return learners.reduce(
     (sum, l) => sum + competencies.filter((c) => l.mastery[c.id] >= theta).length,
     0,

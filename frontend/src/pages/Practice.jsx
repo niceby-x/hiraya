@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { learners } from '../data/mock.js'
 import { questions } from '../data/questions.js'
 import { getCompetency, remediationPath, TARGET_ID } from '../lib/path.js'
+import { percent } from '../lib/mastery.js'
+import { recordResponse, useLearner } from '../lib/store.js'
 import Card from '../components/Card.jsx'
 import { buttonClass } from '../lib/buttonClass.js'
 
-const learner = learners[0]
+const LEARNER_ID = 'l01'
 const letters = ['A', 'B', 'C', 'D']
 
 function optionClass({ submitted, isPicked, isAnswer }) {
@@ -25,6 +26,7 @@ function PracticeSession({ competency, items }) {
   const [picked, setPicked] = useState(null)
   const [submitted, setSubmitted] = useState(false)
   const [correctCount, setCorrectCount] = useState(0)
+  const [change, setChange] = useState(null) // { before, after } mastery for the last answer
 
   const header = (
     <div>
@@ -88,6 +90,7 @@ function PracticeSession({ competency, items }) {
   function submit() {
     setSubmitted(true)
     if (isCorrect) setCorrectCount((c) => c + 1)
+    setChange(recordResponse(LEARNER_ID, competency.id, isCorrect))
   }
 
   function next() {
@@ -147,6 +150,11 @@ function PracticeSession({ competency, items }) {
                   : `Not quite. The correct answer is ${letters[q.answer]}. ${q.options[q.answer]}`}
               </p>
               <p className="mt-1">{q.explanation}</p>
+              {change && (
+                <p className="mt-3 text-sm font-bold">
+                  Your {competency.short} mastery: {percent(change.before)}% → {percent(change.after)}%
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -174,8 +182,12 @@ function PracticeSession({ competency, items }) {
 
 export default function Practice() {
   const [params] = useSearchParams()
+  const learner = useLearner(LEARNER_ID)
   const path = remediationPath(learner.mastery, TARGET_ID)
-  const skillId = params.get('skill') ?? path[0] ?? TARGET_ID
+  // Fixed when the page opens, so the session is not reset mid-practice when an
+  // answer moves the first skill of the path above the mastery line.
+  const [defaultSkill] = useState(() => path[0] ?? TARGET_ID)
+  const skillId = params.get('skill') ?? defaultSkill
   const competency = getCompetency(skillId)
 
   if (!competency) {

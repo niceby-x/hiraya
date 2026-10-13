@@ -1,9 +1,10 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import StatusPill from '../components/StatusPill.jsx'
-import { competencies, learners, THRESHOLD } from '../data/mock.js'
+import { competencies, THRESHOLD } from '../data/mock.js'
 import { NODE, positions, VIEW } from '../data/graphLayout.js'
 import { bandFor, LOW_LINE, percent } from '../lib/mastery.js'
 import { getCompetency, remediationPath, TARGET_ID } from '../lib/path.js'
+import { useLearners } from '../lib/store.js'
 import Card from '../components/Card.jsx'
 
 const nodeStyles = {
@@ -20,6 +21,7 @@ const legend = [
 
 export default function LearnerView() {
   const [params, setParams] = useSearchParams()
+  const learners = useLearners()
   const learner = learners.find((l) => l.id === params.get('learner')) ?? learners[0]
   const target = getCompetency(TARGET_ID)
 
