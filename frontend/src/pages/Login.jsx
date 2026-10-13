@@ -6,10 +6,12 @@ import './login.css'
 
 const SAMPLE_PASSWORD = 'sample1234'
 
-const HEADLINE = [
-  ['Build', 'the', 'foundations.'],
-  ['Grow', 'your', 'skills.'],
+// Clicking the logo swaps between these two headlines. Each one is a list of lines of words.
+const HEADLINES = [
+  [['Build', 'the', 'foundations.'], ['Grow', 'your', 'skills.']],
+  [['The', 'fruit', 'of', 'one’s', 'hopes,', 'dreams,', 'and', 'aspirations.']],
 ]
+const HEADLINE_TEXT = HEADLINES.map((lines) => lines.map((l) => l.join(' ')).join(' '))
 
 const roles = {
   student: {
@@ -82,6 +84,7 @@ function Field({ id, label, error, shake, type, icon, ...props }) {
 
 export default function Login() {
   const [burst, setBurst] = useState(null)
+  const [alt, setAlt] = useState(0) // which headline is showing
   const navigate = useNavigate()
   const [role, setRole] = useState(null)
   const [username, setUsername] = useState('')
@@ -116,15 +119,19 @@ export default function Login() {
 
       <main className="lg-main">
         <header className="lg-brand">
-          <AnimatedLogo size={65} onActivate={(pt) => setBurst({ ...pt, id: performance.now() })} />
+          <AnimatedLogo size={65} onActivate={(pt) => { setBurst({ ...pt, id: performance.now() }); setAlt((v) => 1 - v) }} />
           <span className="lg-brand-name">HIRAYA</span>
         </header>
 
-        <h1 className="lg-title" aria-label="Build the foundations. Grow your skills.">
-          {HEADLINE.map((line, l) => (
-            <span key={l} className={`lg-line ${l === 1 ? 'is-accent' : ''}`} aria-hidden="true">
-              {line.map((w, i) => (
-                <span key={w} className="lg-word" style={{ '--i': l * 3 + i }}>{w}</span>
+        <h1 className="lg-title" aria-label={HEADLINE_TEXT[alt]}>
+          {HEADLINES.map((lines, v) => (
+            <span key={v} className={`lg-variant ${v === 1 ? 'is-alt' : ''}`} data-on={alt === v} aria-hidden="true">
+              {lines.map((line, l) => (
+                <span key={l} className={`lg-line ${v === 0 && l === 1 ? 'is-accent' : ''}`}>
+                  {line.map((w, i) => (
+                    <span key={`${w}-${i}`} className="lg-word" style={{ '--i': lines.slice(0, l).flat().length + i }}>{w}</span>
+                  ))}
+                </span>
               ))}
             </span>
           ))}
