@@ -36,11 +36,45 @@ const roles = {
   },
 }
 
-function Field({ id, label, error, shake, ...props }) {
+function EyeIcon({ off }) {
   return (
-    <div className={`lg-field ${shake ? 'lg-shake' : ''}`} key={shake}>
-      <input id={id} placeholder=" " aria-invalid={Boolean(error)} aria-describedby={error ? `${id}-err` : undefined} {...props} />
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+      <circle cx="12" cy="12" r="3" />
+      {off && <path d="M4 4l16 16" />}
+    </svg>
+  )
+}
+
+const leadIcons = {
+  user: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="4" /><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" />
+    </svg>
+  ),
+  lock: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="11" width="16" height="10" rx="2.5" /><path d="M8 11V8a4 4 0 0 1 8 0v3" />
+    </svg>
+  ),
+}
+
+function Field({ id, label, error, shake, type, icon, ...props }) {
+  const [visible, setVisible] = useState(false)
+  const isPassword = type === 'password'
+  return (
+    <div className={`lg-field ${icon ? 'has-icon' : ''} ${isPassword ? 'has-toggle' : ''} ${shake ? 'lg-shake' : ''}`} key={shake}>
+      <input id={id} placeholder=" " type={isPassword && visible ? 'text' : type} aria-invalid={Boolean(error)} aria-describedby={error ? `${id}-err` : undefined} {...props} />
       <label htmlFor={id}>{label}</label>
+      <fieldset className="lg-outline" aria-hidden="true">
+        <legend><span>{label}</span></legend>
+      </fieldset>
+      {icon && <span className="lg-lead" aria-hidden="true">{leadIcons[icon]}</span>}
+      {isPassword && (
+        <button type="button" className="lg-eye" onClick={() => setVisible((v) => !v)} aria-label="Show password" aria-pressed={visible}>
+          <EyeIcon off={visible} />
+        </button>
+      )}
       {error && <p id={`${id}-err`} className="lg-err">{error}</p>}
     </div>
   )
@@ -118,15 +152,24 @@ export default function Login() {
                     <div className="lg-form-head">
                       <span className="lg-icon sm">{r.icon}</span>
                       <p>{r.title}</p>
-                      <button type="button" className="lg-link" onClick={back}>Change role</button>
+                      <button type="button" className="lg-swap" onClick={back} aria-label="Change role" data-tip="Change role">
+                        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 8h15M15 4l4 4-4 4" /><path d="M20 16H5M9 12l-4 4 4 4" /></svg>
+                      </button>
                     </div>
 
-                    <Field id="username" label="Username" autoComplete="username" value={username}
+                    <Field id="username" label="Username" icon="user" autoComplete="username" value={username}
                       onChange={typing(setUsername)} error={errors.username} shake={errors.username ? shake : 0} />
-                    <Field id="password" label="Password" type="password" autoComplete="current-password" value={password}
+                    <Field id="password" label="Password" icon="lock" type="password" autoComplete="current-password" value={password}
                       onChange={typing(setPassword)} error={errors.password} shake={errors.password ? shake : 0} />
 
                     <div className="lg-forgot">
+                      <label className="lg-check">
+                        <input type="checkbox" name="remember" />
+                        <span className="lg-box" aria-hidden="true">
+                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3.5 8.5l3 3 6-7" /></svg>
+                        </span>
+                        Remember me
+                      </label>
                       {errors.password && (
                         <p role="alert" className="lg-tip">Not sure? Reset it with Forgot password.</p>
                       )}
@@ -139,12 +182,14 @@ export default function Login() {
                     <button type="submit" className="lg-primary">Sign in</button>
                     <div className="lg-or"><span>or</span></div>
                     <button type="button" className="lg-sso" onClick={() => navigate(r.to)}>
-                      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-                        <path fill="#fff" d="M21.6 12.2c0-.7-.1-1.3-.2-1.9H12v3.7h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.300 3-7.300Z" />
-                        <path fill="#fff" opacity=".8" d="M12 22c2.7 0 5-.9 6.600-2.400l-3.200-2.500c-.9.600-2 1-3.400 1-2.600 0-4.800-1.800-5.600-4.100H3.100v2.600A10 10 0 0 0 12 22Z" />
-                        <path fill="#fff" opacity=".6" d="M6.400 13.900a6 6 0 0 1 0-3.800V7.500H3.100a10 10 0 0 0 0 9l3.300-2.600Z" />
-                        <path fill="#fff" opacity=".9" d="M12 5.900c1.500 0 2.800.5 3.800 1.500l2.900-2.900A10 10 0 0 0 3.100 7.500l3.300 2.600C7.200 7.700 9.400 5.900 12 5.900Z" />
-                      </svg>
+                      <span className="lg-g" aria-hidden="true">
+                        <svg viewBox="0 0 48 48" width="18" height="18">
+                          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+                          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+                          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+                          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+                        </svg>
+                      </span>
                       Sign in with Google (DepEd account)
                     </button>
                     <p className="lg-note">Prototype only. Accounts and single sign-on are not connected, and all data is sample data.</p>
