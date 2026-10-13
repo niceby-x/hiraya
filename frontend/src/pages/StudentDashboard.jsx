@@ -4,6 +4,7 @@ import StatusPill from '../components/StatusPill.jsx'
 import { competencies, learners, THRESHOLD } from '../data/mock.js'
 import { bandFor, percent } from '../lib/mastery.js'
 import { getCompetency, remediationPath, TARGET_ID } from '../lib/path.js'
+import RouteLine from '../components/RouteLine.jsx'
 import Card from '../components/Card.jsx'
 import { buttonClass } from '../lib/buttonClass.js'
 
@@ -47,16 +48,19 @@ export default function StudentDashboard() {
       </div>
 
       {first && (
-        <section className="on-dark rounded-2xl bg-brand p-5 text-white sm:p-8">
-          <p className="text-sm font-bold uppercase tracking-widest text-brand-soft">Start here</p>
-          <h2 className="mt-2 font-display text-3xl font-bold">{first.name}</h2>
-          <p className="mt-2 max-w-2xl text-brand-soft">
+        <section className="on-dark rounded-3xl bg-night p-5 text-white sm:p-10">
+          <p className="text-sm font-bold uppercase tracking-widest text-aqua">Start here</p>
+          <h2 className="mt-2 font-display text-4xl font-bold sm:text-5xl">{first.name}</h2>
+          <p className="mt-3 max-w-2xl text-lg text-white/80">
             {first.id === TARGET_ID
               ? 'This is your focus topic.'
               : `${toReview} skill${toReview === 1 ? '' : 's'} to review before ${target.name}. Later skills build on this one, so it comes first.`}
           </p>
+          <div className="mt-8">
+            <RouteLine stops={path.map((id) => ({ id, label: getCompetency(id).short }))} />
+          </div>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Link to={`/student/practice?skill=${first.id}`} className={buttonClass('onBrand')}>
+            <Link to={`/student/practice?skill=${first.id}`} className="inline-block rounded-lg bg-aqua px-6 py-3 font-bold text-night-ink transition-colors hover:bg-aqua-hover">
               Practice this skill
             </Link>
             <Link
@@ -72,7 +76,7 @@ export default function StudentDashboard() {
       <Card>
         <h2 className="font-display text-2xl font-bold">My skills</h2>
         <p className="mt-1 text-sm text-muted">
-          Listed from earliest to latest. The line on each bar marks {percent(THRESHOLD)}% mastery.
+          Listed from earliest to latest. The tick on each ring marks the {percent(THRESHOLD)}% mastery line.
         </p>
         <ul className="mt-4 divide-y divide-line">
           {competencies.map((c) => (

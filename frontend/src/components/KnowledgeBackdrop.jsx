@@ -4,9 +4,10 @@ const GLYPHS = ['½', 'x²', '−3', '%', 'π', '√', 'Σ', '∠', '0.5', 'y=mx
 
 // Faint network of math nodes. The pointer lights nearby nodes; each `pulse`
 // lights a chain of prerequisites, like a mastery estimate updating.
-export default function KnowledgeBackdrop({ pulse }) {
+export default function KnowledgeBackdrop({ pulse, burst }) {
   const canvas = useRef(null)
   const kick = useRef(() => {})
+  const ripple = useRef(() => {})
 
   useEffect(() => {
     const cv = canvas.current
@@ -81,6 +82,14 @@ export default function KnowledgeBackdrop({ pulse }) {
       raf = requestAnimationFrame(frame)
     }
 
+    // A ripple: every node lights up, nearest to (bx, by) first.
+    ripple.current = (bx, by) => {
+      for (const a of nodes) {
+        const d = Math.hypot(a.x - bx, a.y - by)
+        timers.push(setTimeout(() => { a.g = 1 }, Math.min(d * 0.8, 1400)))
+      }
+    }
+
     kick.current = () => {
       const start = Math.floor(Math.random() * nodes.length)
       let ring = [start]
@@ -104,6 +113,7 @@ export default function KnowledgeBackdrop({ pulse }) {
   }, [])
 
   useEffect(() => { if (pulse) kick.current() }, [pulse])
+  useEffect(() => { if (burst) ripple.current(burst.x, burst.y) }, [burst])
 
   return <canvas ref={canvas} aria-hidden="true" className="lg-canvas" />
 }

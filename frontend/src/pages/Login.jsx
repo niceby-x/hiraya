@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import KnowledgeBackdrop from '../components/KnowledgeBackdrop.jsx'
-import Logo from '../components/Logo.jsx'
+import AnimatedLogo from '../components/AnimatedLogo.jsx'
 import './login.css'
 
 const SAMPLE_PASSWORD = 'sample1234'
@@ -81,6 +81,7 @@ function Field({ id, label, error, shake, type, icon, ...props }) {
 }
 
 export default function Login() {
+  const [burst, setBurst] = useState(null)
   const navigate = useNavigate()
   const [role, setRole] = useState(null)
   const [username, setUsername] = useState('')
@@ -111,11 +112,11 @@ export default function Login() {
 
   return (
     <div className="lg-root">
-      <KnowledgeBackdrop pulse={pulse} />
+      <KnowledgeBackdrop pulse={pulse} burst={burst} />
 
       <main className="lg-main">
         <header className="lg-brand">
-          <span className="lg-tile"><Logo size={42} className="" /></span>
+          <AnimatedLogo size={65} onActivate={(pt) => setBurst({ ...pt, id: performance.now() })} />
           <span className="lg-brand-name">HIRAYA</span>
         </header>
 

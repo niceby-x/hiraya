@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { prerequisiteLinks as links } from '../lib/links.js'
-import { getCompetency } from '../lib/path.js'
+import { findCycle, getCompetency } from '../lib/path.js'
+import { competencies } from '../data/mock.js'
 import Card from '../components/Card.jsx'
 import { buttonClass } from '../lib/buttonClass.js'
 
@@ -27,6 +28,8 @@ const ratingMeta = {
 
 const ratingKeys = Object.keys(ratingMeta)
 
+const cycle = findCycle()
+
 const linkTitle = (link) => `${getCompetency(link.from).short} → ${getCompetency(link.to).short}`
 
 export default function GraphReview() {
@@ -44,6 +47,15 @@ export default function GraphReview() {
       <p className="mt-2 text-muted">
         Rate each prerequisite link before the graph is used for recommendations.
       </p>
+      {cycle ? (
+        <p role="alert" className="mt-3 rounded-lg bg-low-soft px-4 py-3 font-bold text-low-ink">
+          Loop found: {cycle.map((id) => getCompetency(id).short).join(' → ')}. Fix these links before review.
+        </p>
+      ) : (
+        <p className="mt-3 inline-block rounded-lg bg-mastered-soft px-4 py-2 text-sm font-bold text-mastered-ink">
+          Graph check passed: {competencies.length} skills, {links.length} links, no loops
+        </p>
+      )}
     </div>
   )
 

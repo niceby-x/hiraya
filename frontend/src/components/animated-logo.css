@@ -1,0 +1,12 @@
+.alogo { color: #5ee3d2; overflow: visible; filter: drop-shadow(0 0 14px rgb(94 227 210 / .35)); }
+.alogo-node { fill: transparent; transition: fill .25s ease; }
+.alogo-node.is-near { fill: rgb(94 227 210 / .35); }
+.alogo-flow { stroke-dasharray: 22 78; stroke-dashoffset: 22; animation: alogo-flow 3.4s ease-in-out infinite; }
+.alogo-core { transform-box: fill-box; transform-origin: center; animation: alogo-beat 3.2s ease-in-out infinite; }
+@keyframes alogo-flow { from { stroke-dashoffset: 22; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } to { stroke-dashoffset: -78; opacity: 0; } }
+@keyframes alogo-beat { 0%, 100% { transform: scale(1); opacity: .85; } 50% { transform: scale(1.05); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .alogo-flow { display: none; } .alogo-core { animation: none; } }
+.alogo-hit { cursor: pointer; outline: none; }
+.alogo-hit:focus-visible .alogo-hitarea { stroke: #5ee3d2; stroke-width: 1.5; stroke-dasharray: 4 4; }
+.alogo-core.is-hit { animation: alogo-beat 3.2s ease-in-out infinite, alogo-hit .7s ease-out; }
+@keyframes alogo-hit { 0% { filter: none; } 30% { filter: drop-shadow(0 0 12px rgb(94 227 210 / 1)) brightness(1.4); } 100% { filter: none; } }
