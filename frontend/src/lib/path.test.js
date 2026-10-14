@@ -2,7 +2,16 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { learners } from '../data/mock.js'
-import { candidatePath, dependencyOrder, displayOrder, hasCompetency, prerequisitesOf, remediationPath } from './path.js'
+import {
+  candidatePath,
+  dependencyOrder,
+  displayOrder,
+  hasCompetency,
+  masteredPrerequisites,
+  prerequisitesOf,
+  remediationPath,
+  skippedPrerequisites,
+} from './path.js'
 
 const byLearner = Object.fromEntries(learners.map((l) => [l.id, l.mastery]))
 // All skills mastered, then override what a test needs.
@@ -136,4 +145,89 @@ test('grid column order: the target chain first, then the other skills in list o
     assert.deepEqual(order.slice(0, dependencyOrder(t).length), dependencyOrder(t))
   }
   assert.deepEqual(displayOrder('nope'), ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7'])
+})
+
+test('regression: target met (c7 0.99) but c3 below (0.50) at 0.95: path is empty and c3 is not labelled mastered', () => {
+  const m = mastery({ c7: 0.99, c3: 0.5 })
+  assert.deepEqual(remediationPath(m, 'c7', 0.95), [])
+  assert.equal(candidatePath(m, 'c7', 0.95).status, 'target-met')
+  const mastered = masteredPrerequisites(m, 'c7', 0.95)
+  assert.ok(!mastered.includes('c3'), 'c3 must not appear under "Already mastered, so skipped"')
+  // The prerequisites that really are at or above the line are still listed, in dependency order.
+  assert.deepEqual(mastered, prerequisitesOf('c7').filter((id) => id !== 'c3'))
+})
+
+test('mastered prerequisites: at the line counts, below it or without a valid estimate does not', () => {
+  const m = mastery({ c1: 0.95, c2: 0.949, c3: undefined, c4: NaN, c5: '0.99', c6: null })
+  assert.deepEqual(masteredPrerequisites(m, 'c7', 0.95), ['c1'])
+  assert.deepEqual(masteredPrerequisites(undefined, 'c7', 0.95), [])
+  assert.deepEqual(masteredPrerequisites(m, 'nope', 0.95), [])
+})
+
+test('when a path is generated, gaps, mastered and unknown prerequisites split the prerequisites exactly', () => {
+  for (const theta of [0.95, 0.98]) {
+    for (const target of ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7']) {
+      for (const l of learners) {
+        const r = candidatePath(l.mastery, target, theta)
+        if (r.status !== 'needs-review') continue
+        const mastered = masteredPrerequisites(l.mastery, target, theta)
+        assert.deepEqual([...r.gaps, ...mastered, ...r.unknown].sort(), [...prerequisitesOf(target)].sort())
+        assert.ok(r.gaps.every((id) => !mastered.includes(id)))
+      }
+    }
+  }
+})
+
+test('missing or invalid target estimate is never reported as target-met', () => {
+  for (const bad of [undefined, null, NaN, '0.99']) {
+    const r = candidatePath(mastery({ c7: bad }), 'c7', 0.95)
+    assert.equal(r.status, 'no-data')
+    assert.deepEqual(r.path, [])
+  }
+  assert.notEqual(candidatePath({}, 'c7', 0.95).status, 'target-met')
+})
+
+// "Already mastered, so skipped" is shown only when a remediation path exists AND there is something to list.
+test('skipped list: normal path with mastered prerequisites lists exactly those, in dependency order', () => {
+  // Learner 01 at 0.95: path is c2, c3, c5, c6, c7; c1 (0.97) and c4 (0.96) are mastered and left out.
+  assert.deepEqual(remediationPath(byLearner.l01, 'c7', 0.95), ['c2', 'c3', 'c5', 'c6', 'c7'])
+  assert.deepEqual(skippedPrerequisites(byLearner.l01, 'c7', 0.95), ['c1', 'c4'])
+})
+
+test('skipped list: target already meets the threshold -> no path, nothing listed (even if a prerequisite is low)', () => {
+  const m = mastery({ c7: 0.99, c3: 0.5 })
+  assert.deepEqual(remediationPath(m, 'c7', 0.95), [])
+  assert.deepEqual(skippedPrerequisites(m, 'c7', 0.95), [])
+  assert.deepEqual(skippedPrerequisites(mastery(), 'c7', 0.95), []) // everything mastered: still nothing to "skip"
+})
+
+test('skipped list: missing target estimate -> no path, nothing listed, even though other prerequisites are mastered', () => {
+  for (const bad of [undefined, null, NaN]) {
+    const m = mastery({ c7: bad })
+    assert.equal(candidatePath(m, 'c7', 0.95).status, 'no-data')
+    assert.deepEqual(remediationPath(m, 'c7', 0.95), [])
+    assert.deepEqual(skippedPrerequisites(m, 'c7', 0.95), [])
+  }
+  assert.deepEqual(skippedPrerequisites(undefined, 'c7', 0.95), [])
+})
+
+test('skipped list: normal path where no prerequisite is mastered -> empty, so no empty section is shown', () => {
+  // Learner 03 at 0.95: all six prerequisites are below the line.
+  const r = candidatePath(byLearner.l03, 'c7', 0.95)
+  assert.equal(r.status, 'needs-review')
+  assert.deepEqual(r.path, ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7'])
+  assert.deepEqual(skippedPrerequisites(byLearner.l03, 'c7', 0.95), [])
+})
+
+test('skipped list never contains a path step, and is non-empty only when a path exists', () => {
+  for (const theta of [0.95, 0.98]) {
+    for (const target of ['c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7']) {
+      for (const l of learners) {
+        const path = remediationPath(l.mastery, target, theta)
+        const skipped = skippedPrerequisites(l.mastery, target, theta)
+        assert.ok(skipped.every((id) => !path.includes(id)))
+        if (path.length === 0) assert.deepEqual(skipped, [])
+      }
+    }
+  }
 })

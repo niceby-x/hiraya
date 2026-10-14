@@ -98,6 +98,24 @@ export function prerequisitesOf(targetId) {
   return hasCompetency(targetId) ? dependencyOrder(targetId).filter((id) => id !== targetId) : []
 }
 
+// Prerequisites of the target that are mastered: a valid estimate at or above theta, earliest first.
+// A prerequisite that is simply missing from the remediation path is NOT necessarily mastered
+// (the path is empty when the target already meets theta, even if a prerequisite is below it),
+// and one with no estimate is not mastered either.
+export function masteredPrerequisites(mastery, targetId, theta) {
+  const estimates = mastery ?? {}
+  return prerequisitesOf(targetId).filter((id) => hasEstimate(estimates[id]) && estimates[id] >= theta)
+}
+
+// Mastered prerequisites to list as "Already mastered, so skipped" on the student's review path.
+// They are only "skipped" when a remediation path was actually generated (status 'needs-review').
+// With no path (target already met, or no target estimate) nothing was skipped, so this is empty.
+export function skippedPrerequisites(mastery, targetId, theta) {
+  return candidatePath(mastery, targetId, theta).status === 'needs-review'
+    ? masteredPrerequisites(mastery, targetId, theta)
+    : []
+}
+
 // Column order for the class grid: the target's dependency chain first (earliest
 // prerequisite to the target), then every other skill in the original list order.
 export function displayOrder(targetId) {

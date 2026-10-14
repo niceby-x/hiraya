@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import StatusPill from '../components/StatusPill.jsx'
 import { THRESHOLD } from '../data/mock.js'
 import { bandFor, percent } from '../lib/mastery.js'
-import { dependencyOrder, getCompetency, remediationPath, TARGET_ID } from '../lib/path.js'
+import { candidatePath, getCompetency, skippedPrerequisites, TARGET_ID } from '../lib/path.js'
 import { useLearner } from '../lib/store.js'
 import Card from '../components/Card.jsx'
 import { buttonClass } from '../lib/buttonClass.js'
@@ -13,8 +13,10 @@ const names = (ids) => ids.map((id) => getCompetency(id).short).join(', ')
 export default function ReviewPath() {
   const learner = useLearner('l01')
   const target = getCompetency(TARGET_ID)
-  const path = remediationPath(learner.mastery, TARGET_ID)
-  const skipped = dependencyOrder(TARGET_ID).filter((id) => id !== TARGET_ID && !path.includes(id))
+  const { status, path } = candidatePath(learner.mastery, TARGET_ID, THRESHOLD)
+  // Listed only when a path exists, and only prerequisites with a real estimate at or above the line.
+  // A prerequisite missing from the path is not automatically mastered (e.g. the target is met but it is not).
+  const skipped = skippedPrerequisites(learner.mastery, TARGET_ID, THRESHOLD)
 
   const labelFor = (id, i) => {
     if (id === TARGET_ID) return 'Focus topic'
@@ -43,7 +45,9 @@ export default function ReviewPath() {
 
       {path.length === 0 ? (
         <Card as="p" className="text-muted">
-          You have reached the mastery line for {target.name}. No review path is needed for this goal.
+          {status === 'target-met'
+            ? `You have reached the mastery line for ${target.name}. No review path is needed for this goal.`
+            : `There is no mastery estimate for ${target.name} yet, so a review path can't be shown.`}
         </Card>
       ) : (
         <ol>
