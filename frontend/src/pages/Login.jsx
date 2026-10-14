@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import KnowledgeBackdrop from '../components/KnowledgeBackdrop.jsx'
 import AnimatedLogo from '../components/AnimatedLogo.jsx'
@@ -13,6 +13,10 @@ const HEADLINES = [
 ]
 const HEADLINE_TEXT = HEADLINES.map((lines) => lines.map((l) => l.join(' ')).join(' '))
 
+// The card eases between its small and open sizes over this long (matches the CSS transitions).
+const MORPH_MS = 500
+const EASE = 'cubic-bezier(.2, .8, .2, 1)'
+
 const roles = {
   student: {
     title: "I'm a Student",
@@ -21,7 +25,7 @@ const roles = {
     to: '/student',
     icon: (
       <svg viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M24 42V22" /><path d="M24 28c-8 0-12-5-12-12 8 0 12 5 12 12Z" /><path d="M24 22c0-7 4-11 12-11 0 7-4 11-12 11Z" />
+        <path d="M24 12C18 8 10 8 6 10v26c4-2 12-2 18 2 6-4 14-4 18-2V10c-4-2-12-2-18 2Z" /><path d="M24 12v26" />
       </svg>
     ),
   },
@@ -85,6 +89,13 @@ function Field({ id, label, error, shake, type, icon, ...props }) {
 export default function Login() {
   const [burst, setBurst] = useState(null)
   const [alt, setAlt] = useState(0) // which headline is showing
+  const variantRefs = useRef([])
+  const [titleH, setTitleH] = useState(null) // height of the headline that is showing
+  const [shown, setShown] = useState(null) // role whose form is mounted (it lingers while it fades out)
+  const cardRefs = useRef({})
+  const rolesRef = useRef(null)
+  const morph = useRef(null) // card height before a pick/back, so it can ease to the new height
+  const settle = useRef(null)
   const navigate = useNavigate()
   const [role, setRole] = useState(null)
   const [username, setUsername] = useState('')
@@ -94,8 +105,17 @@ export default function Login() {
   const [pulse, setPulse] = useState(0)
   const [help, setHelp] = useState(false)
 
+  // Remember the card's height now; the layout effect below eases it to the new height.
+  function remember(key) {
+    const el = cardRefs.current[key]
+    morph.current = el ? { key, h: el.getBoundingClientRect().height } : null
+  }
+
   function pick(key) {
+    clearTimeout(settle.current)
+    remember(key)
     setRole(key)
+    setShown(key)
     setUsername(roles[key].username)
     setPassword(SAMPLE_PASSWORD)
     setErrors({})
@@ -104,6 +124,9 @@ export default function Login() {
   }
 
   function back() {
+    remember(role)
+    clearTimeout(settle.current)
+    settle.current = setTimeout(() => setShown(null), MORPH_MS + 100)
     setRole(null)
     setErrors({})
     setHelp(false)
@@ -128,6 +151,40 @@ export default function Login() {
     setPulse((n) => n + 1)
   }
 
+  // The heading is only as tall as the headline on show. It eases to the new height when the
+  // headline swaps (or when the window width changes how it wraps), so the text below glides.
+  useEffect(() => {
+    const el = variantRefs.current[alt]
+    if (!el || typeof ResizeObserver === 'undefined') return undefined
+    const ro = new ResizeObserver(() => setTitleH(el.offsetHeight))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [alt])
+
+  // Ease the card from its old height to its new one (small card <-> sign-in form).
+  useLayoutEffect(() => {
+    const m = morph.current
+    morph.current = null
+    const el = m && cardRefs.current[m.key]
+    if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const h = el.getBoundingClientRect().height
+    if (Math.abs(h - m.h) < 1) return
+    el.animate({ height: [`${m.h}px`, `${h}px`] }, { duration: MORPH_MS, easing: EASE })
+  }, [role])
+
+  // The small cards keep the width they have when idle, so their text does not re-wrap while a
+  // card shrinks away or grows back. Measured only while both cards are in their normal state.
+  useEffect(() => {
+    if (role !== null || shown !== null) return undefined
+    const measure = () => {
+      const card = cardRefs.current.student
+      if (card && rolesRef.current) rolesRef.current.style.setProperty('--pick-w', `${card.clientWidth}px`)
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [role, shown])
+
   const hasRole = Boolean(role)
 
   return (
@@ -148,9 +205,9 @@ export default function Login() {
               />
               <span className="lg-brand-name">HIRAYA</span>
             </header>
-            <h1 className="lg-title" aria-label={HEADLINE_TEXT[alt]}>
+            <h1 className="lg-title" aria-label={HEADLINE_TEXT[alt]} style={titleH ? { height: titleH } : undefined}>
               {HEADLINES.map((lines, v) => (
-                <span key={v} className={`lg-variant ${v === 1 ? 'is-alt' : ''}`} data-on={alt === v} aria-hidden="true">
+                <span key={v} ref={(el) => { variantRefs.current[v] = el }} className={`lg-variant ${v === 1 ? 'is-alt' : ''}`} data-on={alt === v} aria-hidden="true">
                   {lines.map((line, l) => (
                     <span key={l} className={`lg-line ${v === 0 && l === 1 ? 'is-accent' : ''}`}>
                       {line.map((w, i) => (
@@ -170,26 +227,25 @@ export default function Login() {
           </div>
         </div>
 
-        <div className="lg-roles" data-picked={role ?? ''}>
+        <div className="lg-roles" data-picked={role ?? ''} ref={rolesRef}>
           {Object.entries(roles).map(([key, r]) => {
             const open = role === key
             const away = role && !open
             return (
-              <section key={key} className={`lg-card ${open ? 'is-open' : ''} ${away ? 'is-away' : ''}`} aria-hidden={away || undefined}>
-                {!open ? (
-                  <button type="button" className="lg-pick" onClick={() => pick(key)} tabIndex={away ? -1 : 0}>
-                    <span className="lg-plain-icon">{r.icon}</span>
-                    <span className="lg-pick-title">{r.title}</span>
-                    <span className="lg-pick-blurb">{r.blurb}</span>
-                    <span className={`lg-btn ${key === 'student' ? 'is-primary' : ''}`}>
-                      Continue as {key === 'student' ? 'Student' : 'Teacher'}
-                      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M5 12h14M13 6l6 6-6 6" />
-                      </svg>
-                    </span>
-                  </button>
-                ) : (
-                  <form onSubmit={submit} noValidate className="lg-form">
+              <section key={key} ref={(el) => { cardRefs.current[key] = el }} className={`lg-card ${open ? 'is-open' : ''} ${away ? 'is-away' : ''}`} aria-hidden={away || undefined}>
+                <button type="button" className="lg-pick" data-off={open || undefined} inert={open || away || undefined} onClick={() => pick(key)}>
+                  <span className="lg-plain-icon">{r.icon}</span>
+                  <span className="lg-pick-title">{r.title}</span>
+                  <span className="lg-pick-blurb">{r.blurb}</span>
+                  <span className={`lg-btn ${key === 'student' ? 'is-primary' : ''}`}>
+                    Continue as {key === 'student' ? 'Student' : 'Teacher'}
+                    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12h14M13 6l6 6-6 6" />
+                    </svg>
+                  </span>
+                </button>
+                {shown === key && (
+                  <form onSubmit={submit} noValidate className="lg-form" data-out={!open || undefined} inert={!open || undefined}>
                     <div className="lg-form-head">
                       <span className="lg-icon sm">{r.icon}</span>
                       <p>{r.title}</p>
@@ -256,7 +312,7 @@ export default function Login() {
                       Sign in with Google (DepEd account)
                     </button>
                     <p className="lg-note">
-                      Prototype only. Accounts and single sign-on are not connected, and all data is sample data.
+                      The fruit of one’s hopes, dreams, and aspirations.
                     </p>
                   </form>
                 )}

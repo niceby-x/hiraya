@@ -1,8 +1,11 @@
 /* HIRAYA sign-in. Type comes from the app: --font-display (headings), --font-body (text). */
-.lg-root { position: relative; min-height: 100vh; overflow: hidden; color: #fff; font-family: var(--font-body, system-ui, sans-serif);
+.lg-root { position: fixed; inset: 0; overflow-x: hidden; overflow-y: auto; scrollbar-width: none; color: #fff; font-family: var(--font-body, system-ui, sans-serif);
   background: radial-gradient(60rem 40rem at 15% 10%, #0f5a63 0%, transparent 60%), radial-gradient(50rem 40rem at 90% 100%, #0b4a45 0%, transparent 55%), var(--color-night); }
+/* Hide the scrollbar on the sign-in screen. It still scrolls with wheel, touch and keys, but the bar
+   no longer flashes while the intro collapses and the form opens. */
+.lg-root::-webkit-scrollbar { display: none; }
 .lg-canvas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-.lg-main { position: relative; z-index: 1; display: flex; min-height: 100vh; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1rem; text-align: center; }
+.lg-main { position: relative; z-index: 1; display: flex; min-height: 100%; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1rem; text-align: center; }
 .lg-root :focus-visible { outline: 3px solid #7ff0dc; outline-offset: 2px; }
 
 /* Collapsible Intro Wrapper */
@@ -13,10 +16,11 @@
   max-width: 46rem;
   opacity: 1;
   transform: translateY(0) scale(1);
+  /* Coming back: the space opens first, then the logo, headline and subtitle fade in. */
   transition:
-    grid-template-rows 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
-    opacity 0.3s ease,
-    transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    grid-template-rows 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.45s ease 0.25s,
+    transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s;
 }
 .lg-intro-inner {
   min-height: 0;
@@ -27,6 +31,11 @@
   padding-top: 0.75rem;
 }
 .lg-intro[data-hidden='true'] {
+  /* Leaving: fade out quickly, right away, while the space closes. */
+  transition:
+    grid-template-rows 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.25s ease,
+    transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
   grid-template-rows: 0fr;
   opacity: 0;
   transform: translateY(-18px) scale(0.96);
@@ -45,16 +54,16 @@
 .lg-rule { width: 100%; max-width: 46rem; margin: 1.75rem 0; border: 0; height: 1px; background: rgb(255 255 255 / .14); }
 
 /* Role cards: two solid cards; picking one expands it into the form */
-.lg-roles { display: grid; width: 100%; max-width: 46rem; grid-template-columns: 1fr 1fr; gap: 1.5rem; transition: grid-template-columns .5s ease, gap .5s ease, max-width .5s ease; }
+.lg-roles { display: grid; width: 100%; max-width: 46rem; grid-template-columns: 1fr 1fr; gap: 1.5rem; transition: grid-template-columns .5s cubic-bezier(.2, .8, .2, 1), grid-template-rows .5s cubic-bezier(.2, .8, .2, 1), gap .5s cubic-bezier(.2, .8, .2, 1), max-width .5s cubic-bezier(.2, .8, .2, 1); }
 .lg-roles[data-picked='student'] { grid-template-columns: 1fr 0fr; gap: 0; }
 .lg-roles[data-picked='teacher'] { grid-template-columns: 0fr 1fr; gap: 0; }
 .lg-roles[data-picked='student'], .lg-roles[data-picked='teacher'] { max-width: 28rem; }
 
-.lg-card { min-width: 0; overflow: hidden; text-align: left; border-radius: 1.25rem; background-color: var(--color-night-card); background-image: linear-gradient(180deg, rgb(19 59 65 / 0) 25%, var(--color-night-card) 100%), linear-gradient(rgb(94 227 210 / .1) 1px, transparent 1px), linear-gradient(90deg, rgb(94 227 210 / .1) 1px, transparent 1px); background-size: 100% 100%, 24px 24px, 24px 24px; border: 1px solid rgb(94 227 210 / .18);
+.lg-card { position: relative; min-width: 0; overflow: hidden; text-align: left; border-radius: 1.25rem; background-color: var(--color-night-card); background-image: linear-gradient(180deg, rgb(19 59 65 / 0) 25%, var(--color-night-card) 100%), linear-gradient(rgb(94 227 210 / .1) 1px, transparent 1px), linear-gradient(90deg, rgb(94 227 210 / .1) 1px, transparent 1px); background-size: 100% 100%, 24px 24px, 24px 24px; border: 1px solid rgb(94 227 210 / .18);
   box-shadow: 0 20px 50px rgb(0 0 0 / .3); transition: opacity .35s ease, transform .25s ease, border-color .2s; }
 .lg-card.is-away { opacity: 0; transform: scale(.94); pointer-events: none; border-width: 0; }
 .lg-card:not(.is-open):hover { transform: translateY(-3px); border-color: rgb(94 227 210 / .55); }
-.lg-pick { display: grid; width: 100%; height: 100%; grid-template-columns: auto 1fr; grid-template-areas: 'icon title' 'blurb blurb' 'btn btn'; grid-template-rows: auto auto 1fr; align-items: center; column-gap: .75rem; padding: 1.75rem; color: inherit; font: inherit; text-align: left; background: none; border: 0; cursor: pointer; }
+.lg-pick { display: grid; width: 100%; min-width: var(--pick-w, 0px); height: 100%; transition: opacity .25s ease .15s; grid-template-columns: auto 1fr; grid-template-areas: 'icon title' 'blurb blurb' 'btn btn'; grid-template-rows: auto auto 1fr; align-items: center; column-gap: .75rem; padding: 1.75rem; color: inherit; font: inherit; text-align: left; background: none; border: 0; cursor: pointer; }
 .lg-plain-icon { grid-area: icon; display: grid; place-items: center; height: 2.75rem; width: 2.75rem; border-radius: .8rem; color: #5ee3d2; background: rgb(94 227 210 / .14); }
 .lg-plain-icon svg { display: block; height: 1.5rem; width: 1.5rem; }
 .lg-pick-title { grid-area: title; font-family: var(--font-display, system-ui, sans-serif); font-size: 1.3rem; font-weight: 700; }
@@ -66,6 +75,16 @@
 .lg-card:hover .lg-btn { background: rgb(255 255 255 / .16); }
 .lg-card:hover .lg-btn.is-primary { background: var(--color-aqua-hover); }
 .lg-card:hover .lg-btn svg { transform: translateX(4px); }
+
+/* The small card and the sign-in form sit in the same card. Only the one on show takes up space;
+   the other is laid over it and fades, so the card can ease between the two heights. */
+.lg-pick[data-off] { position: absolute; inset: 0; opacity: 0; pointer-events: none; transition-delay: 0s; }
+.lg-form { animation: lg-form-in .4s ease .12s both; }
+.lg-form[data-out] { position: absolute; top: 0; left: 0; right: 0; pointer-events: none; animation: lg-form-out .2s ease both; }
+@keyframes lg-form-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes lg-form-out { from { opacity: 1; } to { opacity: 0; } }
+/* The form is always laid out at its open width, so it does not re-wrap while the card widens. */
+@media (min-width: 641px) { .lg-form { min-width: calc(28rem - 2px); } }
 
 /* Form */
 .lg-icon { display: grid; place-items: center; border-radius: .8rem; background: rgb(94 227 210 / .15); color: #7ff0dc; }
@@ -135,7 +154,7 @@
 .lg-sso:hover { background: rgb(255 255 255 / .1); }
 .lg-or { display: flex; align-items: center; gap: .75rem; font-size: .85rem; color: rgb(255 255 255 / .7); }
 .lg-or::before, .lg-or::after { content: ''; flex: 1; height: 1px; background: rgb(255 255 255 / .25); }
-.lg-note { margin: .25rem 0 0; font-size: .7rem; line-height: 1.4; color: rgb(255 255 255 / .4); }
+.lg-note { margin: .10rem 0 0; font-size: .70rem; line-height: 1.4; color: rgb(255 255 255 / .3); text-align: center; font-style: italic; }
 
 @media (max-width: 640px) {
   .lg-roles { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
@@ -162,8 +181,13 @@
 /* Clicking the logo swaps the headline. Both versions share one grid cell, so the box keeps
    the taller height and nothing below it moves. The old words drift up and fade, then the new
    ones rise in, staggered. Entrance animations use 'backwards' fill so these transitions work. */
-.lg-title { display: grid; }
-.lg-variant { grid-area: 1 / 1; }
+.lg-title { display: grid; transition: height .5s cubic-bezier(.2, .8, .2, 1); }
+.lg-variant { grid-area: 1 / 1; align-self: start; }
+/* The longer headline stays on one line from 560px up. It measures about 24em wide, so the size is
+   capped (1.75rem) and shrinks with the window to always fit. Below 560px it wraps as normal. */
+@media (min-width: 560px) {
+  .lg-variant.is-alt { white-space: nowrap; font-size: min(1.75rem, calc((100vw - 2rem) / 25)); }
+}
 .lg-word { transition: opacity .45s ease, transform .55s cubic-bezier(.2, .8, .2, 1), filter .45s ease; }
 .lg-variant[data-on='true'] .lg-word { transition-delay: calc(.3s + var(--i) * 45ms); }
 .lg-variant[data-on='false'] { pointer-events: none; user-select: none; }
@@ -183,5 +207,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .lg-word, .lg-brand, .lg-sub, .lg-rule, .lg-roles { animation: none !important; opacity: 1; transform: none; filter: none; }
-  .lg-word { transition: none; }
+  .lg-word, .lg-title { transition: none; }
+  .lg-form, .lg-form[data-out] { animation: none; }
+  .lg-form[data-out] { display: none; }
+  .lg-pick { transition: none; }
 }
