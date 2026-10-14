@@ -1,17 +1,15 @@
 import { useSyncExternalStore } from 'react'
-import { learners as seed } from '../data/mock.js'
+import { learners as seed, THRESHOLD } from '../data/mock.js'
 import { paramsFor } from '../data/bktParams.js'
 import { updateMastery } from './bkt.js'
-
-// In-memory learner state, seeded from sample data. It lives for the browser
-// session only: a page reload (or resetLearners) restores the sample values.
-// Later this module is replaced by calls to the backend (POST /api/responses).
+import { TARGET_ID } from './path.js'
 
 const clone = () => seed.map((l) => ({ ...l, mastery: { ...l.mastery } }))
+const defaultSettings = () => ({ learnerId: 'l01', targetId: TARGET_ID, theta: THRESHOLD })
 
 let state = clone()
+let settings = defaultSettings()
 const listeners = new Set()
-
 const emit = () => listeners.forEach((fn) => fn())
 
 function subscribe(fn) {
@@ -20,8 +18,8 @@ function subscribe(fn) {
 }
 
 const getSnapshot = () => state
+const getSettingsSnapshot = () => settings
 
-// Apply one answer to one learner's skill. Returns { before, after }.
 export function recordResponse(learnerId, skillId, correct) {
   const learner = state.find((l) => l.id === learnerId)
   const before = learner.mastery[skillId]
@@ -33,11 +31,28 @@ export function recordResponse(learnerId, skillId, correct) {
   return { before, after }
 }
 
+export function updateSettings(patch) {
+  const next = { ...settings, ...patch }
+  if (
+    next.learnerId === settings.learnerId &&
+    next.targetId === settings.targetId &&
+    next.theta === settings.theta
+  ) {
+    return
+  }
+  settings = next
+  emit()
+}
+
 export function resetLearners() {
   state = clone()
+  settings = defaultSettings()
   emit()
 }
 
 export const useLearners = () => useSyncExternalStore(subscribe, getSnapshot)
-
-export const useLearner = (id) => useLearners().find((l) => l.id === id)
+export const useLearner = (id) => {
+  const list = useLearners()
+  return list.find((l) => l.id === id) ?? list[0]
+}
+export const useSettings = () => useSyncExternalStore(subscribe, getSettingsSnapshot)

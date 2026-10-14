@@ -24,7 +24,7 @@ All learner data, competencies, prerequisite links and practice questions in thi
 - **BKT parameters are sample values, not fitted.** Every skill uses the same guess 0.20, slip 0.10 and learn 0.15 (`data/bktParams.js`), and each learner starts from a sample mastery value. Fitting from response data (pyBKT) is planned.
 - **All people and data are sample data.** There are eight sample learners, sample prerequisite links and sample practice questions. Graph review ratings are not saved.
 - **Sign-in is a demo.** There are no real accounts, roles or authentication. The student and teacher screens share state only inside one browser tab, so nothing syncs between accounts or devices.
-- **The student screens are fixed to Learner 01, target `c7` and a 95% threshold.** The target selector and the 95% / 98% switch are on the teacher screens.
+- **Teacher and student screens share the active learner, target competency and mastery threshold in memory.** Defaults start at Learner 01, target `c7` and a 95% threshold, and changing them on the teacher screens updates what the student screens display within the same browser session.
 
 ## Getting started
 

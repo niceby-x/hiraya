@@ -1,19 +1,12 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import SkillRing from '../components/SkillRing.jsx'
-import { competencies, THRESHOLD } from '../data/mock.js'
+import { competencies } from '../data/mock.js'
 import { bandFor, percent } from '../lib/mastery.js'
-import { candidatePath, getCompetency, remediationPath, TARGET_ID } from '../lib/path.js'
-import { resetLearners, useLearner } from '../lib/store.js'
+import { candidatePath, getCompetency, remediationPath } from '../lib/path.js'
+import { resetLearners, useLearner, useSettings } from '../lib/store.js'
 
 const pillClass = { mastered: 'ok', gap: 'warn', low: 'low', focus: 'focus', next: 'next' }
-
-const legend = [
-  { band: 'mastered', label: 'Mastered', text: `${percent(THRESHOLD)}% or higher` },
-  { band: 'gap', label: 'Needs review', text: `below ${percent(THRESHOLD)}%` },
-  { band: 'next', label: 'Review next', text: 'the skill to start with' },
-  { band: 'focus', label: 'Focus topic', text: 'the skill you are working toward' },
-]
 
 const Arrow = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
@@ -40,31 +33,39 @@ const strands = competencies.reduce((groups, c) => {
 
 export default function StudentDashboard() {
   const [filter, setFilter] = useState('all') // 'all' | 'path' | 'mastered'
-  const learner = useLearner('l01')
-  const target = getCompetency(TARGET_ID)
-  const path = remediationPath(learner.mastery, TARGET_ID)
+  const { learnerId, targetId, theta } = useSettings()
+  const learner = useLearner(learnerId)
+  const target = getCompetency(targetId)
+  const path = remediationPath(learner.mastery, targetId, theta)
   const pathSet = new Set(path)
-  const { status } = candidatePath(learner.mastery, TARGET_ID, THRESHOLD)
+  const { status } = candidatePath(learner.mastery, targetId, theta)
   const first = path.length > 0 ? getCompetency(path[0]) : null
   const toReview = Math.max(path.length - 1, 0)
-  const bands = competencies.map((c) => bandFor(learner.mastery[c.id]))
+  const bands = competencies.map((c) => bandFor(learner.mastery[c.id], theta))
   const masteredCount = bands.filter((b) => b === 'mastered').length
 
+  const legend = [
+    { band: 'mastered', label: 'Mastered', text: `${percent(theta)}% or higher` },
+    { band: 'gap', label: 'Needs review', text: `below ${percent(theta)}%` },
+    { band: 'next', label: 'Review next', text: 'the skill to start with' },
+    { band: 'focus', label: 'Focus topic', text: 'the skill you are working toward' },
+  ]
+
   const pillBandFor = (id, band) => {
-    if (id === TARGET_ID) return 'focus'
+    if (id === targetId) return 'focus'
     if (path[0] === id) return 'next'
     return band
   }
 
   const pillLabelFor = (id, band) => {
-    if (id === TARGET_ID) return 'Focus topic'
+    if (id === targetId) return 'Focus topic'
     if (path[0] === id) return 'Review next'
     return band === 'mastered' ? 'Mastered' : 'Needs review'
   }
 
   const matchesFilter = (c) => {
     if (filter === 'path') return pathSet.has(c.id)
-    if (filter === 'mastered') return bandFor(learner.mastery[c.id]) === 'mastered'
+    if (filter === 'mastered') return bandFor(learner.mastery[c.id], theta) === 'mastered'
     return true
   }
 
@@ -75,11 +76,11 @@ export default function StudentDashboard() {
       <div className="st-greet">
         <div>
           <h1 className="st-title">Hello, {learner.name}</h1>
-          <p className="st-sub">Grade 7 Mathematics • Goal: {target.name}</p>
+          <p className="st-sub">Grade 7 Mathematics · Goal: {target.name} ({percent(theta)}% line)</p>
         </div>
         <div className="st-tally">
           <p>
-            <strong>{masteredCount}</strong> of {competencies.length} skills mastered ({percent(THRESHOLD)}% line)
+            <strong>{masteredCount}</strong> of {competencies.length} skills mastered ({percent(theta)}% line)
           </p>
           <ul className="st-segs" aria-hidden="true">
             {bands.map((b, i) => (
@@ -101,8 +102,8 @@ export default function StudentDashboard() {
           </span>
           <h2 id="start-here" className="st-hero-title">{first.name}</h2>
           <p className="st-hero-text">
-            {first.id === TARGET_ID
-              ? 'All prerequisite skills meet the 95% line! You are ready to practice your focus topic.'
+            {first.id === targetId
+              ? `All prerequisite skills meet the ${percent(theta)}% line! You are ready to practice your focus topic.`
               : `${toReview} prerequisite skill${toReview === 1 ? '' : 's'} to review before ${target.name}. Later skills build on this one, so it comes first.`}
           </p>
 
@@ -148,7 +149,7 @@ export default function StudentDashboard() {
         <section className="st-card st-pad">
           <p className="st-empty">
             {status === 'target-met'
-              ? `🎉 You have reached the ${percent(THRESHOLD)}% mastery line for ${target.name}! No review path is needed for this goal.`
+              ? `✓ You have reached the ${percent(theta)}% mastery line for ${target.name}! No review path is needed for this goal.`
               : `There is no mastery estimate for ${target.name} yet, so a review path can't be shown.`}
           </p>
         </section>
@@ -159,10 +160,9 @@ export default function StudentDashboard() {
           <div>
             <h2 id="my-skills" className="st-h2">My skills</h2>
             <p className="st-note" style={{ marginTop: '.35rem' }}>
-              Each ring fills to your BKT mastery estimate. The tick marks the {percent(THRESHOLD)}% mastery line.
+              Each ring fills to your BKT mastery estimate. The tick marks the {percent(theta)}% mastery line.
             </p>
           </div>
-
           <div className="st-filters" role="group" aria-label="Filter skills">
             <button
               type="button"
@@ -191,7 +191,7 @@ export default function StudentDashboard() {
         {strands.map((group) => {
           const visibleItems = group.items.filter(matchesFilter)
           if (visibleItems.length === 0) return null
-          const done = group.items.filter((c) => bandFor(learner.mastery[c.id]) === 'mastered').length
+          const done = group.items.filter((c) => bandFor(learner.mastery[c.id], theta) === 'mastered').length
           return (
             <div key={group.name}>
               <h3 className="st-strand st-display">
@@ -201,19 +201,19 @@ export default function StudentDashboard() {
               <ul className="st-grid">
                 {visibleItems.map((c) => {
                   const p = learner.mastery[c.id]
-                  const band = bandFor(p)
+                  const band = bandFor(p, theta)
                   const id = c.id
                   const pillBand = pillBandFor(id, band)
-                  const away = Math.max(percent(THRESHOLD) - percent(p), 1)
+                  const away = Math.max(percent(theta) - percent(p), 1)
                   const delay = 300 + 60 * tile++
                   return (
                     <li key={id}>
                       <Link
                         to={`/student/practice?skill=${id}`}
                         aria-label={`Practice ${c.name}`}
-                        className={`st-card st-skill ${path[0] === id ? 'is-next' : ''} ${id === TARGET_ID ? 'is-focus' : ''}`}
+                        className={`st-card st-skill ${path[0] === id ? 'is-next' : ''} ${id === targetId ? 'is-focus' : ''}`}
                       >
-                        <SkillRing p={p} size={64} animate delay={delay} />
+                        <SkillRing p={p} theta={theta} size={64} animate delay={delay} />
                         <span className="st-skill-body">
                           <p className="st-skill-name">{c.name}</p>
                           <span className="st-skill-meta">
@@ -221,7 +221,7 @@ export default function StudentDashboard() {
                             <span>
                               {band === 'mastered'
                                 ? 'At or above the line'
-                                : `${away} more pt${away === 1 ? '' : 's'} to ${percent(THRESHOLD)}%`}
+                                : `${away} more pt${away === 1 ? '' : 's'} to ${percent(theta)}%`}
                             </span>
                           </span>
                           <p className="st-skill-prereq">

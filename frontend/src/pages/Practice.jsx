@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom'
 import SkillRing from '../components/SkillRing.jsx'
-import { THRESHOLD } from '../data/mock.js'
 import { questions } from '../data/questions.js'
-import { getCompetency, remediationPath, TARGET_ID } from '../lib/path.js'
+import { getCompetency, remediationPath } from '../lib/path.js'
 import { percent } from '../lib/mastery.js'
-import { recordResponse, useLearner } from '../lib/store.js'
+import { recordResponse, useLearner, useSettings } from '../lib/store.js'
 
-const LEARNER_ID = 'l01'
 const letters = ['A', 'B', 'C', 'D']
 
 const Back = () => (
@@ -39,17 +37,18 @@ function optionClass({ submitted, isPicked, isAnswer }) {
 }
 
 function PracticeSession({ competency, items }) {
-  const learner = useLearner(LEARNER_ID)
+  const { learnerId, targetId, theta } = useSettings()
+  const learner = useLearner(learnerId)
   const outlet = useOutletContext()
   const [index, setIndex] = useState(0)
   const [picked, setPicked] = useState(null)
   const [submitted, setSubmitted] = useState(false)
   const [correctCount, setCorrectCount] = useState(0)
-  const [change, setChange] = useState(null) // { before, after } mastery for the last answer
+  const [change, setChange] = useState(null)
 
   const currentMastery = learner.mastery[competency.id]
-  const isNowMastered = currentMastery >= THRESHOLD
-  const updatedPath = remediationPath(learner.mastery, TARGET_ID)
+  const isNowMastered = currentMastery >= theta
+  const updatedPath = remediationPath(learner.mastery, targetId, theta)
   const nextRecommendedId = updatedPath.find((id) => id !== competency.id) ?? updatedPath[0]
   const nextRecommended = nextRecommendedId ? getCompetency(nextRecommendedId) : null
 
@@ -64,7 +63,7 @@ function PracticeSession({ competency, items }) {
       setCorrectCount((c) => c + 1)
       outlet?.celebrate?.()
     }
-    setChange(recordResponse(LEARNER_ID, competency.id, isCorrect))
+    setChange(recordResponse(learner.id, competency.id, isCorrect))
   }
 
   function next() {
@@ -73,7 +72,6 @@ function PracticeSession({ competency, items }) {
     setSubmitted(false)
   }
 
-  // Keyboard navigation: A-D or 1-4 to pick an option, Enter to submit/advance
   useEffect(() => {
     if (!q) return undefined
     const handleKey = (e) => {
@@ -105,11 +103,11 @@ function PracticeSession({ competency, items }) {
         <Back />
         <h1 className="st-title">{competency.name}</h1>
         <p className="st-sub">
-          {competency.strand} • Goal: {percent(THRESHOLD)}% mastery
+          {competency.strand} · Goal: {percent(theta)}% mastery
         </p>
       </div>
       <div className="st-ph-ring">
-        <SkillRing p={currentMastery} size={72} />
+        <SkillRing p={currentMastery} theta={theta} size={72} />
         <div>Your mastery</div>
       </div>
     </div>
@@ -132,7 +130,7 @@ function PracticeSession({ competency, items }) {
         {header}
         <section className="st-card st-pad st-done">
           <span className={`st-pill st-pill--${isNowMastered ? 'ok' : 'warn'}`}>
-            {isNowMastered ? `✓ Reached ${percent(THRESHOLD)}% Mastery Line` : `${percent(currentMastery)}% Current Estimate`}
+            {isNowMastered ? `✓ Reached ${percent(theta)}% Mastery Line` : `${percent(currentMastery)}% Current Estimate`}
           </span>
           <h2 className="st-h2" style={{ marginTop: '.75rem' }}>Practice complete</h2>
           <p className="st-score" style={{ marginTop: '1rem' }}>
@@ -142,8 +140,8 @@ function PracticeSession({ competency, items }) {
           <p className="st-sub" style={{ marginTop: '.75rem' }}>answered correctly</p>
           <p className="st-note" style={{ margin: '.75rem auto 0', maxWidth: '32rem' }}>
             {isNowMastered
-              ? `Great job! Your mastery estimate for ${competency.name} is now ${percent(currentMastery)}%, which meets the ${percent(THRESHOLD)}% threshold.`
-              : `Your mastery estimate is now ${percent(currentMastery)}%. Practice another round to reach the ${percent(THRESHOLD)}% mastery line.`}
+              ? `Great job! Your mastery estimate for ${competency.name} is now ${percent(currentMastery)}%, which meets the ${percent(theta)}% threshold.`
+              : `Your mastery estimate is now ${percent(currentMastery)}%. Practice another round to reach the ${percent(theta)}% mastery line.`}
           </p>
           <div className="st-actions">
             {isNowMastered && nextRecommended ? (
@@ -174,11 +172,12 @@ function PracticeSession({ competency, items }) {
   }
 
   const deltaPts = change ? percent(change.after) - percent(change.before) : 0
-  const crossedThreshold = change && change.before < THRESHOLD && change.after >= THRESHOLD
+  const crossedThreshold = change && change.before < theta && change.after >= theta
 
   return (
     <div className="st-practice">
       {header}
+
       <section className="st-card st-pad">
         <div className="st-steps">
           <p>Question {index + 1} of {items.length}</p>
@@ -228,9 +227,7 @@ function PracticeSession({ competency, items }) {
                   </span>
                 )}
               </div>
-
               <p className="st-fb-text">{q.explanation}</p>
-
               {change && (
                 <div className="st-meter">
                   <div className="st-meter-row">
@@ -242,23 +239,22 @@ function PracticeSession({ competency, items }) {
                   <div
                     className="st-track"
                     role="img"
-                    aria-label={`Mastery moved from ${percent(change.before)} to ${percent(change.after)} percent. Mastery line ${percent(THRESHOLD)} percent.`}
+                    aria-label={`Mastery moved from ${percent(change.before)} to ${percent(change.after)} percent. Mastery line ${percent(theta)} percent.`}
                   >
                     <div
                       className="st-track-fill"
                       style={{ '--from': `${percent(change.before)}%`, '--to': `${percent(change.after)}%` }}
                     />
-                    <span className="st-line95" style={{ left: `${percent(THRESHOLD)}%` }} />
-                    <span className="st-line95-label" style={{ left: `${percent(THRESHOLD)}%` }}>
-                      {percent(THRESHOLD)}% line
+                    <span className="st-line95" style={{ left: `${percent(theta)}%` }} />
+                    <span className="st-line95-label" style={{ left: `${percent(theta)}%` }}>
+                      {percent(theta)}% line
                     </span>
                   </div>
                 </div>
               )}
-
               {crossedThreshold && (
                 <div className="st-mastered-banner">
-                  <span>🎉 You crossed the {percent(THRESHOLD)}% mastery line for {competency.short}!</span>
+                  <span>✓ You crossed the {percent(theta)}% mastery line for {competency.short}!</span>
                   {nextRecommended && (
                     <Link to={`/student/practice?skill=${nextRecommended.id}`} className="st-btn st-btn--sm st-btn--primary">
                       Jump to {nextRecommended.short}
@@ -291,9 +287,10 @@ function PracticeSession({ competency, items }) {
 
 export default function Practice() {
   const [params] = useSearchParams()
-  const learner = useLearner(LEARNER_ID)
-  const path = remediationPath(learner.mastery, TARGET_ID)
-  const [defaultSkill] = useState(() => path[0] ?? TARGET_ID)
+  const { learnerId, targetId, theta } = useSettings()
+  const learner = useLearner(learnerId)
+  const path = remediationPath(learner.mastery, targetId, theta)
+  const [defaultSkill] = useState(() => path[0] ?? targetId)
   const skillId = params.get('skill') ?? defaultSkill
   const competency = getCompetency(skillId)
 

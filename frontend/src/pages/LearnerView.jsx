@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import StatusPill from '../components/StatusPill.jsx'
 import MasteryRing from '../components/MasteryRing.jsx'
@@ -8,7 +8,7 @@ import { competencies } from '../data/mock.js'
 import { NODE, positions, VIEW } from '../data/graphLayout.js'
 import { formatPercent, percent, statusFor } from '../lib/mastery.js'
 import { candidatePath, dependencyOrder, getCompetency, prerequisitesOf } from '../lib/path.js'
-import { useLearners } from '../lib/store.js'
+import { updateSettings, useLearners, useSettings } from '../lib/store.js'
 import {
   contextQuery,
   learnerLink,
@@ -96,8 +96,21 @@ export default function LearnerView() {
   const [compareOtherId, setCompareOtherId] = useState(null)
 
   const learners = useLearners()
-  const ctx = readContext(params, learners.map((l) => l.id))
+  const settings = useSettings()
+  const effectiveParams = new URLSearchParams(params)
+  if (!effectiveParams.has('target')) effectiveParams.set('target', settings.targetId)
+  if (!effectiveParams.has('theta')) effectiveParams.set('theta', String(settings.theta))
+
+  const ctx = readContext(effectiveParams, learners.map((l) => l.id))
   const { target: targetId, theta, invalid } = ctx
+
+  useEffect(() => {
+    updateSettings({
+      targetId,
+      theta,
+      ...(ctx.learnerId ? { learnerId: ctx.learnerId } : {}),
+    })
+  }, [targetId, theta, ctx.learnerId])
   const target = getCompetency(targetId)
   const backLink = overviewLink({ target: targetId, theta, learnerId: ctx.learnerId })
 

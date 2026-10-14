@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import KnowledgeBackdrop from './KnowledgeBackdrop.jsx'
 import Logo from './Logo.jsx'
-import { competencies, THRESHOLD } from '../data/mock.js'
-import { resetLearners, useLearner } from '../lib/store.js'
+import { competencies } from '../data/mock.js'
+import { percent } from '../lib/mastery.js'
+import { resetLearners, useLearner, useSettings } from '../lib/store.js'
 import '../pages/student.css'
 
 const THEME_KEY = 'hiraya-theme'
@@ -27,9 +28,10 @@ export default function StudentShell({ userLabel, home }) {
   const [lit, setLit] = useState(0)
   const [theme, setTheme] = useState(readTheme)
   const light = theme === 'light'
-
-  const learner = useLearner('l01')
-  const masteredCount = competencies.filter((c) => (learner?.mastery?.[c.id] ?? 0) >= THRESHOLD).length
+  const { learnerId, theta } = useSettings()
+  const learner = useLearner(learnerId)
+  const masteredCount = competencies.filter((c) => (learner?.mastery?.[c.id] ?? 0) >= theta).length
+  const displayLabel = learner ? `${learner.name} · Grade 7` : userLabel
 
   function toggleTheme() {
     const next = light ? 'dark' : 'light'
@@ -44,6 +46,7 @@ export default function StudentShell({ userLabel, home }) {
   return (
     <div className="st-root" data-theme={theme}>
       <KnowledgeBackdrop pulse={`${key}:${lit}`} />
+
       <header className="on-dark st-topbar sticky top-0 z-30 border-b border-white/12 bg-night/90 px-4 py-2.5 text-white backdrop-blur-md sm:px-8">
         <div className="mx-auto flex max-w-295 flex-wrap items-center gap-x-6 gap-y-2">
           <Link to={home} className="flex items-center gap-2.5 py-1 group">
@@ -79,10 +82,9 @@ export default function StudentShell({ userLabel, home }) {
           </nav>
 
           <div className="ml-auto flex items-center gap-3 text-sm sm:ml-0">
-            <span className="st-header-pill" title="Skills at or above 95% mastery">
+            <span className="st-header-pill" title={`Skills at or above ${percent(theta)}% mastery`}>
               ✓ {masteredCount}/{competencies.length} Mastered
             </span>
-
             <button
               type="button"
               onClick={resetLearners}
@@ -95,7 +97,6 @@ export default function StudentShell({ userLabel, home }) {
               </svg>
               Reset demo
             </button>
-
             <button
               type="button"
               onClick={toggleTheme}
@@ -114,7 +115,6 @@ export default function StudentShell({ userLabel, home }) {
                 </svg>
               )}
             </button>
-
             <div className="hidden items-center gap-2 rounded-full border border-white/12 bg-white/5 py-1 pr-3 pl-1.5 lg:flex">
               <span className="grid h-6 w-6 place-items-center rounded-full bg-aqua/20 text-aqua">
                 <svg viewBox="0 0 48 48" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round">
@@ -123,9 +123,8 @@ export default function StudentShell({ userLabel, home }) {
                   <path d="M24 22c0-7 4-11 12-11 0 7-4 11-12 11Z" />
                 </svg>
               </span>
-              <span className="text-xs font-medium text-white/85">{userLabel}</span>
+              <span className="text-xs font-medium text-white/85">{displayLabel}</span>
             </div>
-
             <Link
               to="/"
               className="rounded-lg px-2.5 py-1.5 font-bold text-aqua transition-colors hover:bg-aqua/10 hover:underline"
@@ -135,6 +134,7 @@ export default function StudentShell({ userLabel, home }) {
           </div>
         </div>
       </header>
+
       <main className="st-main">
         <Outlet context={{ celebrate: () => setLit((n) => n + 1) }} />
       </main>

@@ -1,10 +1,10 @@
-import { Fragment, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { competencies } from '../data/mock.js'
 import { classWideReview, masteredCount, targetSummary, visibleRows } from '../lib/classStats.js'
 import { formatPercent, percent, statusFor } from '../lib/mastery.js'
 import { displayOrder, getCompetency } from '../lib/path.js'
-import { useLearners } from '../lib/store.js'
+import { updateSettings, useLearners, useSettings } from '../lib/store.js'
 import { contextQuery, learnerLink, readContext, THRESHOLD_OPTIONS } from '../lib/teacherContext.js'
 import Card from '../components/Card.jsx'
 import Notice from '../components/Notice.jsx'
@@ -105,12 +105,26 @@ export default function TeacherDashboard() {
   // Quick-Compare Drawer state: { a: string, b: string } | null
   const [comparePair, setComparePair] = useState(null)
 
-  const { target: targetId, theta, learnerId, invalid } = readContext(params, learners.map((l) => l.id))
-  const target = getCompetency(targetId)
-  const columns = displayOrder(targetId).map(getCompetency)
+const settings = useSettings()
+const effectiveParams = new URLSearchParams(params)
+if (!effectiveParams.has('target')) effectiveParams.set('target', settings.targetId)
+if (!effectiveParams.has('theta')) effectiveParams.set('theta', String(settings.theta))
+if (!effectiveParams.has('learner') && settings.learnerId) effectiveParams.set('learner', settings.learnerId)
 
-  const update = (change) =>
-    setParams(contextQuery({ target: targetId, theta, learnerId, ...change }), { replace: true })
+const { target: targetId, theta, learnerId, invalid } = readContext(effectiveParams, learners.map((l) => l.id))
+const target = getCompetency(targetId)
+const columns = displayOrder(targetId).map(getCompetency)
+
+useEffect(() => {
+  updateSettings({
+    targetId,
+    theta,
+    ...(learnerId ? { learnerId } : {}),
+  })
+}, [targetId, theta, learnerId])
+
+const update = (change) =>
+  setParams(contextQuery({ target: targetId, theta, learnerId, ...change }), { replace: true })
 
   const total = learners.length * competencies.length
   const masteredTotal = masteredCount(learners, theta)
