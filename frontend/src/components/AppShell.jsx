@@ -1,43 +1,129 @@
+import { useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import KnowledgeBackdrop from './KnowledgeBackdrop.jsx'
 import Logo from './Logo.jsx'
+import { resetLearners } from '../lib/store.js'
+
+const THEME_KEY = 'hiraya-theme'
+
+function readTheme() {
+  try {
+    return localStorage.getItem(THEME_KEY) === 'dark' ? 'dark' : 'light'
+  } catch {
+    return 'light'
+  }
+}
 
 export default function AppShell({ links, userLabel, home }) {
-  const { search } = useLocation()
+  const { search, pathname, key } = useLocation()
+  const [theme, setTheme] = useState(readTheme)
+  const isDark = theme === 'dark'
+
+  function toggleTheme() {
+    const next = isDark ? 'light' : 'dark'
+    setTheme(next)
+    try {
+      localStorage.setItem(THEME_KEY, next)
+    } catch {
+      // Ignore storage restrictions
+    }
+  }
 
   return (
-    <div className="min-h-screen bg-surface">
-      <header className="on-dark flex flex-wrap items-center gap-x-6 gap-y-1 bg-night px-4 py-2 text-white sm:px-8">
-        <Link to={home} className="flex items-center gap-2.5 py-1">
-          <Logo className="text-aqua" />
-          <span className="font-display text-xl font-bold tracking-widest text-white">HIRAYA</span>
-        </Link>
+    <div className="tc-root" data-theme={theme}>
+      <KnowledgeBackdrop pulse={key} />
 
-        <nav className="order-last flex w-full gap-1 overflow-x-auto sm:order-none sm:w-auto sm:flex-1">
-          {links.map((link) => (
-            <NavLink
-              key={link.to}
-              to={{ pathname: link.to, search: link.keepSearch ? search : '' }}
-              end={link.end}
-              className={({ isActive }) =>
-                `whitespace-nowrap rounded-lg px-3 py-2.5 sm:px-3.5 sm:py-3 ${
-                  isActive ? 'bg-white/15 font-bold text-white' : 'font-medium text-white/75 hover:bg-white/10 hover:text-white'
-                }`
-              }
-            >
-              {link.label}
-            </NavLink>
-          ))}
-        </nav>
-
-        <div className="ml-auto flex items-center gap-4 text-sm sm:ml-0">
-          <span className="hidden sm:inline">{userLabel}</span>
-          <Link to="/" className="py-3 font-bold text-aqua hover:underline">
-            Sign out
+      <header className="on-dark sticky top-0 z-30 border-b border-white/12 bg-night/90 px-4 py-2.5 text-white backdrop-blur-md sm:px-8">
+        <div className="mx-auto flex max-w-295 flex-wrap items-center gap-x-6 gap-y-2">
+          <Link to={{ pathname: home, search }} className="flex items-center gap-2.5 py-1 group">
+            <Logo size={32} className="text-aqua transition-transform duration-200 group-hover:scale-105" />
+            <div className="flex items-baseline gap-2">
+              <span className="font-display text-xl font-bold tracking-widest text-white">HIRAYA</span>
+              <span className="rounded-full border border-aqua/30 bg-aqua/10 px-2 py-0.5 text-[11px] font-bold tracking-wide text-aqua uppercase">
+                Teacher
+              </span>
+            </div>
           </Link>
+
+          <nav
+            aria-label="Teacher navigation"
+            className="order-last flex w-full gap-1.5 overflow-x-auto pb-1 sm:order-none sm:w-auto sm:flex-1 sm:pb-0"
+          >
+            {links.map((link) => (
+              <NavLink
+                key={link.to}
+                to={{ pathname: link.to, search: link.keepSearch ? search : '' }}
+                end={link.end}
+                className={({ isActive }) =>
+                  `relative whitespace-nowrap rounded-lg px-3.5 py-2 text-sm transition-colors ${
+                    isActive
+                      ? 'bg-aqua/15 font-bold text-white shadow-[inset_0_-2px_0_0_#66e5d3]'
+                      : 'font-medium text-white/75 hover:bg-white/10 hover:text-white'
+                  }`
+                }
+              >
+                {link.label}
+              </NavLink>
+            ))}
+          </nav>
+
+          <div className="ml-auto flex items-center gap-3 text-sm sm:ml-0">
+            <button
+              type="button"
+              onClick={resetLearners}
+              title="Reset sample BKT mastery data to initial values"
+              className="hidden rounded-lg border border-white/15 bg-white/5 px-2.5 py-1.5 text-xs font-bold text-white/80 transition-colors hover:border-aqua/40 hover:bg-white/10 hover:text-white md:inline-flex items-center gap-1.5 cursor-pointer"
+            >
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
+                <path d="M3 3v5h5" />
+              </svg>
+              Reset demo
+            </button>
+
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              className="grid h-8.5 w-8.5 place-items-center rounded-full border border-white/15 bg-white/8 text-white/85 transition-colors hover:bg-white/15 hover:text-white cursor-pointer"
+            >
+              {isDark ? (
+                <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="4" />
+                  <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5Z" />
+                </svg>
+              )}
+            </button>
+
+            <div className="hidden items-center gap-2 rounded-full border border-white/12 bg-white/5 py-1 pr-3 pl-1.5 lg:flex">
+              <span className="grid h-6 w-6 place-items-center rounded-full bg-aqua/20 text-aqua">
+                <svg viewBox="0 0 48 48" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="6" y="8" width="36" height="32" rx="5" />
+                  <path d="M16 32v-7M24 32V16M32 32v-11" />
+                </svg>
+              </span>
+              <span className="text-xs font-medium text-white/85">{userLabel}</span>
+            </div>
+
+            <Link
+              to="/"
+              onClick={() => {
+                // Keep pathname awareness clean
+              }}
+              className="rounded-lg px-2.5 py-1.5 font-bold text-aqua transition-colors hover:bg-aqua/10 hover:underline"
+            >
+              Sign out
+            </Link>
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-295 px-4 py-6 sm:px-8 sm:py-10">
+      <main key={pathname} className="relative z-10 mx-auto w-full max-w-295 px-4 py-6 sm:px-8 sm:py-9">
         <Outlet />
       </main>
     </div>

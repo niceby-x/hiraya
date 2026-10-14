@@ -1,7 +1,29 @@
 // SAMPLE practice items for the prototype. Replace with the real item bank.
 // answer is the index of the correct option.
-
 export const questions = {
+  c1: [
+    {
+      id: 'c1-1',
+      prompt: 'What is the value of (-8) + 15?',
+      options: ['-23', '-7', '7', '23'],
+      answer: 2,
+      explanation: 'When adding integers with different signs, subtract the smaller absolute value from the larger (15 - 8 = 7) and keep the sign of the larger number (+7).',
+    },
+    {
+      id: 'c1-2',
+      prompt: 'Evaluate: (-6) - (-10)',
+      options: ['-16', '-4', '4', '16'],
+      answer: 2,
+      explanation: 'Subtracting a negative integer is the same as adding its opposite: (-6) + 10 = 4.',
+    },
+    {
+      id: 'c1-3',
+      prompt: 'What is the product of (-7) × (-4)?',
+      options: ['-28', '-11', '11', '28'],
+      answer: 3,
+      explanation: 'The product of two negative integers is always positive: (-7) × (-4) = 28.',
+    },
+  ],
   c2: [
     {
       id: 'c2-1',
@@ -49,10 +71,102 @@ export const questions = {
     },
     {
       id: 'c3-3',
-      prompt: 'What is -0.5 − (-1.25)?',
+      prompt: 'What is -0.5 - (-1.25)?',
       options: ['-1.75', '0.75', '1.75', '-0.75'],
       answer: 1,
       explanation: 'Subtracting a negative means adding: -0.5 + 1.25 = 0.75.',
+    },
+  ],
+  c4: [
+    {
+      id: 'c4-1',
+      prompt: 'What is the value of 2⁴?',
+      options: ['6', '8', '16', '32'],
+      answer: 2,
+      explanation: '2⁴ means multiplying 2 by itself 4 times: 2 × 2 × 2 × 2 = 16.',
+    },
+    {
+      id: 'c4-2',
+      prompt: 'Simplify using the product rule of exponents: x³ · x²',
+      options: ['x⁵', 'x⁶', '2x⁵', 'x⁹'],
+      answer: 0,
+      explanation: 'When multiplying powers with the same base, add the exponents: x³⁺² = x⁵.',
+    },
+    {
+      id: 'c4-3',
+      prompt: 'What is the value of (-3)²?',
+      options: ['-9', '-6', '6', '9'],
+      answer: 3,
+      explanation: 'Squaring -3 means (-3) × (-3) = 9.',
+    },
+  ],
+  c5: [
+    {
+      id: 'c5-1',
+      prompt: 'Evaluate 3x - 4 when x = 5.',
+      options: ['11', '15', '19', '31'],
+      answer: 0,
+      explanation: 'Substitute x = 5 into the expression: 3(5) - 4 = 15 - 4 = 11.',
+    },
+    {
+      id: 'c5-2',
+      prompt: 'Find the value of 2a² + 1 when a = -3.',
+      options: ['-17', '-11', '13', '19'],
+      answer: 3,
+      explanation: 'First compute (-3)² = 9, then multiply by 2 to get 18, and add 1: 18 + 1 = 19.',
+    },
+    {
+      id: 'c5-3',
+      prompt: 'Evaluate 4(y + 2) - y when y = 3.',
+      options: ['11', '14', '17', '20'],
+      answer: 2,
+      explanation: 'Substitute y = 3: 4(3 + 2) - 3 = 4(5) - 3 = 20 - 3 = 17.',
+    },
+  ],
+  c6: [
+    {
+      id: 'c6-1',
+      prompt: 'Simplify the expression: 5x + 3 - 2x + 7',
+      options: ['3x + 10', '7x + 10', '3x + 4', '13x'],
+      answer: 0,
+      explanation: 'Combine like terms: (5x - 2x) + (3 + 7) = 3x + 10.',
+    },
+    {
+      id: 'c6-2',
+      prompt: 'Expand and simplify: 3(2x - 4) + x',
+      options: ['6x - 4', '7x - 12', '5x - 12', '7x - 4'],
+      answer: 1,
+      explanation: 'Distribute 3 across (2x - 4) to get 6x - 12, then add x: 6x + x - 12 = 7x - 12.',
+    },
+    {
+      id: 'c6-3',
+      prompt: 'Simplify: (4a - 1) - (a - 5)',
+      options: ['3a - 6', '3a + 4', '5a + 4', '3a - 4'],
+      answer: 1,
+      explanation: 'Distribute the negative sign: 4a - 1 - a + 5 = (4a - a) + (-1 + 5) = 3a + 4.',
+    },
+  ],
+  c7: [
+    {
+      id: 'c7-1',
+      prompt: 'Solve for x: 2x + 5 = 17',
+      options: ['x = 6', 'x = 11', 'x = 12', 'x = 22'],
+      answer: 0,
+      explanation: 'Subtract 5 from both sides to get 2x = 12, then divide both sides by 2 to get x = 6.',
+    },
+    {
+      id: 'c7-2',
+      prompt: 'Solve for y: 3(y - 2) = 15',
+      options: ['y = 3', 'y = 5', 'y = 7', 'y = 9'],
+      answer: 2,
+      explanation: 'Divide both sides by 3 to get y - 2 = 5, then add 2 to both sides to get y = 7.',
+    },
+    {
+      id: 'c7-3',
+      prompt: 'Solve for n: 4n - 3 = n + 9',
+      options: ['n = 2', 'n = 3', 'n = 4', 'n = 6'],
+      answer: 2,
+      explanation: 'Subtract n from both sides (3n - 3 = 9), add 3 to both sides (3n = 12), and divide by 3 to get n = 4.',
     },
   ],
 }

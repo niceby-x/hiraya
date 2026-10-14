@@ -1,0 +1,182 @@
+import { paramsFor } from '../data/bktParams.js'
+import { observe, predictCorrect, updateMastery } from '../lib/bkt.js'
+import { formatPercent, percent, statusFor } from '../lib/mastery.js'
+import { getCompetency } from '../lib/path.js'
+import { recordResponse } from '../lib/store.js'
+import StatusPill from './StatusPill.jsx'
+
+export default function BktInspector({ learner, skillId, theta, onClose }) {
+  if (!learner || !skillId) return null
+
+  const competency = getCompetency(skillId)
+  if (!competency) return null
+
+  const prior = learner.mastery?.[skillId]
+  const hasPrior = typeof prior === 'number' && Number.isFinite(prior)
+  const params = paramsFor(skillId)
+
+  const pCorrectNext = hasPrior ? predictCorrect(prior, params) : null
+  const obsRight = hasPrior ? observe(prior, true, params) : null
+  const nextRight = hasPrior ? updateMastery(prior, true, params) : null
+  const obsWrong = hasPrior ? observe(prior, false, params) : null
+  const nextWrong = hasPrior ? updateMastery(prior, false, params) : null
+
+  const fmtDec = (n) => (typeof n === 'number' ? `${(n * 100).toFixed(1)}%` : '—')
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="bkt-inspector-title"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-night/60 p-4 backdrop-blur-xs"
+      onClick={onClose}
+    >
+      <div
+        className="tc-card relative w-full max-w-lg rounded-2xl border border-brand/35 p-6 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-line pb-4">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-brand-soft px-2.5 py-0.5 text-xs font-bold text-brand">
+                BKT Model Inspector
+              </span>
+              <span className="text-xs font-bold text-muted">{learner.name}</span>
+            </div>
+            <h2 id="bkt-inspector-title" className="mt-1.5 font-display text-xl font-bold text-ink">
+              {competency.name} ({competency.short})
+            </h2>
+            <p className="text-xs text-muted">{competency.strand}</p>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close BKT inspector"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-line bg-white text-muted transition-colors hover:border-brand hover:text-ink cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Current State & Prediction */}
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className="rounded-xl border border-line bg-white p-3.5">
+            <p className="text-[11px] font-bold tracking-wider text-muted uppercase">
+              Current Mastery P(Lₙ)
+            </p>
+            <div className="mt-1 flex items-baseline justify-between gap-2">
+              <span className="font-display text-2xl font-bold text-ink tabular-nums">
+                {formatPercent(prior, theta)}
+              </span>
+              <StatusPill band={statusFor(prior, theta)} />
+            </div>
+            <p className="mt-1 text-[11px] text-muted tabular-nums">
+              Exact prior: {hasPrior ? prior.toFixed(4) : 'No data'} (θ = {percent(theta)}%)
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-line bg-white p-3.5">
+            <p className="text-[11px] font-bold tracking-wider text-muted uppercase">
+              Next Correct Pred. P(Cₙ₊₁)
+            </p>
+            <p className="mt-1 font-display text-2xl font-bold text-brand tabular-nums">
+              {fmtDec(pCorrectNext)}
+            </p>
+            <p className="mt-1 text-[11px] text-muted">
+              P(Lₙ)(1 − S) + (1 − P(Lₙ))G
+            </p>
+          </div>
+        </div>
+
+        {/* Fitted / Sample BKT Parameters */}
+        <div className="mt-4">
+          <p className="text-xs font-bold tracking-wider text-muted uppercase">
+            Skill BKT Parameters (Sample)
+          </p>
+          <div className="mt-2 grid grid-cols-3 gap-2.5 text-center">
+            <div className="rounded-xl border border-line bg-white p-2.5">
+              <p className="text-xs font-bold text-muted">Guess P(G)</p>
+              <p className="mt-0.5 font-display text-lg font-bold text-ink tabular-nums">
+                {params.guess.toFixed(2)}
+              </p>
+              <p className="text-[10px] text-muted">Right without mastery</p>
+            </div>
+            <div className="rounded-xl border border-line bg-white p-2.5">
+              <p className="text-xs font-bold text-muted">Slip P(S)</p>
+              <p className="mt-0.5 font-display text-lg font-bold text-ink tabular-nums">
+                {params.slip.toFixed(2)}
+              </p>
+              <p className="text-[10px] text-muted">Wrong despite mastery</p>
+            </div>
+            <div className="rounded-xl border border-line bg-white p-2.5">
+              <p className="text-xs font-bold text-muted">Learn P(T)</p>
+              <p className="mt-0.5 font-display text-lg font-bold text-ink tabular-nums">
+                {params.learn.toFixed(2)}
+              </p>
+              <p className="text-[10px] text-muted">Transition per item</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Two-Step Posterior Transition Preview */}
+        {hasPrior && (
+          <div className="mt-4">
+            <p className="text-xs font-bold tracking-wider text-muted uppercase">
+              Next Response Bayesian Update Preview
+            </p>
+            <div className="mt-2 grid gap-2.5 sm:grid-cols-2">
+              <div className="rounded-xl border border-mastered/30 bg-mastered-soft/45 p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-mastered-ink">If Next Answer is Correct</span>
+                  <span className="rounded-full bg-mastered text-white px-2 py-0.5 text-[11px] font-bold tabular-nums">
+                    +{ ((nextRight - prior) * 100).toFixed(1) }%
+                  </span>
+                </div>
+                <p className="mt-1.5 text-xs text-muted tabular-nums">
+                  1. Posterior P(L|✓): <strong className="text-ink">{fmtDec(obsRight)}</strong>
+                </p>
+                <p className="text-xs text-muted tabular-nums">
+                  2. After Learn P(Lₙ): <strong className="text-mastered-ink">{fmtDec(nextRight)}</strong>
+                </p>
+                <button
+                  type="button"
+                  onClick={() => recordResponse(learner.id, skillId, true)}
+                  className="mt-2.5 w-full rounded-lg bg-mastered px-3 py-1.5 text-xs font-bold text-white transition-opacity hover:opacity-90 cursor-pointer"
+                >
+                  Simulate +1 Correct Answer
+                </button>
+              </div>
+
+              <div className="rounded-xl border border-low/30 bg-low-soft/45 p-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-low-ink">If Next Answer is Wrong</span>
+                  <span className="rounded-full bg-low text-white px-2 py-0.5 text-[11px] font-bold tabular-nums">
+                    { ((nextWrong - prior) * 100).toFixed(1) }%
+                  </span>
+                </div>
+                <p className="mt-1.5 text-xs text-muted tabular-nums">
+                  1. Posterior P(L|✗): <strong className="text-ink">{fmtDec(obsWrong)}</strong>
+                </p>
+                <p className="text-xs text-muted tabular-nums">
+                  2. After Learn P(Lₙ): <strong className="text-low-ink">{fmtDec(nextWrong)}</strong>
+                </p>
+                <button
+                  type="button"
+                  onClick={() => recordResponse(learner.id, skillId, false)}
+                  className="mt-2.5 w-full rounded-lg bg-low px-3 py-1.5 text-xs font-bold text-white transition-opacity hover:opacity-90 cursor-pointer"
+                >
+                  Simulate +1 Wrong Answer
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <p className="mt-4 border-t border-line pt-3 text-[11px] text-muted">
+          Simulating an answer updates in-memory BKT state across both Teacher and Student views. Use <strong>Reset demo</strong> in the top bar to restore initial values.
+        </p>
+      </div>
+    </div>
+  )
+}

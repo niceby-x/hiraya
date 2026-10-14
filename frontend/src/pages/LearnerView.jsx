@@ -1,11 +1,22 @@
+import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import StatusPill from '../components/StatusPill.jsx'
+import MasteryRing from '../components/MasteryRing.jsx'
+import BktInspector from '../components/BktInspector.jsx'
+import LearnerCompareDrawer from '../components/LearnerCompareDrawer.jsx'
 import { competencies } from '../data/mock.js'
 import { NODE, positions, VIEW } from '../data/graphLayout.js'
 import { formatPercent, percent, statusFor } from '../lib/mastery.js'
 import { candidatePath, dependencyOrder, getCompetency, prerequisitesOf } from '../lib/path.js'
 import { useLearners } from '../lib/store.js'
-import { contextQuery, learnerLink, learnerSelection, overviewLink, readContext } from '../lib/teacherContext.js'
+import {
+  contextQuery,
+  learnerLink,
+  learnerSelection,
+  overviewLink,
+  readContext,
+  THRESHOLD_OPTIONS,
+} from '../lib/teacherContext.js'
 import Card from '../components/Card.jsx'
 import Notice from '../components/Notice.jsx'
 
@@ -14,16 +25,13 @@ const nodeStyles = {
   below: 'fill-gap-soft stroke-gap',
   none: 'fill-surface stroke-muted',
 }
+const nodeWord = { meets: '✓ Meets', below: '▲ Below', none: 'No data' }
 
-const nodeWord = { meets: '✓ Meets', below: '▼ Below', none: 'No data' }
-
-// Shown when no learner has been chosen yet, or the link names a learner who is not in the class.
-// Choosing here replaces this history entry, so Back leaves the page instead of returning to the list.
 function LearnerPicker({ state, learners, target, theta, invalid, backLink }) {
   return (
     <div className="flex flex-col gap-6">
-      <Link to={backLink} className="text-sm font-bold text-brand">
-        ← Class overview
+      <Link to={backLink} className="inline-flex items-center gap-1.5 text-sm font-bold text-brand hover:underline">
+        <span aria-hidden="true">←</span> Class overview
       </Link>
       {invalid.target && (
         <Notice>The target competency in the link was not recognized, so the default target is shown.</Notice>
@@ -32,7 +40,7 @@ function LearnerPicker({ state, learners, target, theta, invalid, backLink }) {
         <Notice>The mastery threshold in the link was not recognized, so {percent(theta)}% is used.</Notice>
       )}
       <Card>
-        <h1 className="font-display text-2xl font-bold">
+        <h1 className="font-display text-2xl font-bold sm:text-3xl">
           {state === 'invalid' ? 'Learner not found' : 'Choose a learner'}
         </h1>
         <p className="mt-2 max-w-3xl text-muted">
@@ -41,30 +49,41 @@ function LearnerPicker({ state, learners, target, theta, invalid, backLink }) {
             : 'No learner is selected yet. Choose a learner to see their mastery estimates, prerequisite graph and suggested review order.'}
         </p>
         <p className="mt-2 text-sm text-muted">
-          Target competency: <strong className="text-ink">{target.name}</strong> · Mastery threshold:{' '}
+          Target competency: <strong className="text-ink">{target.name}</strong> • Mastery threshold:{' '}
           <strong className="text-ink">{percent(theta)}%</strong>
         </p>
-        <ul className="mt-4 divide-y divide-line">
+        <ul className="mt-5 grid gap-3 sm:grid-cols-2">
           {learners.map((l) => {
             const p = l.mastery?.[target.id]
+            const { gaps } = candidatePath(l.mastery, target.id, theta)
             return (
-              <li key={l.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-3">
-                <p className="w-28 font-bold">{l.name}</p>
-                <p className="w-16 font-bold">{formatPercent(p, theta)}</p>
-                <StatusPill band={statusFor(p, theta)} />
+              <li key={l.id}>
                 <Link
                   to={learnerLink({ learnerId: l.id, target: target.id, theta })}
                   replace
-                  className="ml-auto font-bold text-brand"
+                  className="flex items-center gap-4 rounded-xl border border-line bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-brand hover:shadow-md"
                 >
-                  Open learner view
-                  <span className="sr-only"> for {l.name}</span> →
+                  <MasteryRing p={p ?? 0} theta={theta} size={52} />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-display text-lg font-bold text-ink">{l.name}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                      <StatusPill band={statusFor(p, theta)} />
+                      <span className="text-xs font-bold text-muted">
+                        {gaps.length} prerequisite gap{gaps.length === 1 ? '' : 's'}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="font-bold text-brand">
+                    Open <span className="sr-only">learner view for {l.name}</span>→
+                  </span>
                 </Link>
               </li>
             )
           })}
         </ul>
-        <p className="mt-4 text-sm text-muted">Percentages are each learner's BKT estimate for the target competency.</p>
+        <p className="mt-4 text-xs text-muted">
+          Percentages are each learner&apos;s BKT estimate for the selected target competency ({target.name}).
+        </p>
       </Card>
     </div>
   )
@@ -72,6 +91,10 @@ function LearnerPicker({ state, learners, target, theta, invalid, backLink }) {
 
 export default function LearnerView() {
   const [params, setParams] = useSearchParams()
+  const [hoveredNode, setHoveredNode] = useState(null)
+  const [inspectedSkill, setInspectedSkill] = useState(null)
+  const [compareOtherId, setCompareOtherId] = useState(null)
+
   const learners = useLearners()
   const ctx = readContext(params, learners.map((l) => l.id))
   const { target: targetId, theta, invalid } = ctx
@@ -81,8 +104,8 @@ export default function LearnerView() {
   if (learners.length === 0) {
     return (
       <div className="flex flex-col gap-6">
-        <Link to={backLink} className="text-sm font-bold text-brand">
-          ← Class overview
+        <Link to={backLink} className="inline-flex items-center gap-1.5 text-sm font-bold text-brand hover:underline">
+          <span aria-hidden="true">←</span> Class overview
         </Link>
         <Card>
           <h1 className="font-display text-2xl font-bold">No learners yet</h1>
@@ -109,13 +132,14 @@ export default function LearnerView() {
   const learner = learners.find((l) => l.id === ctx.learnerId)
   const mastery = learner.mastery ?? {}
 
-  // Same function the class overview uses for its target-specific counts.
+  const updateContext = (change) =>
+    setParams(contextQuery({ learnerId: learner.id, target: targetId, theta, ...change }), { replace: true })
+
   const result = candidatePath(mastery, targetId, theta)
   const path = result.path
   const onPath = new Set(path)
   const relevant = new Set(dependencyOrder(targetId))
   const hasUnrelated = competencies.some((c) => !relevant.has(c.id))
-
   const prerequisites = prerequisitesOf(targetId)
   const metPrerequisites = prerequisites.filter((id) => statusFor(mastery[id], theta) === 'meets')
   const targetEstimate = formatPercent(mastery[targetId], theta)
@@ -138,21 +162,24 @@ export default function LearnerView() {
     return `M ${x1} ${a.y} C ${xm} ${a.y}, ${xm} ${b.y}, ${x2} ${b.y}`
   }
 
-  const drawEdge = (e) => (
-    <path
-      key={e.key}
-      d={edgePath(e)}
-      fill="none"
-      strokeWidth={e.onPath ? 3 : 2}
-      className={e.onPath ? 'stroke-brand' : 'stroke-muted/60'}
-      markerEnd={`url(#${e.onPath ? 'arrow-brand' : 'arrow-gray'})`}
-    />
-  )
+  const drawEdge = (e) => {
+    const isConnectedToHover = hoveredNode && (e.from === hoveredNode || e.to === hoveredNode)
+    return (
+      <path
+        key={e.key}
+        d={edgePath(e)}
+        fill="none"
+        strokeWidth={e.onPath || isConnectedToHover ? 3.5 : 2}
+        className={`${
+          e.onPath ? 'stroke-brand tc-edge-animated' : isConnectedToHover ? 'stroke-brand' : 'stroke-muted/45'
+        } transition-opacity duration-200`}
+        markerEnd={`url(#${e.onPath || isConnectedToHover ? 'arrow-brand' : 'arrow-gray'})`}
+      />
+    )
+  }
 
   const gapCount = result.gaps.length
 
-  // One plain-language message for each outcome. An empty path is not a statement
-  // that the learner has no difficulties.
   const messages = {
     'needs-review':
       gapCount === 0
@@ -164,40 +191,103 @@ export default function LearnerView() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <Link to={backLink} className="text-sm font-bold text-brand">
-            ← Class overview
-          </Link>
-          <h1 className="mt-3 font-display text-3xl font-bold sm:text-4xl">{learner.name}</h1>
-          <p className="mt-2 text-muted">
-            Target competency: <strong className="text-ink">{target.name}</strong> · Mastery threshold:{' '}
-            <strong className="text-ink">{percent(theta)}%</strong>
-          </p>
-          <p className="mt-1 max-w-3xl text-muted">{messages[result.status]}</p>
-        </div>
+    <div className="flex flex-col gap-7">
+      {/* Header & Switcher Controls */}
+      <Card className="border-brand/25">
+        <div className="flex flex-wrap items-start justify-between gap-6">
+          <div className="flex-1 min-w-64">
+            <Link to={backLink} className="inline-flex items-center gap-1.5 text-sm font-bold text-brand hover:underline">
+              <span aria-hidden="true">←</span> Class overview
+            </Link>
 
-        <div>
-          <label htmlFor="learner" className="text-sm font-bold text-muted">
-            Learner
-          </label>
-          <select
-            id="learner"
-            value={learner.id}
-            onChange={(e) =>
-              setParams(contextQuery({ learnerId: e.target.value, target: targetId, theta }), { replace: true })
-            }
-            className="mt-1 block rounded-lg border border-line bg-white px-4 py-2 font-bold"
-          >
-            {learners.map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.name}
-              </option>
-            ))}
-          </select>
+            <div className="mt-3 flex flex-wrap items-center gap-4">
+              <MasteryRing p={mastery[targetId] ?? 0} theta={theta} size={64} />
+              <div>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <h1 className="font-display text-3xl font-bold sm:text-4xl">{learner.name}</h1>
+                  <StatusPill band={statusFor(mastery[targetId], theta)} />
+                </div>
+                <p className="mt-1 text-sm text-muted">
+                  Target competency: <strong className="text-ink">{target.name}</strong> ({targetEstimate}) • Mastery threshold:{' '}
+                  <strong className="text-ink">{percent(theta)}%</strong>
+                </p>
+              </div>
+            </div>
+
+            <p className="mt-3 max-w-3xl rounded-xl bg-brand-soft/60 px-4 py-2.5 text-sm font-medium text-ink">
+              {messages[result.status]}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-end gap-3">
+            <div>
+              <label htmlFor="learner" className="mb-1 block text-xs font-bold tracking-wider text-muted uppercase">
+                Learner
+              </label>
+              <select
+                id="learner"
+                value={learner.id}
+                onChange={(e) => updateContext({ learnerId: e.target.value })}
+                className="block rounded-xl border border-line bg-white px-3.5 py-2 text-sm font-bold shadow-2xs"
+              >
+                {learners.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="target-select" className="mb-1 block text-xs font-bold tracking-wider text-muted uppercase">
+                Target
+              </label>
+              <select
+                id="target-select"
+                value={targetId}
+                onChange={(e) => updateContext({ target: e.target.value })}
+                className="block rounded-xl border border-line bg-white px-3.5 py-2 text-sm font-bold shadow-2xs"
+              >
+                {competencies.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.short} — {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <p className="mb-1 text-xs font-bold tracking-wider text-muted uppercase">Threshold</p>
+              <div className="inline-flex rounded-xl border border-line bg-white p-1 shadow-2xs">
+                {THRESHOLD_OPTIONS.map((o) => (
+                  <button
+                    key={o}
+                    type="button"
+                    onClick={() => updateContext({ theta: o })}
+                    className={`rounded-lg px-3 py-1 text-sm font-bold transition-colors cursor-pointer ${
+                      theta === o ? 'bg-brand text-white' : 'text-muted hover:text-ink'
+                    }`}
+                  >
+                    {percent(o)}%
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {learners.length >= 2 && (
+              <button
+                type="button"
+                onClick={() =>
+                  setCompareOtherId(learners.find((l) => l.id !== learner.id)?.id ?? learner.id)
+                }
+                className="rounded-xl border border-brand/30 bg-brand-soft px-3.5 py-2 text-sm font-bold text-brand transition-colors hover:bg-brand hover:text-white cursor-pointer"
+              >
+                Compare learner
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      </Card>
 
       {invalid.target && (
         <Notice>The target competency in the link was not recognized, so the default target is shown.</Notice>
@@ -206,15 +296,25 @@ export default function LearnerView() {
         <Notice>The mastery threshold in the link was not recognized, so {percent(theta)}% is used.</Notice>
       )}
 
+      {/* Interactive Prerequisite Graph */}
       <Card>
-        <h2 className="font-display text-2xl font-bold">Prerequisite graph</h2>
-        <p className="mt-1 text-sm text-muted">
-          Arrows point from a prerequisite to the skill that builds on it. Teal arrows and numbered circles
-          show the suggested review order. Percentages are BKT mastery estimates.
-        </p>
-        <p className="mt-1 text-sm font-bold text-muted lg:hidden">Swipe sideways to see the whole graph.</p>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h2 className="font-display text-2xl font-bold">Prerequisite graph</h2>
+            <p className="mt-1 text-sm text-muted">
+              Arrows point from a prerequisite to the skill that builds on it. Animated teal arrows and numbered badges show the suggested review order.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setInspectedSkill(targetId)}
+            className="rounded-xl border border-line bg-white px-3 py-1.5 text-xs font-bold text-brand hover:border-brand cursor-pointer"
+          >
+            Inspect BKT math for {target.short} →
+          </button>
+        </div>
 
-        <div className="mt-6 overflow-x-auto">
+        <div className="tc-graph-surface mt-5 overflow-x-auto rounded-2xl border border-line p-4">
           <svg
             viewBox={`0 0 ${VIEW.w} ${VIEW.h}`}
             role="img"
@@ -258,33 +358,60 @@ export default function LearnerView() {
               const step = path.indexOf(c.id)
               const left = x - NODE.w / 2
               const top = y - NODE.h / 2
-
+              const isTarget = c.id === targetId
               return (
-                <g key={c.id} className={relevant.has(c.id) ? undefined : 'opacity-50'}>
-                  <title>{`${c.name}: ${formatPercent(p, theta)}${s === 'none' ? '' : s === 'meets' ? ' (meets the threshold)' : ' (below the threshold)'}`}</title>
+                <g
+                  key={c.id}
+                  onMouseEnter={() => setHoveredNode(c.id)}
+                  onMouseLeave={() => setHoveredNode(null)}
+                  onClick={() => setInspectedSkill(c.id)}
+                  className={`cursor-pointer transition-opacity duration-200 ${
+                    relevant.has(c.id) ? '' : 'opacity-45 hover:opacity-90'
+                  }`}
+                >
+                  <title>{`${c.name}: ${formatPercent(p, theta)}${
+                    s === 'none' ? '' : s === 'meets' ? ' (meets the threshold)' : ' (below the threshold)'
+                  } — Click to inspect BKT parameters`}</title>
+
+                  {isTarget && (
+                    <rect
+                      x={left - 5}
+                      y={top - 5}
+                      width={NODE.w + 10}
+                      height={NODE.h + 10}
+                      rx={16}
+                      fill="none"
+                      strokeWidth={2}
+                      strokeDasharray="5 3"
+                      className="stroke-brand"
+                    />
+                  )}
+
                   <rect
                     x={left}
                     y={top}
                     width={NODE.w}
                     height={NODE.h}
                     rx={12}
-                    strokeWidth={c.id === targetId ? 3 : 2}
+                    strokeWidth={isTarget ? 3 : 2}
                     className={nodeStyles[s]}
                   />
                   <text x={x} y={y - 4} textAnchor="middle" className="fill-ink text-base font-bold">
                     {c.short}
                   </text>
-                  <text x={x} y={y + 18} textAnchor="middle" className="fill-ink text-sm">
-                    {formatPercent(p, theta)} · {nodeWord[s]}
+                  <text x={x} y={y + 18} textAnchor="middle" className="fill-ink text-sm font-medium">
+                    {formatPercent(p, theta)} • {nodeWord[s]}
                   </text>
-                  {c.id === targetId && (
+
+                  {isTarget && (
                     <text x={left + NODE.w - 8} y={top + 15} textAnchor="end" className="fill-brand text-xs font-bold">
                       Target
                     </text>
                   )}
+
                   {step >= 0 && (
                     <g>
-                      <circle cx={left + 4} cy={top + 4} r={13} className="fill-brand" />
+                      <circle cx={left + 4} cy={top + 4} r={14} className="fill-brand stroke-white" strokeWidth="2" />
                       <text x={left + 4} y={top + 9} textAnchor="middle" className="fill-white text-sm font-bold">
                         {step + 1}
                       </text>
@@ -296,7 +423,7 @@ export default function LearnerView() {
           </svg>
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-x-8 gap-y-3 text-sm text-muted">
+        <div className="mt-5 flex flex-wrap items-center gap-x-8 gap-y-3 text-sm text-muted">
           <div className="flex items-center gap-2">
             <StatusPill band="meets" />
             <span>estimate at or above {percent(theta)}%</span>
@@ -305,29 +432,86 @@ export default function LearnerView() {
             <StatusPill band="below" />
             <span>estimate below {percent(theta)}%</span>
           </div>
+          <span className="text-xs">
+            Click any skill node in the graph to inspect its BKT parameters and simulate answers.
+          </span>
         </div>
         {hasUnrelated && (
-          <p className="mt-3 text-sm text-muted">Faded skills are not prerequisites of the selected target.</p>
+          <p className="mt-2 text-xs text-muted">Faded skills are not prerequisites of the selected target.</p>
         )}
       </Card>
 
+      {/* Suggested Topological Review Order */}
       <Card>
-        <h2 className="font-display text-2xl font-bold">Suggested review order</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-display text-2xl font-bold">Suggested review order</h2>
+          {path.length > 0 && (
+            <span className="rounded-full bg-brand-soft px-3 py-1 text-xs font-bold text-brand">
+              {path.length} step{path.length === 1 ? '' : 's'} in topological order
+            </span>
+          )}
+        </div>
+
         {path.length === 0 ? (
-          <p className="mt-2 max-w-3xl text-muted">{messages[result.status]}</p>
+          <p className="mt-3 max-w-3xl rounded-xl bg-mastered-soft/60 p-4 text-sm font-medium text-mastered-ink">
+            {messages[result.status]}
+          </p>
         ) : (
-          <ol className="mt-4 divide-y divide-line">
+          <ol className="mt-5 flex flex-col gap-3">
             {path.map((id, i) => {
               const c = getCompetency(id)
               const p = mastery[id]
+              const isFirst = i === 0
+              const isTarget = id === targetId
               return (
-                <li key={id} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-3">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand font-bold text-white">
+                <li
+                  key={id}
+                  className={`flex flex-wrap items-center gap-4 rounded-xl border p-4 transition-colors ${
+                    isFirst
+                      ? 'border-brand bg-brand-soft/35 shadow-xs'
+                      : 'border-line bg-white'
+                  }`}
+                >
+                  <span
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-display font-bold ${
+                      isFirst ? 'bg-brand text-white shadow-sm' : 'border-2 border-brand text-brand'
+                    }`}
+                  >
                     {i + 1}
                   </span>
-                  <p className="min-w-48 flex-1 font-bold">{c.name}</p>
-                  <p className="w-14 text-right font-bold">{formatPercent(p, theta)}</p>
-                  <StatusPill band={id === targetId ? 'focus' : 'below'} label={id === targetId ? 'Target competency' : undefined} />
+
+                  <MasteryRing p={p ?? 0} theta={theta} size={48} />
+
+                  <div className="min-w-48 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-display text-lg font-bold text-ink">{c.name}</p>
+                      {isFirst && (
+                        <span className="rounded-full bg-brand px-2.5 py-0.5 text-xs font-bold text-white">
+                          Start here
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted">
+                      {c.strand} • {c.prereqs.length > 0 ? `Builds on ${c.prereqs.map((pr) => getCompetency(pr).short).join(', ')}` : 'Foundational skill'}
+                    </p>
+                  </div>
+
+                  <p className="w-16 text-right font-display text-lg font-bold tabular-nums">
+                    {formatPercent(p, theta)}
+                  </p>
+
+                  <StatusPill
+                    band={isTarget ? 'focus' : 'below'}
+                    label={isTarget ? 'Target competency' : undefined}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setInspectedSkill(id)}
+                    className="rounded-lg border border-line bg-white px-2.5 py-1.5 text-xs font-bold text-brand hover:border-brand cursor-pointer"
+                  >
+                    BKT Math
+                  </button>
                 </li>
               )
             })}
@@ -335,25 +519,48 @@ export default function LearnerView() {
         )}
 
         {result.status === 'needs-review' && metPrerequisites.length > 0 && (
-          <p className="mt-4 text-sm text-muted">
-            Prerequisites that meet the threshold and are not listed:{' '}
+          <div className="mt-5 rounded-xl border border-mastered/25 bg-mastered-soft/45 px-4 py-3 text-sm text-mastered-ink">
+            <strong>Prerequisites that already meet {percent(theta)}% (skipped):</strong>{' '}
             {metPrerequisites.map((id) => `${getCompetency(id).name} (${formatPercent(mastery[id], theta)})`).join(', ')}.
-          </p>
+          </div>
         )}
+
         {result.unknown.length > 0 && (
-          <p className="mt-2 text-sm text-muted">
-            No estimate is available for: {result.unknown.map((id) => getCompetency(id).name).join(', ')}. These are not
-            included in the path.
+          <p className="mt-3 text-sm text-muted">
+            No estimate is available for: {result.unknown.map((id) => getCompetency(id).name).join(', ')}. These are not included in the path.
           </p>
         )}
 
-        <p className="mt-6 text-sm text-muted">
-          These are candidate review priorities from BKT estimates and the prerequisite graph. They support, and do
-          not replace, your judgment of this learner.
+        <p className="mt-6 border-t border-line pt-3.5 text-xs text-muted">
+          These are candidate review priorities from BKT estimates and the prerequisite graph. They support, and do not replace, your judgment of this learner.
         </p>
       </Card>
 
-      <p className="text-sm text-muted">HIRAYA suggests; the teacher decides. Sample data for the prototype.</p>
+      <p className="text-center text-xs text-muted">HIRAYA suggests; the teacher decides. Sample data for the prototype.</p>
+
+      {/* BKT Inspector Modal */}
+      {inspectedSkill && (
+        <BktInspector
+          learner={learner}
+          skillId={inspectedSkill}
+          theta={theta}
+          onClose={() => setInspectedSkill(null)}
+        />
+      )}
+
+      {/* Quick-Compare Drawer */}
+      {compareOtherId && (
+        <LearnerCompareDrawer
+          learners={learners}
+          learnerAId={learner.id}
+          learnerBId={compareOtherId}
+          onSelectA={(a) => updateContext({ learnerId: a })}
+          onSelectB={(b) => setCompareOtherId(b)}
+          targetId={targetId}
+          theta={theta}
+          onClose={() => setCompareOtherId(null)}
+        />
+      )}
     </div>
   )
 }
