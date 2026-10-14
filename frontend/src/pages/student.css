@@ -2,7 +2,7 @@
    Dark is the sign-in look. Light turns the dark surfaces (header, hero, buttons) brand teal
    and the page and cards white. The header and hero keep the dark-surface text tokens in both themes. */
 .st-root[data-theme='dark'],
-.st-root[data-theme='light'] .st-header,
+.st-root[data-theme='light'] .st-topbar,
 .st-root[data-theme='light'] .st-hero {
   --st-fg: 255 255 255;
   --st-aqua: #66e5d3; --st-aqua-hi: #86efe0; --st-glow: #7ff0dc; --st-aqua-rgb: 102 229 211;
@@ -17,7 +17,6 @@
 .st-root[data-theme='dark'] {
   --st-base: var(--color-night); --st-bg-a: #0f5a63; --st-bg-b: #0b4a45;
   --st-card: #133b41; --st-card-fade: rgb(19 59 65 / 0); --st-grid: rgb(94 227 210 / .1);
-  --st-header-bg: rgb(7 34 40 / .78);
   --st-hero-bg: radial-gradient(34rem 18rem at 100% 0%, rgb(102 229 211 / .2), transparent 62%), radial-gradient(26rem 16rem at 0% 100%, rgb(15 90 99 / .55), transparent 70%), #133b41;
   --st-node-bg: var(--color-night); --st-num-bg: var(--color-night);
   --st-canvas-filter: none;
@@ -34,55 +33,28 @@
   --st-shadow: 11 60 68;
   --st-base: #eef6f6; --st-bg-a: #c9e7e5; --st-bg-b: #d3ece3;
   --st-card: #fff; --st-card-fade: rgb(255 255 255 / 0); --st-grid: rgb(14 90 98 / .07);
-  --st-header-bg: rgb(14 90 98 / .96);
   --st-hero-bg: radial-gradient(34rem 18rem at 100% 0%, rgb(102 229 211 / .28), transparent 62%), linear-gradient(135deg, #0e5a62 0%, #0b4a51 100%);
   --st-node-bg: #0b4a51; --st-num-bg: #fff;
   --st-canvas-filter: brightness(.3) saturate(1.6);
 }
 .st-root[data-theme='light'] .lg-canvas { opacity: .55; }
-.st-root[data-theme='light'] .st-header { border-bottom-color: rgb(255 255 255 / .12); }
 .st-root[data-theme='light'] .st-hero { border-color: rgb(14 90 98 / .4); box-shadow: 0 24px 60px rgb(11 60 68 / .3), inset 0 1px 0 rgb(255 255 255 / .12); }
-
-.st-theme { display: grid; place-items: center; width: 2.1rem; height: 2.1rem; padding: 0; color: rgb(var(--st-fg) / .8); background: rgb(var(--st-fg) / .08); border: 1px solid var(--st-line); border-radius: 999px; cursor: pointer; transition: color .15s, background .15s; }
-.st-theme:hover { color: rgb(var(--st-fg)); background: rgb(var(--st-fg) / .16); }
-.st-theme svg { width: 1.1rem; height: 1.1rem; }
 
 .st-root { position: relative; min-height: 100vh; color: rgb(var(--st-fg)); font-family: var(--font-body, system-ui, sans-serif); background: var(--st-base); }
 .st-root::before { content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background: radial-gradient(60rem 40rem at 12% -5%, var(--st-bg-a) 0%, transparent 60%), radial-gradient(50rem 40rem at 95% 100%, var(--st-bg-b) 0%, transparent 55%); }
 .st-root .lg-canvas { filter: var(--st-canvas-filter); position: fixed; inset: 0; z-index: 0; width: 100%; height: 100%; pointer-events: none; }
 .st-root :focus-visible { outline: 3px solid var(--st-glow); outline-offset: 2px; }
-:where(.st-root a) { color: inherit; text-decoration: none; }
-.st-header, .st-hero { color: rgb(var(--st-fg)); }
+/* In the base layer so Tailwind utilities (e.g. the header's text-aqua, hover:underline) can override it. */
+@layer base { :where(.st-root a) { color: inherit; text-decoration: none; } }
+.st-hero { color: rgb(var(--st-fg)); }
 .st-display { font-family: var(--font-display, system-ui, sans-serif); }
 
 /* ---------- Shell ---------- */
-.st-header { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; align-items: center; gap: .25rem 1.25rem; padding: .55rem 1rem;
-  background: var(--st-header-bg); backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2); border-bottom: 1px solid var(--st-line); }
-.st-brand { display: flex; align-items: center; gap: .65rem; padding: .25rem 0; }
-.st-brand-name { font-family: var(--font-display, system-ui, sans-serif); font-size: 1.3rem; font-weight: 700; letter-spacing: .12em; }
-.st-role-badge { padding: .12rem .5rem; border-radius: 999px; font-size: .68rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--st-aqua); background: rgb(var(--st-aqua-rgb) / .14); border: 1px solid rgb(var(--st-aqua-rgb) / .3); }
-.st-nav { order: 3; display: flex; width: 100%; gap: .25rem; overflow-x: auto; padding: .15rem 0 .35rem; }
-.st-nav a { position: relative; white-space: nowrap; padding: .55rem .95rem; border-radius: .7rem; font-size: .92rem; font-weight: 500; color: rgb(var(--st-fg) / .74); transition: color .15s, background .15s; }
-.st-nav a:hover { color: rgb(var(--st-fg)); background: rgb(var(--st-fg) / .08); }
-.st-nav a[aria-current='page'] { color: rgb(var(--st-fg)); font-weight: 700; background: rgb(var(--st-aqua-rgb) / .12); }
-.st-nav a[aria-current='page']::after { content: ''; position: absolute; left: .95rem; right: .95rem; bottom: .2rem; height: 2px; border-radius: 2px; background: var(--st-aqua); box-shadow: 0 0 10px var(--st-aqua); }
-.st-user { display: flex; align-items: center; gap: .6rem; margin-left: auto; font-size: .88rem; }
 .st-header-pill { display: none; align-items: center; gap: .4rem; padding: .28rem .7rem; border-radius: 999px; font-size: .78rem; font-weight: 700; color: var(--st-ok); background: rgb(var(--st-ok-rgb) / .14); border: 1px solid rgb(var(--st-ok-rgb) / .28); }
-.st-reset-btn { display: none; align-items: center; gap: .35rem; padding: .35rem .65rem; border-radius: .55rem; font: inherit; font-size: .75rem; font-weight: 700; color: rgb(var(--st-fg) / .82); background: rgb(var(--st-fg) / .07); border: 1px solid rgb(var(--st-fg) / .15); cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
-.st-reset-btn:hover { color: rgb(var(--st-fg)); background: rgb(var(--st-fg) / .14); border-color: var(--st-aqua); }
-.st-avatar { display: grid; place-items: center; width: 2.1rem; height: 2.1rem; border-radius: 999px; color: var(--st-aqua); background: rgb(var(--st-aqua-rgb) / .14); border: 1px solid var(--st-line); }
-.st-avatar svg { width: 1.15rem; height: 1.15rem; }
-.st-user-name { display: none; color: rgb(var(--st-fg) / .78); font-weight: 500; }
-.st-signout { padding: .4rem .55rem; border-radius: .5rem; font-weight: 700; color: var(--st-aqua); transition: background .15s; }
-.st-signout:hover { background: rgb(var(--st-aqua-rgb) / .12); text-decoration: underline; }
 .st-main { position: relative; z-index: 1; width: 100%; max-width: 62rem; margin: 0 auto; padding: 1.5rem 1rem 3.5rem; box-sizing: border-box; }
 @media (min-width: 640px) {
-  .st-header { padding: .55rem 2rem; }
-  .st-nav { order: 0; width: auto; flex: 1; padding: 0; }
-  .st-user-name { display: inline; }
   .st-header-pill { display: inline-flex; }
-  .st-reset-btn { display: inline-flex; }
   .st-main { padding: 2.25rem 2rem 4rem; }
 }
 
