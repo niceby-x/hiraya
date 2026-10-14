@@ -10,9 +10,9 @@ const THEME_KEY = 'hiraya-theme'
 
 function readTheme() {
   try {
-    return localStorage.getItem(THEME_KEY) === 'light' ? 'light' : 'dark'
+    return localStorage.getItem(THEME_KEY) === 'dark' ? 'dark' : 'light'
   } catch {
-    return 'dark'
+    return 'light'
   }
 }
 
