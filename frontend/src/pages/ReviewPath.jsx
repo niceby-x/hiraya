@@ -1,14 +1,12 @@
 import { Link } from 'react-router-dom'
-import StatusPill from '../components/StatusPill.jsx'
+import SkillRing from '../components/SkillRing.jsx'
 import { THRESHOLD } from '../data/mock.js'
 import { bandFor, percent } from '../lib/mastery.js'
 import { candidatePath, getCompetency, skippedPrerequisites, TARGET_ID } from '../lib/path.js'
 import { useLearner } from '../lib/store.js'
-import Card from '../components/Card.jsx'
-import { buttonClass } from '../lib/buttonClass.js'
 
-
-const names = (ids) => ids.map((id) => getCompetency(id).short).join(', ')
+const names = (ids) => ids.map((id) => getCompetency(id).short)
+const pillClass = { mastered: 'ok', gap: 'warn', low: 'low', focus: 'focus', next: 'next' }
 
 export default function ReviewPath() {
   const learner = useLearner('l01')
@@ -18,81 +16,69 @@ export default function ReviewPath() {
   // A prerequisite missing from the path is not automatically mastered (e.g. the target is met but it is not).
   const skipped = skippedPrerequisites(learner.mastery, TARGET_ID, THRESHOLD)
 
-  const labelFor = (id, i) => {
-    if (id === TARGET_ID) return 'Focus topic'
-    if (i === 0) return 'Review next'
-    return undefined
+  const pillFor = (id, i) => {
+    if (id === TARGET_ID) return ['focus', 'Focus topic']
+    if (i === 0) return ['next', 'Review next']
+    const band = bandFor(learner.mastery[id])
+    return [band, band === 'mastered' ? 'Mastered' : 'Needs review']
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="st-page">
       <div>
-        <h1 className="font-display text-3xl font-bold sm:text-4xl">My review path</h1>
-        <p className="mt-2 text-muted">Suggested order to reach {target.name}</p>
+        <h1 className="st-title">My review path</h1>
+        <p className="st-sub">Suggested order to reach {target.name}</p>
       </div>
 
-      <section className="rounded-2xl bg-brand-soft p-6">
-        <h2 className="font-display text-xl font-bold text-brand">How this order was made</h2>
-        <ol className="mt-3 list-decimal space-y-1 pl-5">
-          <li>Start from your goal: {target.name}.</li>
-          <li>Check every skill it depends on, step by step.</li>
-          <li>
-            Keep the ones below {percent(THRESHOLD)}% and list them so each skill comes after the
-            skills it builds on.
-          </li>
+      <section className="st-card st-pad" aria-labelledby="how-made">
+        <h2 id="how-made" className="st-how-title">How this order was made</h2>
+        <ol className="st-how">
+          <li><b>1</b><span>Start from your goal: {target.name}.</span></li>
+          <li><b>2</b><span>Check every skill it depends on, step by step.</span></li>
+          <li><b>3</b><span>Keep the ones below {percent(THRESHOLD)}% and list them so each skill comes after the skills it builds on.</span></li>
         </ol>
       </section>
 
       {path.length === 0 ? (
-        <Card as="p" className="text-muted">
-          {status === 'target-met'
-            ? `You have reached the mastery line for ${target.name}. No review path is needed for this goal.`
-            : `There is no mastery estimate for ${target.name} yet, so a review path can't be shown.`}
-        </Card>
+        <section className="st-card st-pad">
+          <p className="st-empty">
+            {status === 'target-met'
+              ? `You have reached the mastery line for ${target.name}. No review path is needed for this goal.`
+              : `There is no mastery estimate for ${target.name} yet, so a review path can't be shown.`}
+          </p>
+        </section>
       ) : (
-        <ol>
+        <ol className="st-line">
           {path.map((id, i) => {
             const c = getCompetency(id)
             const p = learner.mastery[id]
             const unlocks = path.filter((other) => getCompetency(other).prereqs.includes(id))
-            const isLast = i === path.length - 1
-
+            const [band, label] = pillFor(id, i)
             return (
-              <li key={id} className="flex gap-5">
-                <div className="flex flex-col items-center">
-                  <span
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 font-bold ${
-                      i === 0 ? 'border-brand bg-brand text-white' : 'border-line bg-white text-ink'
-                    }`}
-                  >
-                    {i + 1}
-                  </span>
-                  {!isLast && <span className="w-0.5 flex-1 bg-line" />}
-                </div>
-
-                <div className={`flex-1 rounded-2xl border border-line bg-white p-6 ${isLast ? '' : 'mb-6'}`}>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <h3 className="font-display text-xl font-bold">{c.name}</h3>
-                    <StatusPill band={id === TARGET_ID ? 'focus' : i === 0 ? 'next' : bandFor(p)} label={labelFor(id, i)} />
-                  </div>
-                  <p className="mt-1 text-muted">
-                    {percent(p)}% now · mastery line {percent(THRESHOLD)}%
-                  </p>
-                  <p className="mt-3 text-sm">
-                    <span className="font-bold">Builds on:</span>{' '}
-                    {c.prereqs.length > 0 ? names(c.prereqs) : 'no earlier skills'}
-                  </p>
-                  {unlocks.length > 0 && (
-                    <p className="text-sm">
-                      <span className="font-bold">Needed for:</span> {names(unlocks)}
+              <li key={id} className={`st-step ${i === 0 ? 'is-next' : ''} ${id === TARGET_ID ? 'is-focus' : ''}`}>
+                <div className="st-rail"><span className="st-num">{i + 1}</span></div>
+                <div className="st-card st-step-card">
+                  <div className="st-ring-wrap"><SkillRing p={p} size={72} /></div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div className="st-step-head">
+                      <h3 className="st-step-name">{c.name}</h3>
+                      <span className={`st-pill st-pill--${pillClass[band]}`}>{label}</span>
+                    </div>
+                    <p className="st-step-now">{percent(p)}% now · mastery line {percent(THRESHOLD)}%</p>
+                    <p className="st-chips">
+                      <b>Builds on</b>
+                      {c.prereqs.length > 0 ? names(c.prereqs).map((n) => <span key={n} className="st-chip">{n}</span>) : <span>no earlier skills</span>}
                     </p>
-                  )}
-                  <Link
-                    to={`/student/practice?skill=${id}`}
-                    className={`mt-4 ${buttonClass('outline', 'sm')}`}
-                  >
-                    Practice this skill
-                  </Link>
+                    {unlocks.length > 0 && (
+                      <p className="st-chips">
+                        <b>Needed for</b>
+                        {names(unlocks).map((n) => <span key={n} className="st-chip">{n}</span>)}
+                      </p>
+                    )}
+                    <Link to={`/student/practice?skill=${id}`} className={`st-btn st-btn--sm ${i === 0 ? 'st-btn--primary' : 'st-btn--ghost'}`}>
+                      Practice this skill
+                    </Link>
+                  </div>
                 </div>
               </li>
             )
@@ -101,14 +87,12 @@ export default function ReviewPath() {
       )}
 
       {skipped.length > 0 && (
-        <section>
-          <h2 className="font-display text-xl font-bold">Already mastered, so skipped</h2>
-          <ul className="mt-3 flex flex-wrap gap-2">
+        <section aria-labelledby="skipped">
+          <h2 id="skipped" className="st-h2">Already mastered, so skipped</h2>
+          <ul className="st-skipped">
             {skipped.map((id) => (
-              <li
-                key={id}
-                className="rounded-full bg-mastered-soft px-3 py-1 text-sm font-bold text-mastered-ink"
-              >
+              <li key={id}>
+                <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M3.5 8.5l3 3 6-7" /></svg>
                 {getCompetency(id).name} · {percent(learner.mastery[id])}%
               </li>
             ))}
@@ -116,9 +100,7 @@ export default function ReviewPath() {
         </section>
       )}
 
-      <p className="text-sm text-muted">
-        This order is a suggestion. Your teacher can change it. Sample data for the prototype.
-      </p>
+      <p className="st-note">This order is a suggestion. Your teacher can change it. Sample data for the prototype.</p>
     </div>
   )
 }

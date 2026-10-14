@@ -6,13 +6,8 @@ import Login from './pages/Login.jsx'
 import Practice from './pages/Practice.jsx'
 import ReviewPath from './pages/ReviewPath.jsx'
 import StudentDashboard from './pages/StudentDashboard.jsx'
+import StudentShell from './components/StudentShell.jsx'
 import TeacherDashboard from './pages/TeacherDashboard.jsx'
-
-const studentLinks = [
-  { to: '/student', label: 'My progress', end: true },
-  { to: '/student/practice', label: 'Practice' },
-  { to: '/student/path', label: 'Review path' },
-]
 
 const teacherLinks = [
   { to: '/teacher', label: 'Class overview', end: true, keepSearch: true },
@@ -26,7 +21,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Login />} />
 
-        <Route path="/student" element={<AppShell links={studentLinks} userLabel="Learner 01 · Grade 7" home="/student" />}>
+        <Route path="/student" element={<StudentShell userLabel="Learner 01 · Grade 7" home="/student" />}>
           <Route index element={<StudentDashboard />} />
           <Route path="practice" element={<Practice />} />
           <Route path="path" element={<ReviewPath />} />
