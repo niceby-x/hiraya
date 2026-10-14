@@ -5,6 +5,37 @@
 .lg-main { position: relative; z-index: 1; display: flex; min-height: 100vh; flex-direction: column; align-items: center; justify-content: center; padding: 2rem 1rem; text-align: center; }
 .lg-root :focus-visible { outline: 3px solid #7ff0dc; outline-offset: 2px; }
 
+/* Collapsible Intro Wrapper */
+.lg-intro {
+  display: grid;
+  grid-template-rows: 1fr;
+  width: 100%;
+  max-width: 46rem;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition:
+    grid-template-rows 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.3s ease,
+    transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.lg-intro-inner {
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 0.75rem;
+}
+.lg-intro[data-hidden='true'] {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transform: translateY(-18px) scale(0.96);
+  pointer-events: none;
+}
+.lg-intro[data-hidden='true'] .lg-intro-inner {
+  padding-top: 0;
+}
+
 /* Header */
 .lg-brand { display: flex; flex-direction: column; align-items: center; gap: .75rem; margin-bottom: 1.25rem; }
 .lg-tile { display: grid; place-items: center; height: 4.5rem; width: 4.5rem; border-radius: 1.25rem; color: #5ee3d2; background: var(--color-night-card); border: 1px solid rgb(94 227 210 / .25); box-shadow: 0 10px 30px rgb(0 0 0 / .3); }
@@ -18,6 +49,7 @@
 .lg-roles[data-picked='student'] { grid-template-columns: 1fr 0fr; gap: 0; }
 .lg-roles[data-picked='teacher'] { grid-template-columns: 0fr 1fr; gap: 0; }
 .lg-roles[data-picked='student'], .lg-roles[data-picked='teacher'] { max-width: 28rem; }
+
 .lg-card { min-width: 0; overflow: hidden; text-align: left; border-radius: 1.25rem; background-color: var(--color-night-card); background-image: linear-gradient(180deg, rgb(19 59 65 / 0) 25%, var(--color-night-card) 100%), linear-gradient(rgb(94 227 210 / .1) 1px, transparent 1px), linear-gradient(90deg, rgb(94 227 210 / .1) 1px, transparent 1px); background-size: 100% 100%, 24px 24px, 24px 24px; border: 1px solid rgb(94 227 210 / .18);
   box-shadow: 0 20px 50px rgb(0 0 0 / .3); transition: opacity .35s ease, transform .25s ease, border-color .2s; }
 .lg-card.is-away { opacity: 0; transform: scale(.94); pointer-events: none; border-width: 0; }
@@ -40,15 +72,15 @@
 .lg-icon.sm { height: 2.75rem; width: 2.75rem; }
 .lg-icon.sm svg { height: 1.5rem; width: 1.5rem; }
 .lg-form { display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem; }
-.lg-form-head { display: flex; align-items: center; gap: .75rem; font-family: var(--font-display, system-ui, sans-serif); font-weight: 700; font-size: 1.15rem; }
+.lg-form-head { display: flex; align-items: center; gap: .75rem; font-family: var(--font-display, system-ui, sans-serif); font-weight: 700; font-size: 1.15rem; margin-bottom: 1.25rem; }
 .lg-form-head p { margin: 0; flex: 1; }
-.lg-form-head { margin-bottom: 1.25rem; }
 .lg-field + .lg-field { margin-top: .5rem; }
 .lg-swap { position: relative; display: grid; place-items: center; flex-shrink: 0; height: 2.25rem; width: 2.25rem; padding: 0; color: rgb(255 255 255 / .6); background: none; border: 0; border-radius: .6rem; cursor: pointer; transition: color .15s, background .15s; }
 .lg-swap:hover, .lg-swap:focus-visible { color: #fff; background: rgb(255 255 255 / .1); }
 .lg-swap::after { content: attr(data-tip); position: absolute; top: calc(100% + .4rem); right: 0; z-index: 2; padding: .35rem .6rem; border-radius: .5rem; background: #fff; color: var(--color-night); font-family: var(--font-body, system-ui, sans-serif); font-size: .8rem; font-weight: 700; white-space: nowrap; box-shadow: 0 6px 16px rgb(0 0 0 / .3); opacity: 0; transform: translateY(-4px); pointer-events: none; transition: opacity .15s, transform .15s; }
 .lg-swap:hover::after { opacity: 1; transform: none; transition-delay: .25s; }
 .lg-swap:focus-visible::after { opacity: 1; transform: none; }
+
 /* Form fields: frosted fill + notched outline (fieldset/legend breaks the border around the floated label) */
 .lg-field { position: relative; }
 .lg-field input { width: 100%; height: 3.15rem; box-sizing: border-box; padding: 0 1rem; font: inherit; font-size: 1rem; line-height: 1.25rem; color: #fff; caret-color: var(--color-aqua); border: 0; border-radius: .9rem; background: rgb(3 24 29 / .45); transition: background .15s; }
@@ -78,6 +110,7 @@
 .lg-err { margin: .4rem 0 0 .25rem; font-size: .875rem; color: #ffc0b3; }
 .lg-shake { animation: lg-shake .4s; }
 @keyframes lg-shake { 20%, 60% { transform: translateX(-7px); } 40%, 80% { transform: translateX(7px); } }
+
 .lg-forgot { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .lg-link, .lg-check { font-size: .875rem; font-weight: 400; color: rgb(255 255 255 / .65); }
 .lg-link { background: none; border: 0; padding: .25rem 0; font-family: inherit; text-decoration: none; cursor: pointer; transition: color .15s; }
@@ -110,7 +143,11 @@
   .lg-roles[data-picked='teacher'] { grid-template-columns: 1fr; grid-template-rows: 0fr 1fr; }
   .lg-roles[data-picked='student'], .lg-roles[data-picked='teacher'] { max-width: 100%; }
 }
-@media (prefers-reduced-motion: reduce) { .lg-shake { animation: none; } .lg-roles, .lg-card, .lg-field label, .lg-outline, .lg-outline legend, .lg-field input, .lg-btn svg, .lg-eye, .lg-swap, .lg-lead, .lg-link, .lg-box, .lg-box svg, .lg-swap::after, .lg-primary { transition: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-shake { animation: none; }
+  .lg-intro, .lg-roles, .lg-card, .lg-field label, .lg-outline, .lg-outline legend, .lg-field input, .lg-btn svg, .lg-eye, .lg-swap, .lg-lead, .lg-link, .lg-box, .lg-box svg, .lg-swap::after, .lg-primary { transition: none; }
+}
 
 /* Entrance: the headline builds word by word, then both sentences catch a soft light */
 .lg-line { display: inline; }
@@ -121,6 +158,7 @@
 .lg-line.is-accent { --grad: linear-gradient(100deg, #5ee3d2 25%, #dcfff6 45%, #5ee3d2 65%); }
 .lg-line .lg-word { color: transparent; background: var(--grad); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text;
   animation: lg-rise .7s cubic-bezier(.2, .8, .2, 1) calc(var(--i) * 90ms + 200ms) backwards, lg-shimmer 5s linear 1.8s 1; }
+
 /* Clicking the logo swaps the headline. Both versions share one grid cell, so the box keeps
    the taller height and nothing below it moves. The old words drift up and fade, then the new
    ones rise in, staggered. Entrance animations use 'backwards' fill so these transitions work. */
@@ -132,14 +170,17 @@
 .lg-variant[data-on='false'] .lg-word { opacity: 0; transform: translateY(-.35em); filter: blur(6px); transition-delay: calc(var(--i) * 25ms); }
 .lg-variant.is-alt .lg-word { animation: none; }
 .lg-variant.is-alt[data-on='false'] .lg-word { transform: translateY(.45em); }
+
 .lg-brand { animation: lg-fade .6s ease both; }
 .lg-sub { animation: lg-fade .8s ease 1s both; }
 .lg-rule { transform-origin: center; animation: lg-grow-x .9s ease 1.1s both; }
 .lg-roles { animation: lg-fade .8s ease 1.25s both; }
+
 @keyframes lg-rise { from { opacity: 0; transform: translateY(.55em); filter: blur(8px); } to { opacity: 1; transform: none; filter: blur(0); } }
 @keyframes lg-shimmer { to { background-position: -220% 0; } }
 @keyframes lg-fade { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 @keyframes lg-grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
 @media (prefers-reduced-motion: reduce) {
   .lg-word, .lg-brand, .lg-sub, .lg-rule, .lg-roles { animation: none !important; opacity: 1; transform: none; filter: none; }
   .lg-word { transition: none; }
