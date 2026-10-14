@@ -17,6 +17,10 @@ const HEADLINE_TEXT = HEADLINES.map((lines) => lines.map((l) => l.join(' ')).joi
 const MORPH_MS = 500
 const EASE = 'cubic-bezier(.2, .8, .2, 1)'
 
+// The card's real layout height. Unlike getBoundingClientRect, it ignores the card's scale transform
+// (a card that is fading away is drawn slightly smaller).
+const layoutHeight = (el) => parseFloat(getComputedStyle(el).height)
+
 const roles = {
   student: {
     title: "I'm a Student",
@@ -96,6 +100,8 @@ export default function Login() {
   const rolesRef = useRef(null)
   const morph = useRef(null) // card height before a pick/back, so it can ease to the new height
   const settle = useRef(null)
+  const [paused, setPaused] = useState(false) // background network is paused while a card opens/closes (phones)
+  const pauseTimer = useRef(null)
   const navigate = useNavigate()
   const [role, setRole] = useState(null)
   const [username, setUsername] = useState('')
@@ -105,10 +111,17 @@ export default function Login() {
   const [pulse, setPulse] = useState(0)
   const [help, setHelp] = useState(false)
 
-  // Remember the card's height now; the layout effect below eases it to the new height.
+  // Remember the cards' heights now; the layout effect below eases them to their new heights.
   function remember(key) {
-    const el = cardRefs.current[key]
-    morph.current = el ? { key, h: el.getBoundingClientRect().height } : null
+    const h = {}
+    for (const [k, el] of Object.entries(cardRefs.current)) if (el) h[k] = layoutHeight(el)
+    morph.current = { key, h }
+    // On phones, pause the background drawing while the card moves so the transition gets the full frame.
+    if (window.matchMedia('(max-width: 640px), (pointer: coarse)').matches) {
+      setPaused(true)
+      clearTimeout(pauseTimer.current)
+      pauseTimer.current = setTimeout(() => setPaused(false), MORPH_MS + 150)
+    }
   }
 
   function pick(key) {
@@ -161,15 +174,21 @@ export default function Login() {
     return () => ro.disconnect()
   }, [alt])
 
-  // Ease the card from its old height to its new one (small card <-> sign-in form).
+  // Ease the card from its old height to its new one (small card <-> sign-in form). On phones the
+  // cards are stacked, so the other card eases its height too (down to nothing, or back up).
   useLayoutEffect(() => {
     const m = morph.current
     morph.current = null
-    const el = m && cardRefs.current[m.key]
-    if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const h = el.getBoundingClientRect().height
-    if (Math.abs(h - m.h) < 1) return
-    el.animate({ height: [`${m.h}px`, `${h}px`] }, { duration: MORPH_MS, easing: EASE })
+    if (!m || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const phone = window.matchMedia('(max-width: 640px)').matches
+    for (const [k, from] of Object.entries(m.h)) {
+      if (k !== m.key && !phone) continue // side by side, the other card simply fades away
+      const el = cardRefs.current[k]
+      if (!el) continue
+      const to = layoutHeight(el)
+      if (Math.abs(to - from) < 1) continue
+      el.animate({ height: [`${from}px`, `${to}px`] }, { duration: MORPH_MS, easing: EASE })
+    }
   }, [role])
 
   // The small cards keep the width they have when idle, so their text does not re-wrap while a
@@ -189,7 +208,7 @@ export default function Login() {
 
   return (
     <div className="lg-root">
-      <KnowledgeBackdrop pulse={pulse} burst={burst} />
+      <KnowledgeBackdrop pulse={pulse} burst={burst} paused={paused} />
       <main className="lg-main">
         {/* Collapsible Intro: hides logo, headline, subtitle, and rule when a role card is clicked */}
         <div className="lg-intro" data-hidden={hasRole} aria-hidden={hasRole || undefined}>

@@ -154,13 +154,15 @@
 .lg-sso:hover { background: rgb(255 255 255 / .1); }
 .lg-or { display: flex; align-items: center; gap: .75rem; font-size: .85rem; color: rgb(255 255 255 / .7); }
 .lg-or::before, .lg-or::after { content: ''; flex: 1; height: 1px; background: rgb(255 255 255 / .25); }
-.lg-note { margin: .10rem 0 0; font-size: .70rem; line-height: 1.4; color: rgb(255 255 255 / .3); text-align: center; font-style: italic; }
+.lg-note { margin: .25rem 0 0; font-size: .85rem; line-height: 1.4; color: rgb(255 255 255 / .4); text-align: center; font-style: italic; }
 
 @media (max-width: 640px) {
-  .lg-roles { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
-  .lg-roles[data-picked='student'] { grid-template-columns: 1fr; grid-template-rows: 1fr 0fr; }
-  .lg-roles[data-picked='teacher'] { grid-template-columns: 1fr; grid-template-rows: 0fr 1fr; }
+  /* Stacked cards in a plain column, so each card can ease its own height (see Login.jsx). The card
+     that is not chosen fades while its height eases to nothing. */
+  .lg-roles { display: flex; flex-direction: column; }
   .lg-roles[data-picked='student'], .lg-roles[data-picked='teacher'] { max-width: 100%; }
+  .lg-card { flex: none; box-shadow: 0 10px 24px rgb(0 0 0 / .3); }
+  .lg-card.is-away { height: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -211,4 +213,9 @@
   .lg-form, .lg-form[data-out] { animation: none; }
   .lg-form[data-out] { display: none; }
   .lg-pick { transition: none; }
+}
+/* Phones: no blur on the headline words. Blur is costly to draw and makes the animations stutter. */
+@media (max-width: 640px) {
+  .lg-variant[data-on='false'] .lg-word { filter: none; }
+  @keyframes lg-rise { from { opacity: 0; transform: translateY(.55em); } to { opacity: 1; transform: none; } }
 }

@@ -4,8 +4,9 @@ const GLYPHS = ['½', 'x²', '−3', '%', 'π', '√', 'Σ', '∠', '0.5', 'y=mx
 
 // Faint network of math nodes. The pointer lights nearby nodes; each `pulse`
 // lights a chain of prerequisites, like a mastery estimate updating.
-export default function KnowledgeBackdrop({ pulse, burst }) {
+export default function KnowledgeBackdrop({ pulse, burst, paused = false }) {
   const canvas = useRef(null)
+  const pausedRef = useRef(false)
   const kick = useRef(() => {})
   const ripple = useRef(() => {})
 
@@ -41,6 +42,8 @@ export default function KnowledgeBackdrop({ pulse, burst }) {
     }
 
     function frame() {
+      // While paused (a busy moment on a phone) the last picture stays up and nothing is redrawn.
+      if (pausedRef.current) { raf = requestAnimationFrame(frame); return }
       ctx.clearRect(0, 0, w, h)
       for (const a of nodes) {
         a.x += a.vx; a.y += a.vy
@@ -112,6 +115,7 @@ export default function KnowledgeBackdrop({ pulse, burst }) {
     }
   }, [])
 
+  useEffect(() => { pausedRef.current = paused }, [paused])
   useEffect(() => { if (pulse) kick.current() }, [pulse])
   useEffect(() => { if (burst) ripple.current(burst.x, burst.y) }, [burst])
 
