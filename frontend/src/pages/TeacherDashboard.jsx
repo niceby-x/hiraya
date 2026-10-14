@@ -232,7 +232,7 @@ export default function TeacherDashboard() {
 
             <div className="mt-3 overflow-x-auto lg:mt-6">
               <div className="grid min-w-190 items-center gap-2" style={gridStyle}>
-                <p className="sticky left-0 bg-white text-sm font-bold text-muted">Learner</p>
+                <p className="sticky left-0 z-10 bg-white text-sm font-bold text-muted">Learner</p>
                 {columns.map((c) => (
                   <p
                     key={c.id}
@@ -245,7 +245,7 @@ export default function TeacherDashboard() {
 
                 {rows.map(({ learner: l, status, gaps }) => (
                   <Fragment key={l.id}>
-                    <div className="sticky left-0 bg-white py-1">
+                    <div className="sticky left-0 z-10 bg-white py-1">
                       <Link to={learnerLink({ learnerId: l.id, target: targetId, theta })} className="font-bold text-brand">
                         {l.name}
                       </Link>
