@@ -188,3 +188,13 @@ body {
     stroke-dasharray: none;
   }
 }
+
+/* Profile dropdown pop-in (opens from the top-right corner under the avatar) */
+@keyframes menu-pop {
+  from { opacity: 0; transform: translateY(-6px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+.menu-pop { transform-origin: top right; animation: menu-pop 0.16s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .menu-pop { animation: none; }
+}

@@ -4,8 +4,6 @@ import KnowledgeBackdrop from './KnowledgeBackdrop.jsx'
 import ShellHeader, { bottomNavInset } from './ShellHeader.jsx'
 import { icons } from './navIcons.jsx'
 import SkipLink from './SkipLink.jsx'
-import { competencies } from '../data/mock.js'
-import { percent } from '../lib/mastery.js'
 import { useRouteA11y } from '../lib/routeA11y.js'
 import { useLearner, useSettings } from '../lib/store.js'
 import { useTheme } from '../lib/useTheme.js'
@@ -18,10 +16,9 @@ const links = [
 ]
 
 const userIcon = (
-  <svg viewBox="0 0 48 48" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M24 42V22" />
-    <path d="M24 28c-8 0-12-5-12-12 8 0 12 5 12 12Z" />
-    <path d="M24 22c0-7 4-11 12-11 0 7-4 11-12 11Z" />
+  <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
   </svg>
 )
 
@@ -30,9 +27,8 @@ export default function StudentShell({ userLabel, home }) {
   const [lit, setLit] = useState(0)
   const { theme, isDark, toggleTheme } = useTheme()
   const mainRef = useRouteA11y(pathname)
-  const { learnerId, theta } = useSettings()
+  const { learnerId } = useSettings()
   const learner = useLearner(learnerId)
-  const masteredCount = competencies.filter((c) => (learner?.mastery?.[c.id] ?? 0) >= theta).length
   const displayLabel = learner ? `${learner.name} · Grade 7` : userLabel
 
   return (
@@ -41,23 +37,15 @@ export default function StudentShell({ userLabel, home }) {
       <KnowledgeBackdrop pulse={`${key}:${lit}`} dim={!isDark} />
 
       <ShellHeader
-        className="st-topbar"
-        badge="Student"
         navLabel="Student navigation"
         links={links}
         homeTo={home}
-        extra={
-          <span className="st-header-pill" title={`Skills at or above ${percent(theta)}% mastery`}>
-            ✓ {masteredCount}/{competencies.length} Mastered
-          </span>
-        }
         resetTitle="Reset the sample mastery scores to their starting values"
         isDark={isDark}
         onToggleTheme={toggleTheme}
         userIcon={userIcon}
         userLabel={displayLabel}
-        userPillClass="lg:flex"
-        spreadTabs
+        profileMenu
       />
 
       <main ref={mainRef} className="st-main">

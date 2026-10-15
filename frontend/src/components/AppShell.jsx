@@ -24,7 +24,6 @@ export default function AppShell({ links, userLabel, home }) {
       <KnowledgeBackdrop pulse={key} dim={!isDark} />
 
       <ShellHeader
-        badge="Teacher"
         navLabel="Teacher navigation"
         links={navLinks}
         homeTo={{ pathname: home, search }}
@@ -33,7 +32,6 @@ export default function AppShell({ links, userLabel, home }) {
         onToggleTheme={toggleTheme}
         userIcon={userIcon}
         userLabel={userLabel}
-        userPillClass="2xl:flex"
       />
 
       <main ref={mainRef} key={pathname} className="relative z-10 mx-auto w-full max-w-295 px-4 py-6 sm:px-8 sm:py-9">

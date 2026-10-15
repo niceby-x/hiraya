@@ -12,7 +12,6 @@ const COPIES = 5
 const CENTER_COPY = 2
 
 export default function ShellHeader({
-  badge,
   navLabel,
   links = [],
   homeTo = '/',
@@ -21,7 +20,6 @@ export default function ShellHeader({
   onToggleTheme,
   userIcon,
   userLabel,
-  userPillClass = 'xl:flex',
   extra,
   children,
 }) {
@@ -126,96 +124,41 @@ export default function ShellHeader({
   return (
     <>
       <header className="st-topbar on-dark sticky top-0 z-30 border-b border-white/12 bg-night/90 px-4 py-2.5 text-white backdrop-blur-md sm:px-8">
-        <div className="mx-auto flex max-w-295 flex-wrap items-center gap-x-1.5 gap-y-2 sm:gap-x-4">
+        {/* Phone: logo left, profile right. Desktop: logo | tabs centered in the free space | profile. */}
+        <div className="mx-auto flex max-w-295 items-center justify-between gap-3 sm:grid sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:gap-5">
           <Link to={homeTo} className="group flex shrink-0 items-center gap-2.5 py-1">
             <Logo size={32} className="text-aqua transition-transform duration-200 group-hover:scale-105" />
             <div className="flex items-baseline gap-2">
               <span className="font-display text-xl font-bold tracking-widest text-white">HIRAYA</span>
-              {badge && (
-                <span className="rounded-full border border-aqua/30 bg-aqua/10 px-2 py-0.5 text-[11px] font-bold tracking-wide text-aqua uppercase max-[359px]:hidden">
-                  {badge}
-                </span>
-              )}
             </div>
           </Link>
 
-          <nav
-            aria-label={navLabel}
-            className="hidden gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex sm:w-auto sm:flex-1"
-          >
-            {links.map((link) => (
-              <NavLink
-                key={link.to}
-                to={link.search ? { pathname: link.to, search: link.search } : link.to}
-                end={link.end}
-                className={({ isActive }) => linkClass(isActive)}
-              >
-                {link.label}
-              </NavLink>
-            ))}
+          <nav aria-label={navLabel} className="hidden min-w-0 justify-self-center sm:flex">
+            <div className="flex max-w-full gap-1 overflow-x-auto rounded-xl border border-white/10 bg-white/5 p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {links.map((link) => (
+                <NavLink
+                  key={link.to}
+                  to={link.search ? { pathname: link.to, search: link.search } : link.to}
+                  end={link.end}
+                  className={({ isActive }) => linkClass(isActive)}
+                >
+                  {link.label}
+                </NavLink>
+              ))}
+            </div>
           </nav>
 
-          <div className="ml-auto flex shrink-0 items-center gap-1 text-sm sm:ml-0 sm:gap-2">
+          <div className="flex shrink-0 items-center gap-2 justify-self-end">
             {extra}
             {children}
-
-            <button
-              type="button"
-              onClick={handleReset}
-              title={resetTitle}
-              className="hidden items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-2.5 py-1.5 text-xs font-bold text-white/80 transition-colors hover:border-aqua/40 hover:bg-white/10 hover:text-white md:inline-flex cursor-pointer"
-            >
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />
-                <path d="M3 3v5h5" />
-              </svg>
-              Reset demo
-            </button>
-
-            <button
-              type="button"
-              onClick={onToggleTheme}
-              aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-              className="hidden h-8.5 w-8.5 place-items-center rounded-full border border-white/15 bg-white/8 text-white/85 transition-colors hover:bg-white/15 hover:text-white cursor-pointer sm:grid"
-            >
-              {isDark ? (
-                <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="4" />
-                  <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5Z" />
-                </svg>
-              )}
-            </button>
-
             <ProfileMenu
               userLabel={userLabel}
+              userIcon={userIcon}
               isDark={isDark}
               onToggleTheme={onToggleTheme}
               onReset={handleReset}
               resetTitle={resetTitle}
             />
-
-            {userLabel && (
-              <div className={`hidden items-center gap-2 rounded-full border border-white/12 bg-white/5 py-1 pr-2.5 pl-1.5 ${userPillClass}`}>
-                {userIcon && (
-                  <span className="grid h-6 w-6 place-items-center rounded-full bg-aqua/20 text-aqua">
-                    {userIcon}
-                  </span>
-                )}
-                <span className="text-xs font-medium text-white/85">{userLabel}</span>
-              </div>
-            )}
-
-            <Link
-              to="/"
-              className="rounded-lg px-1.5 py-1.5 font-bold text-aqua sm:px-2 transition-colors hover:bg-aqua/10 hover:underline pointer-coarse:flex pointer-coarse:min-h-11 pointer-coarse:items-center"
-            >
-              Sign out
-            </Link>
           </div>
         </div>
       </header>

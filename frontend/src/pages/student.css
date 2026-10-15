@@ -49,10 +49,8 @@
 .st-display { font-family: var(--font-display, system-ui, sans-serif); }
 
 /* ---------- Shell ---------- */
-.st-header-pill { display: none; align-items: center; gap: .4rem; padding: .28rem .7rem; border-radius: 999px; font-size: .78rem; font-weight: 700; color: var(--st-ok); background: rgb(var(--st-ok-rgb) / .14); border: 1px solid rgb(var(--st-ok-rgb) / .28); }
 .st-main { position: relative; z-index: 1; width: 100%; max-width: 62rem; margin: 0 auto; padding: 1.5rem 1rem 3.5rem; box-sizing: border-box; }
 @media (min-width: 640px) {
-  .st-header-pill { display: inline-flex; }
   .st-main { padding: 2.25rem 2rem 4rem; }
 }
 
