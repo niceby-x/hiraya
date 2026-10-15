@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Link, NavLink, matchPath, useLocation, useNavigate } from 'react-router-dom'
 import Logo from './Logo.jsx'
+import ProfileMenu from './ProfileMenu.jsx'
 import { resetLearners } from '../lib/store.js'
 
 export const bottomNavInset = 'pb-20 sm:pb-0'
@@ -21,6 +22,7 @@ export default function ShellHeader({
   userIcon,
   userLabel,
   userPillClass = 'xl:flex',
+  extra,
   children,
 }) {
   const { pathname } = useLocation()
@@ -124,13 +126,13 @@ export default function ShellHeader({
   return (
     <>
       <header className="st-topbar on-dark sticky top-0 z-30 border-b border-white/12 bg-night/90 px-4 py-2.5 text-white backdrop-blur-md sm:px-8">
-        <div className="mx-auto flex max-w-295 flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="mx-auto flex max-w-295 flex-wrap items-center gap-x-1.5 gap-y-2 sm:gap-x-4">
           <Link to={homeTo} className="group flex shrink-0 items-center gap-2.5 py-1">
             <Logo size={32} className="text-aqua transition-transform duration-200 group-hover:scale-105" />
             <div className="flex items-baseline gap-2">
               <span className="font-display text-xl font-bold tracking-widest text-white">HIRAYA</span>
               {badge && (
-                <span className="rounded-full border border-aqua/30 bg-aqua/10 px-2 py-0.5 text-[11px] font-bold tracking-wide text-aqua uppercase">
+                <span className="rounded-full border border-aqua/30 bg-aqua/10 px-2 py-0.5 text-[11px] font-bold tracking-wide text-aqua uppercase max-[359px]:hidden">
                   {badge}
                 </span>
               )}
@@ -153,7 +155,8 @@ export default function ShellHeader({
             ))}
           </nav>
 
-          <div className="ml-auto flex shrink-0 items-center gap-2 text-sm sm:ml-0">
+          <div className="ml-auto flex shrink-0 items-center gap-1 text-sm sm:ml-0 sm:gap-2">
+            {extra}
             {children}
 
             <button
@@ -174,7 +177,7 @@ export default function ShellHeader({
               onClick={onToggleTheme}
               aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
               title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-              className="grid h-8.5 w-8.5 place-items-center rounded-full border border-white/15 bg-white/8 text-white/85 transition-colors hover:bg-white/15 hover:text-white cursor-pointer"
+              className="hidden h-8.5 w-8.5 place-items-center rounded-full border border-white/15 bg-white/8 text-white/85 transition-colors hover:bg-white/15 hover:text-white cursor-pointer sm:grid"
             >
               {isDark ? (
                 <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -187,6 +190,14 @@ export default function ShellHeader({
                 </svg>
               )}
             </button>
+
+            <ProfileMenu
+              userLabel={userLabel}
+              isDark={isDark}
+              onToggleTheme={onToggleTheme}
+              onReset={handleReset}
+              resetTitle={resetTitle}
+            />
 
             {userLabel && (
               <div className={`hidden items-center gap-2 rounded-full border border-white/12 bg-white/5 py-1 pr-2.5 pl-1.5 ${userPillClass}`}>
@@ -201,7 +212,7 @@ export default function ShellHeader({
 
             <Link
               to="/"
-              className="rounded-lg px-2 py-1.5 font-bold text-aqua transition-colors hover:bg-aqua/10 hover:underline"
+              className="rounded-lg px-1.5 py-1.5 font-bold text-aqua sm:px-2 transition-colors hover:bg-aqua/10 hover:underline pointer-coarse:flex pointer-coarse:min-h-11 pointer-coarse:items-center"
             >
               Sign out
             </Link>
