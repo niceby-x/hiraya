@@ -9,6 +9,7 @@ import ReviewPath from './pages/ReviewPath.jsx'
 import StudentDashboard from './pages/StudentDashboard.jsx'
 import StudentShell from './components/StudentShell.jsx'
 import TeacherDashboard from './pages/TeacherDashboard.jsx'
+import { useLearner, useSettings } from './lib/store.js'
 
 const teacherLinks = [
   { to: '/teacher', label: 'Class overview', end: true, keepSearch: true },
@@ -17,12 +18,18 @@ const teacherLinks = [
   { to: '/teacher/graph', label: 'Prerequisite graph' },
 ]
 
+function ActiveStudentShell() {
+  const { learnerId } = useSettings()
+  const learner = useLearner(learnerId)
+  return <StudentShell userLabel={`${learner.name} · Grade 7`} home="/student" />
+}
+
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/student" element={<StudentShell userLabel="Learner 01 · Grade 7" home="/student" />}>
+        <Route path="/student" element={<ActiveStudentShell />}>
           <Route index element={<StudentDashboard />} />
           <Route path="practice" element={<Practice />} />
           <Route path="path" element={<ReviewPath />} />

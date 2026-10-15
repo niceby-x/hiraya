@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { paramsFor } from '../data/bktParams.js'
 import { observe, predictCorrect, updateMastery } from '../lib/bkt.js'
 import { formatPercent, percent, statusFor } from '../lib/mastery.js'
@@ -11,8 +11,15 @@ export default function BktInspector({ learner, skillId, theta, onClose }) {
   // { learnerId, skillId, correct, before, after, undone } for the last demo action in this dialog.
   const [demo, setDemo] = useState(null)
 
-  if (!learner || !skillId) return null
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose?.()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
 
+  if (!learner || !skillId) return null
   const competency = getCompetency(skillId)
   if (!competency) return null
 
@@ -32,10 +39,12 @@ export default function BktInspector({ learner, skillId, theta, onClose }) {
     const change = recordResponse(learner.id, skillId, correct)
     setDemo({ learnerId: learner.id, skillId, correct, ...change, undone: false })
   }
+
   const undoDemo = () => {
     undoMasteryChange(skillId, { [learner.id]: { before: demo.before, after: demo.after } })
     setDemo({ ...demo, undone: true })
   }
+
   const lastDemo = demo && demo.learnerId === learner.id && demo.skillId === skillId ? demo : null
 
   return (
@@ -57,6 +66,11 @@ export default function BktInspector({ learner, skillId, theta, onClose }) {
                 <span className="rounded-full bg-brand-soft px-2.5 py-0.5 text-xs font-bold text-brand">
                   BKT Model Inspector
                 </span>
+                {competency.code && (
+                  <span className="rounded-full border border-line bg-surface px-2 py-0.5 text-[11px] font-bold text-muted">
+                    {competency.code}
+                  </span>
+                )}
                 <span className="text-xs font-bold text-muted">{learner.name}</span>
               </div>
               <h2 id="bkt-inspector-title" className="mt-1.5 font-display text-xl font-bold text-ink">
@@ -64,7 +78,6 @@ export default function BktInspector({ learner, skillId, theta, onClose }) {
               </h2>
               <p className="text-xs text-muted">{competency.strand}</p>
             </div>
-
             <button
               type="button"
               onClick={onClose}
@@ -78,7 +91,7 @@ export default function BktInspector({ learner, skillId, theta, onClose }) {
           {/* Current State & Prediction */}
           <div className="mt-4 grid grid-cols-2 gap-3">
             <div className="rounded-xl border border-line bg-white p-3.5">
-              <p className="text-xs font-bold tracking-wider text-muted uppercase">
+              <p className="text-[11px] font-bold tracking-wider text-muted uppercase">
                 Current Mastery P(Lₙ)
               </p>
               <div className="mt-1 flex items-baseline justify-between gap-2">
@@ -87,53 +100,67 @@ export default function BktInspector({ learner, skillId, theta, onClose }) {
                 </span>
                 <StatusPill band={statusFor(prior, theta)} />
               </div>
-              <p className="mt-1 text-xs text-muted tabular-nums">
+              <p className="mt-1 text-[11px] text-muted tabular-nums">
                 Exact prior: {hasPrior ? prior.toFixed(4) : 'No data'} (θ = {percent(theta)}%)
               </p>
             </div>
 
             <div className="rounded-xl border border-line bg-white p-3.5">
-              <p className="text-xs font-bold tracking-wider text-muted uppercase">
+              <p className="text-[11px] font-bold tracking-wider text-muted uppercase">
                 Next Correct Pred. P(Cₙ₊₁)
               </p>
               <p className="mt-1 font-display text-2xl font-bold text-brand tabular-nums">
                 {fmtDec(pCorrectNext)}
               </p>
-              <p className="mt-1 text-xs text-muted">
+              <p className="mt-1 text-[11px] text-muted">
                 P(Lₙ)(1 − S) + (1 − P(Lₙ))G
               </p>
             </div>
           </div>
 
-          {/* Fitted / Sample BKT Parameters */}
+          {/* All 4 BKT Parameters (Chapter 2) */}
           <div className="mt-4">
             <p className="text-xs font-bold tracking-wider text-muted uppercase">
-              Skill BKT Parameters (Sample)
+              Four-Parameter BKT Configuration (Sample)
             </p>
-            <div className="mt-2 grid grid-cols-3 gap-2.5 text-center">
+            <div className="mt-2 grid grid-cols-2 gap-2.5 text-center sm:grid-cols-4">
               <div className="rounded-xl border border-line bg-white p-2.5">
-                <p className="text-xs font-bold text-muted">Guess P(G)</p>
+                <p className="text-xs font-bold text-muted">Init P(L₀)</p>
                 <p className="mt-0.5 font-display text-lg font-bold text-ink tabular-nums">
-                  {params.guess.toFixed(2)}
+                  {(params.init ?? 0.5).toFixed(2)}
                 </p>
-                <p className="text-xs text-muted">Right without mastery</p>
-              </div>
-              <div className="rounded-xl border border-line bg-white p-2.5">
-                <p className="text-xs font-bold text-muted">Slip P(S)</p>
-                <p className="mt-0.5 font-display text-lg font-bold text-ink tabular-nums">
-                  {params.slip.toFixed(2)}
-                </p>
-                <p className="text-xs text-muted">Wrong despite mastery</p>
+                <p className="text-[10px] text-muted">Starting prior</p>
               </div>
               <div className="rounded-xl border border-line bg-white p-2.5">
                 <p className="text-xs font-bold text-muted">Learn P(T)</p>
                 <p className="mt-0.5 font-display text-lg font-bold text-ink tabular-nums">
                   {params.learn.toFixed(2)}
                 </p>
-                <p className="text-xs text-muted">Transition per item</p>
+                <p className="text-[10px] text-muted">Transition rate</p>
+              </div>
+              <div className="rounded-xl border border-line bg-white p-2.5">
+                <p className="text-xs font-bold text-muted">Guess P(G)</p>
+                <p className="mt-0.5 font-display text-lg font-bold text-ink tabular-nums">
+                  {params.guess.toFixed(2)}
+                </p>
+                <p className="text-[10px] text-muted">Right by chance</p>
+              </div>
+              <div className="rounded-xl border border-line bg-white p-2.5">
+                <p className="text-xs font-bold text-muted">Slip P(S)</p>
+                <p className="mt-0.5 font-display text-lg font-bold text-ink tabular-nums">
+                  {params.slip.toFixed(2)}
+                </p>
+                <p className="text-[10px] text-muted">Careless error</p>
               </div>
             </div>
           </div>
+
+          {/* Interpretable Model Rationale (Table 2, Feature 3) */}
+          {hasPrior && (
+            <div className="mt-3 rounded-xl border border-brand/25 bg-brand-soft/45 px-3.5 py-2.5 text-xs text-ink">
+              <strong>Interpretable BKT Rationale:</strong> Because Guess P(G)={params.guess.toFixed(2)} and Slip P(S)={params.slip.toFixed(2)}, BKT tempers single-item jumps so a lucky guess is not mistaken for mastery and a single slip does not erase high prior mastery.
+            </div>
+          )}
 
           {/* Two-Step Posterior Transition Preview */}
           {hasPrior && (
@@ -145,85 +172,72 @@ export default function BktInspector({ learner, skillId, theta, onClose }) {
                 <div className="rounded-xl border border-mastered/30 bg-mastered-soft/45 p-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-mastered-ink">If Next Answer is Correct</span>
-                    <span className="rounded-full bg-mastered text-on-mastered px-2 py-0.5 text-xs font-bold tabular-nums">
-                      +{ ((nextRight - prior) * 100).toFixed(1) }%
+                    <span className="rounded-full bg-mastered text-on-mastered px-2 py-0.5 text-[11px] font-bold tabular-nums">
+                      +{((nextRight - prior) * 100).toFixed(1)}%
                     </span>
                   </div>
                   <p className="mt-1.5 text-xs text-muted tabular-nums">
-                    1. Posterior P(L|✓): <strong className="text-ink">{fmtDec(obsRight)}</strong>
+                    1. Posterior P(Lₙ|right): <strong className="text-ink">{fmtDec(obsRight)}</strong>
                   </p>
                   <p className="text-xs text-muted tabular-nums">
                     2. After Learn P(Lₙ): <strong className="text-mastered-ink">{fmtDec(nextRight)}</strong>
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => runDemo(true)}
+                    className="mt-2.5 w-full rounded-lg bg-mastered px-3 py-1.5 text-xs font-bold text-on-mastered transition-opacity hover:opacity-90 cursor-pointer"
+                  >
+                    Simulate +1 Correct Answer
+                  </button>
                 </div>
 
                 <div className="rounded-xl border border-low/30 bg-low-soft/45 p-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-low-ink">If Next Answer is Wrong</span>
-                    <span className="rounded-full bg-low text-on-low px-2 py-0.5 text-xs font-bold tabular-nums">
-                      { ((nextWrong - prior) * 100).toFixed(1) }%
+                    <span className="rounded-full bg-low text-on-low px-2 py-0.5 text-[11px] font-bold tabular-nums">
+                      {((nextWrong - prior) * 100).toFixed(1)}%
                     </span>
                   </div>
                   <p className="mt-1.5 text-xs text-muted tabular-nums">
-                    1. Posterior P(L|✗): <strong className="text-ink">{fmtDec(obsWrong)}</strong>
+                    1. Posterior P(Lₙ|wrong): <strong className="text-ink">{fmtDec(obsWrong)}</strong>
                   </p>
                   <p className="text-xs text-muted tabular-nums">
                     2. After Learn P(Lₙ): <strong className="text-low-ink">{fmtDec(nextWrong)}</strong>
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => runDemo(false)}
+                    className="mt-2.5 w-full rounded-lg bg-low px-3 py-1.5 text-xs font-bold text-on-low transition-opacity hover:opacity-90 cursor-pointer"
+                  >
+                    Simulate +1 Wrong Answer
+                  </button>
                 </div>
               </div>
             </div>
           )}
 
-          {hasPrior && (
-            <div className="mt-4 rounded-xl border-2 border-dashed border-gap/60 bg-gap-soft/40 p-3.5">
-              <p className="flex flex-wrap items-center gap-2 text-sm font-bold text-gap-ink">
-                <span className="rounded-full bg-gap px-2 py-0.5 text-xs font-bold text-white">DEMO ONLY</span>
-                Changes the shared sample data
-              </p>
-              <p className="mt-1.5 text-sm text-ink">
-                Recording a demo answer changes {learner.name}&apos;s {competency.short} estimate for everyone using this
-                prototype, including the student view. Use Undo here, or <strong>Reset demo</strong> in the top bar, to
-                restore it.
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
+          {lastDemo && (
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-surface px-3.5 py-2 text-xs">
+              <span>
+                {lastDemo.undone
+                  ? `Undone: restored ${competency.short} estimate to ${formatPercent(lastDemo.before, theta)}.`
+                  : `Simulated ${lastDemo.correct ? 'correct' : 'wrong'} response: ${formatPercent(lastDemo.before, theta)} → ${formatPercent(lastDemo.after, theta)}.`}
+              </span>
+              {!lastDemo.undone && (
                 <button
                   type="button"
-                  onClick={() => runDemo(true)}
-                  className="rounded-lg border-2 border-mastered bg-white px-3.5 py-2 text-sm font-bold text-mastered-ink transition-colors hover:bg-mastered-soft cursor-pointer"
+                  onClick={undoDemo}
+                  className="font-bold text-brand underline cursor-pointer"
                 >
-                  Record a correct answer (demo)
+                  Undo
                 </button>
-                <button
-                  type="button"
-                  onClick={() => runDemo(false)}
-                  className="rounded-lg border-2 border-low bg-white px-3.5 py-2 text-sm font-bold text-low-ink transition-colors hover:bg-low-soft cursor-pointer"
-                >
-                  Record a wrong answer (demo)
-                </button>
-              </div>
-              <div role="status" aria-live="polite">
-                {lastDemo && (
-                  <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-medium text-ink">
-                    <span>
-                      {lastDemo.undone
-                        ? `Undone: back to ${formatPercent(lastDemo.before, theta)}.`
-                        : `Recorded a ${lastDemo.correct ? 'correct' : 'wrong'} answer: ${formatPercent(lastDemo.before, theta)} → ${formatPercent(lastDemo.after, theta)}.`}
-                    </span>
-                    {!lastDemo.undone && (
-                      <button
-                        type="button"
-                        onClick={undoDemo}
-                        className="rounded-lg border border-line bg-white px-2.5 py-1 text-xs font-bold text-brand hover:border-brand cursor-pointer"
-                      >
-                        Undo
-                      </button>
-                    )}
-                  </p>
-                )}
-              </div>
+              )}
             </div>
           )}
+
+          <p className="mt-4 border-t border-line pt-3 text-[11px] text-muted">
+            Simulating an answer updates in-memory BKT state across both Teacher and Student views. Use <strong>Reset demo</strong> in the top bar to restore initial values.
+          </p>
         </div>
       </div>
     </Overlay>

@@ -4,7 +4,7 @@ import SkillRing from '../components/SkillRing.jsx'
 import StudentPill from '../components/StudentPill.jsx'
 import { questions } from '../data/questions.js'
 import { getCompetency, remediationPath } from '../lib/path.js'
-import { percent } from '../lib/mastery.js'
+import { formatPercent, percent } from '../lib/mastery.js'
 import { missedEntry, nextRadioIndex, shuffleItems } from '../lib/practice.js'
 import { recordResponse, useLearner, useSettings } from '../lib/store.js'
 
@@ -47,7 +47,6 @@ function PracticeSession({ competency, items: bank }) {
   const [submitted, setSubmitted] = useState(false)
   const [correctCount, setCorrectCount] = useState(0)
   const [change, setChange] = useState(null)
-  // Questions and answer options are shuffled for each round so a repeat round is not identical.
   const [items, setItems] = useState(() => shuffleItems(bank))
   const [missed, setMissed] = useState([])
   const optionRefs = useRef([])
@@ -84,7 +83,6 @@ function PracticeSession({ competency, items: bank }) {
     setSubmitted(false)
   }
 
-  // Arrow keys move between the answer choices, like a native radio group.
   function handleOptionKey(e, i) {
     const n = nextRadioIndex(i, e.key, q.options.length)
     if (n === -1) return
@@ -93,8 +91,6 @@ function PracticeSession({ competency, items: bank }) {
     optionRefs.current[n]?.focus()
   }
 
-  // On a phone the feedback and the Next button land below the fold. After Submit, bring them
-  // into view and put focus on Next, so the answer, the score change and the next step are seen.
   useEffect(() => {
     if (!submitted) return
     const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -102,7 +98,6 @@ function PracticeSession({ competency, items: bank }) {
     nextRowRef.current?.scrollIntoView({ block: 'end', behavior: calm ? 'auto' : 'smooth' })
   }, [submitted])
 
-  // Moving to the next question: start at the top of the new question and move focus to it.
   useEffect(() => {
     if (shownIndex.current === index) return
     shownIndex.current = index
@@ -115,7 +110,10 @@ function PracticeSession({ competency, items: bank }) {
   useEffect(() => {
     if (!q) return undefined
     const handleKey = (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+      if (e.ctrlKey || e.metaKey || e.altKey) return
+      const tag = e.target.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'A' || tag === 'SUMMARY') return
+      if (tag === 'BUTTON' && !e.target.classList.contains('st-opt') && e.key === 'Enter') return
       const key = e.key.toUpperCase()
       if (!submitted) {
         const letterIdx = letters.indexOf(key)
@@ -143,12 +141,12 @@ function PracticeSession({ competency, items: bank }) {
         <Back />
         <h1 className="st-title">{competency.name}</h1>
         <p className="st-sub">
-          {competency.strand} · Mastery goal: {percent(theta)}%
+          {competency.strand} {competency.code ? `(${competency.code})` : ''} · Mastery threshold: {percent(theta)}%
         </p>
       </div>
       <div className="st-ph-ring">
         <SkillRing p={currentMastery} theta={theta} size={72} />
-        <div>Your mastery score</div>
+        <div>BKT mastery estimate</div>
       </div>
     </div>
   )
@@ -170,18 +168,18 @@ function PracticeSession({ competency, items: bank }) {
         {header}
         <section className="st-card st-pad st-done">
           <StudentPill band={isNowMastered ? 'mastered' : 'gap'}>
-            {isNowMastered ? `✓ Mastery goal reached (${percent(theta)}%)` : `Your mastery score: ${percent(currentMastery)}%`}
+            {isNowMastered ? `✓ Mastery threshold reached (${percent(theta)}%)` : `BKT mastery estimate: ${formatPercent(currentMastery, theta)}`}
           </StudentPill>
           <h2 className="st-h2" style={{ marginTop: '.75rem' }}>Practice complete</h2>
           <p className="st-score" style={{ marginTop: '1rem' }}>
             {correctCount}
             <small> of {items.length}</small>
           </p>
-          <p className="st-sub" style={{ marginTop: '.75rem' }}>answered correctly</p>
+          <p className="st-sub" style={{ marginTop: '.75rem' }}>answered correctly in this round</p>
           <p className="st-note" style={{ margin: '.75rem auto 0', maxWidth: '32rem' }}>
             {isNowMastered
-              ? `Great job! Your mastery score for ${competency.name} is now ${percent(currentMastery)}%. That reaches your mastery goal of ${percent(theta)}%.`
-              : `Your mastery score is now ${percent(currentMastery)}%. Practice another round to reach your mastery goal of ${percent(theta)}%.`}
+              ? `Great job! Your BKT mastery estimate for ${competency.name} is now ${formatPercent(currentMastery, theta)}, which meets the ${percent(theta)}% threshold.`
+              : `Your BKT mastery estimate is now ${formatPercent(currentMastery, theta)}. Practice another round to reach the ${percent(theta)}% mastery threshold.`}
           </p>
           {missed.length > 0 && (
             <section className="st-missed" aria-labelledby="missed-title">
@@ -242,6 +240,23 @@ function PracticeSession({ competency, items: bank }) {
     <div className="st-practice">
       {header}
 
+      {competency.resource && (
+        <details
+          className="st-card"
+          style={{ marginBottom: '1rem', padding: '1rem 1.25rem' }}
+        >
+          <summary style={{ cursor: 'pointer', fontWeight: 700, fontSize: '.92rem', color: 'var(--st-aqua)' }}>
+            Concept Review & Worked Example · {competency.resource.title}
+          </summary>
+          <p style={{ margin: '.5rem 0 0', fontSize: '.9rem', lineHeight: 1.5, opacity: 0.9 }}>
+            {competency.resource.summary}
+          </p>
+          <p style={{ margin: '.4rem 0 0', fontFamily: 'monospace', fontSize: '.85rem', opacity: 0.85 }}>
+            Worked Example: {competency.resource.example}
+          </p>
+        </details>
+      )}
+
       <section className="st-card st-pad">
         <div className="st-steps">
           <p>Question {index + 1} of {items.length}</p>
@@ -292,7 +307,7 @@ function PracticeSession({ competency, items: bank }) {
                 </p>
                 {change && (
                   <span className={`st-delta ${deltaPts >= 0 ? 'is-up' : 'is-down'}`}>
-                    {deltaPts >= 0 ? `+${deltaPts}%` : `${deltaPts}%`} to your score
+                    {deltaPts >= 0 ? `+${deltaPts}%` : `${deltaPts}%`} BKT estimate update
                   </span>
                 )}
               </div>
@@ -300,15 +315,15 @@ function PracticeSession({ competency, items: bank }) {
               {change && (
                 <div className="st-meter">
                   <div className="st-meter-row">
-                    <span>Your {competency.short} mastery score</span>
+                    <span>Your {competency.short} BKT mastery estimate</span>
                     <span>
-                      {percent(change.before)}% → {percent(change.after)}%
+                      {formatPercent(change.before, theta)} → {formatPercent(change.after, theta)}
                     </span>
                   </div>
                   <div
                     className="st-track"
                     role="img"
-                    aria-label={`Mastery score moved from ${percent(change.before)} to ${percent(change.after)} percent. Mastery goal ${percent(theta)} percent.`}
+                    aria-label={`BKT mastery estimate moved from ${formatPercent(change.before, theta)} to ${formatPercent(change.after, theta)}. Mastery threshold ${percent(theta)} percent.`}
                   >
                     <div
                       className="st-track-fill"
@@ -316,14 +331,14 @@ function PracticeSession({ competency, items: bank }) {
                     />
                     <span className="st-line95" style={{ left: `${percent(theta)}%` }} />
                     <span className="st-line95-label" style={{ left: `${percent(theta)}%` }}>
-                      Goal {percent(theta)}%
+                      Threshold {percent(theta)}%
                     </span>
                   </div>
                 </div>
               )}
               {crossedThreshold && (
                 <div className="st-mastered-banner">
-                  <span>✓ You reached your mastery goal of {percent(theta)}% for {competency.short}!</span>
+                  <span>✓ You reached the {percent(theta)}% mastery threshold for {competency.short}!</span>
                   {nextRecommended && (
                     <Link to={`/student/practice?skill=${nextRecommended.id}`} className="st-btn st-btn--sm st-btn--primary">
                       Jump to {nextRecommended.short}

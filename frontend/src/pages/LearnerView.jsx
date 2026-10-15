@@ -26,7 +26,8 @@ const nodeStyles = {
   below: 'fill-gap-soft stroke-gap',
   none: 'fill-surface stroke-muted',
 }
-const nodeWord = { meets: '✓ Meets', below: '▲ Below', none: 'No data' }
+
+const nodeWord = { meets: '✓ Meets', below: '▼ Below', none: 'No data' }
 
 function LearnerPicker({ state, learners, target, theta, invalid, backLink }) {
   return (
@@ -34,12 +35,14 @@ function LearnerPicker({ state, learners, target, theta, invalid, backLink }) {
       <Link to={backLink} className="inline-flex items-center gap-1.5 text-sm font-bold text-brand hover:underline">
         <span aria-hidden="true">←</span> Class overview
       </Link>
+
       {invalid.target && (
         <Notice>The target competency in the link was not recognized, so the default target is shown.</Notice>
       )}
       {invalid.theta && (
         <Notice>The mastery threshold in the link was not recognized, so {percent(theta)}% is used.</Notice>
       )}
+
       <Card>
         <h1 className="font-display text-2xl font-bold sm:text-3xl">
           {state === 'invalid' ? 'Learner not found' : 'Choose a learner'}
@@ -50,9 +53,10 @@ function LearnerPicker({ state, learners, target, theta, invalid, backLink }) {
             : 'No learner is selected yet. Choose a learner to see their mastery estimates, prerequisite graph and suggested review order.'}
         </p>
         <p className="mt-2 text-sm text-muted">
-          Target competency: <strong className="text-ink">{target.name}</strong> • Mastery threshold:{' '}
+          Target competency: <strong className="text-ink">{target.name}</strong> · Mastery threshold:{' '}
           <strong className="text-ink">{percent(theta)}%</strong>
         </p>
+
         <ul className="mt-5 grid gap-3 sm:grid-cols-2">
           {learners.map((l) => {
             const p = l.mastery?.[target.id]
@@ -75,13 +79,14 @@ function LearnerPicker({ state, learners, target, theta, invalid, backLink }) {
                     </div>
                   </div>
                   <span className="font-bold text-brand">
-                    Open <span className="sr-only">learner view for {l.name}</span>→
+                    Open <span className="sr-only">learner view for {l.name}</span> →
                   </span>
                 </Link>
               </li>
             )
           })}
         </ul>
+
         <p className="mt-4 text-xs text-muted">
           Percentages are each learner&apos;s BKT estimate for the selected target competency ({target.name}).
         </p>
@@ -99,9 +104,12 @@ export default function LearnerView() {
   const [pinnedNode, setPinnedNode] = useState(null)
   const [inspectedSkill, setInspectedSkill] = useState(null)
   const [compareOtherId, setCompareOtherId] = useState(null)
-
+  // Teacher decision-support controls: pin a prerequisite as #1 priority or mark reviewed in class.
+  const [priorityId, setPriorityId] = useState(null)
+  const [teacherReviewed, setTeacherReviewed] = useState({})
   const learners = useLearners()
   const settings = useSettings()
+
   const effectiveParams = new URLSearchParams(params)
   if (!effectiveParams.has('target')) effectiveParams.set('target', settings.targetId)
   if (!effectiveParams.has('theta')) effectiveParams.set('theta', String(settings.theta))
@@ -116,6 +124,7 @@ export default function LearnerView() {
       ...(ctx.learnerId ? { learnerId: ctx.learnerId } : {}),
     })
   }, [targetId, theta, ctx.learnerId])
+
   const target = getCompetency(targetId)
   const backLink = overviewLink({ target: targetId, theta, learnerId: ctx.learnerId })
 
@@ -150,11 +159,17 @@ export default function LearnerView() {
   const learner = learners.find((l) => l.id === ctx.learnerId)
   const mastery = learner.mastery ?? {}
 
-  const updateContext = (change) =>
+  const updateContext = (change) => {
+    setPriorityId(null)
     setParams(contextQuery({ learnerId: learner.id, target: targetId, theta, ...change }), { replace: true })
+  }
 
   const result = candidatePath(mastery, targetId, theta)
-  const path = result.path
+  const basePath = result.path
+  const hasTeacherOverride = Boolean(priorityId && basePath.includes(priorityId) && priorityId !== targetId)
+  const path = hasTeacherOverride
+    ? [priorityId, ...basePath.filter((id) => id !== priorityId)]
+    : basePath
   const onPath = new Set(path)
   const relevant = new Set(dependencyOrder(targetId))
   const hasUnrelated = competencies.some((c) => !relevant.has(c.id))
@@ -202,8 +217,12 @@ export default function LearnerView() {
     setInspectedSkill(id)
   }
 
-  const gapCount = result.gaps.length
+  const toggleReviewed = (skillId) => {
+    const key = `${learner.id}:${skillId}`
+    setTeacherReviewed((prev) => ({ ...prev, [key]: !prev[key] }))
+  }
 
+  const gapCount = result.gaps.length
   const messages = {
     'needs-review':
       gapCount === 0
@@ -223,21 +242,24 @@ export default function LearnerView() {
             <Link to={backLink} className="inline-flex items-center gap-1.5 text-sm font-bold text-brand hover:underline">
               <span aria-hidden="true">←</span> Class overview
             </Link>
-
             <div className="mt-3 flex flex-wrap items-center gap-4">
               <MasteryRing p={mastery[targetId]} theta={theta} size={64} />
               <div>
                 <div className="flex flex-wrap items-center gap-2.5">
                   <h1 className="font-display text-3xl font-bold sm:text-4xl">{learner.name}</h1>
                   <StatusPill band={statusFor(mastery[targetId], theta)} />
+                  {target.code && (
+                    <span className="rounded-full border border-line bg-surface px-2.5 py-0.5 text-xs font-bold text-muted">
+                      {target.code}
+                    </span>
+                  )}
                 </div>
                 <p className="mt-1 text-sm text-muted">
-                  Target competency: <strong className="text-ink">{target.name}</strong> ({targetEstimate}) • Mastery threshold:{' '}
+                  Target competency: <strong className="text-ink">{target.name}</strong> ({targetEstimate}) · Mastery threshold:{' '}
                   <strong className="text-ink">{percent(theta)}%</strong>
                 </p>
               </div>
             </div>
-
             <p className="mt-3 max-w-3xl rounded-xl bg-brand-soft/60 px-4 py-2.5 text-sm font-medium text-ink">
               {messages[result.status]}
             </p>
@@ -386,7 +408,7 @@ export default function LearnerView() {
                   tabIndex={0}
                   aria-haspopup="dialog"
                   aria-label={`${c.name}: ${
-                    s === 'none' ? 'no data' : `${formatPercent(p, theta)}, ${s === 'meets' ? 'meets' : 'below'} the threshold`
+                    s === 'none' ? 'no data' : `${formatPercent(p, theta)},${s === 'meets' ? 'meets' : 'below'} the threshold`
                   }${isTarget ? ', target competency' : ''}${step >= 0 ? `, review step ${step + 1}` : ''}${
                     relevant.has(c.id) ? '' : ', not a prerequisite of the target'
                   }. Opens BKT details.`}
@@ -411,7 +433,6 @@ export default function LearnerView() {
                   <title>{`${c.name}: ${formatPercent(p, theta)}${
                     s === 'none' ? '' : s === 'meets' ? ' (meets the threshold)' : ' (below the threshold)'
                   } — Click to inspect BKT parameters`}</title>
-
                   {focusedNode === c.id && (
                     <rect
                       x={left - 8}
@@ -424,7 +445,6 @@ export default function LearnerView() {
                       className="stroke-ink"
                     />
                   )}
-
                   {isTarget && (
                     <rect
                       x={left - 5}
@@ -438,7 +458,6 @@ export default function LearnerView() {
                       className="stroke-brand"
                     />
                   )}
-
                   <rect
                     x={left}
                     y={top}
@@ -452,15 +471,13 @@ export default function LearnerView() {
                     {c.short}
                   </text>
                   <text x={x} y={y + 18} textAnchor="middle" className="fill-ink text-sm font-medium">
-                    {formatPercent(p, theta)} • {nodeWord[s]}
+                    {formatPercent(p, theta)} · {nodeWord[s]}
                   </text>
-
                   {isTarget && (
                     <text x={left + NODE.w - 8} y={top + 15} textAnchor="end" className="fill-brand text-xs font-bold">
                       Target
                     </text>
                   )}
-
                   {step >= 0 && (
                     <g>
                       <circle cx={left + 4} cy={top + 4} r={14} className="fill-brand stroke-white" strokeWidth="2" />
@@ -496,12 +513,30 @@ export default function LearnerView() {
       {/* Suggested Topological Review Order */}
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-display text-2xl font-bold">Suggested review order</h2>
-          {path.length > 0 && (
-            <span className="rounded-full bg-brand-soft px-3 py-1 text-xs font-bold text-brand">
-              {path.length} step{path.length === 1 ? '' : 's'} in topological order
-            </span>
-          )}
+          <div>
+            <h2 className="font-display text-2xl font-bold">Suggested review order</h2>
+            <p className="mt-1 text-xs text-muted">
+              Candidate remediation sequence generated from BKT estimates and the prerequisite DAG. You can prioritize a prerequisite or mark skills reviewed in class.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {hasTeacherOverride && (
+              <button
+                type="button"
+                onClick={() => setPriorityId(null)}
+                className="rounded-full border border-brand/30 bg-white px-3 py-1 text-xs font-bold text-brand hover:bg-brand-soft cursor-pointer"
+              >
+                Restore topological order
+              </button>
+            )}
+            {path.length > 0 && (
+              <span className="rounded-full bg-brand-soft px-3 py-1 text-xs font-bold text-brand">
+                {hasTeacherOverride
+                  ? `${path.length} steps (teacher-prioritized)`
+                  : `${path.length} step${path.length === 1 ? '' : 's'} in topological order`}
+              </span>
+            )}
+          </div>
         </div>
 
         {path.length === 0 ? (
@@ -515,13 +550,17 @@ export default function LearnerView() {
               const p = mastery[id]
               const isFirst = i === 0
               const isTarget = id === targetId
+              const isPinned = priorityId === id
+              const isReviewed = Boolean(teacherReviewed[`${learner.id}:${id}`])
               return (
                 <li
                   key={id}
                   className={`flex flex-wrap items-center gap-4 rounded-xl border p-4 transition-colors ${
-                    isFirst
-                      ? 'border-brand bg-brand-soft/35 shadow-xs'
-                      : 'border-line bg-white'
+                    isReviewed
+                      ? 'border-mastered/40 bg-mastered-soft/20'
+                      : isFirst
+                        ? 'border-brand bg-brand-soft/35 shadow-xs'
+                        : 'border-line bg-white'
                   }`}
                 >
                   <span
@@ -531,39 +570,75 @@ export default function LearnerView() {
                   >
                     {i + 1}
                   </span>
-
                   <MasteryRing p={p} theta={theta} size={48} />
-
                   <div className="min-w-48 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-display text-lg font-bold text-ink">{c.name}</p>
+                      {c.code && (
+                        <span className="rounded-full border border-line bg-surface px-2 py-0.5 text-[11px] font-bold text-muted">
+                          {c.code}
+                        </span>
+                      )}
                       {isFirst && (
                         <span className="rounded-full bg-brand px-2.5 py-0.5 text-xs font-bold text-on-brand">
-                          Start here
+                          {isPinned ? 'Teacher Priority #1' : 'Start here'}
+                        </span>
+                      )}
+                      {isReviewed && (
+                        <span className="rounded-full bg-mastered-soft px-2.5 py-0.5 text-xs font-bold text-mastered-ink">
+                          ✓ Reviewed in class
                         </span>
                       )}
                     </div>
                     <p className="text-xs text-muted">
-                      {c.strand} • {c.prereqs.length > 0 ? `Builds on ${c.prereqs.map((pr) => getCompetency(pr).short).join(', ')}` : 'Foundational skill'}
+                      {c.strand} · {c.prereqs.length > 0 ? `Builds on ${c.prereqs.map((pr) => getCompetency(pr).short).join(', ')}` : 'Foundational skill'}
                     </p>
+                    {c.resource && (
+                      <p className="mt-1 text-xs font-medium text-brand">
+                        Aligned resource: {c.resource.title}
+                      </p>
+                    )}
                   </div>
-
                   <p className="w-16 text-right font-display text-lg font-bold tabular-nums">
                     {formatPercent(p, theta)}
                   </p>
-
                   <StatusPill
                     band={isTarget ? 'focus' : 'below'}
                     label={isTarget ? 'Target competency' : undefined}
                   />
-
-                  <button
-                    type="button"
-                    onClick={() => setInspectedSkill(id)}
-                    className="rounded-lg border border-line bg-white px-2.5 py-1.5 text-xs font-bold text-brand hover:border-brand cursor-pointer"
-                  >
-                    BKT Math
-                  </button>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {!isTarget && path.length > 2 && (
+                      <button
+                        type="button"
+                        onClick={() => setPriorityId(isPinned ? null : id)}
+                        className={`rounded-lg border px-2.5 py-1.5 text-xs font-bold transition-colors cursor-pointer ${
+                          isPinned
+                            ? 'border-brand bg-brand text-on-brand'
+                            : 'border-brand/30 bg-brand-soft text-brand hover:bg-brand hover:text-on-brand'
+                        }`}
+                      >
+                        {isPinned ? 'Pinned #1' : 'Prioritize 1st'}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => toggleReviewed(id)}
+                      className={`rounded-lg border px-2.5 py-1.5 text-xs font-bold transition-colors cursor-pointer ${
+                        isReviewed
+                          ? 'border-mastered bg-mastered-soft text-mastered-ink'
+                          : 'border-line bg-white text-muted hover:border-brand hover:text-ink'
+                      }`}
+                    >
+                      {isReviewed ? '✓ Reviewed' : 'Mark reviewed'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setInspectedSkill(id)}
+                      className="rounded-lg border border-line bg-white px-2.5 py-1.5 text-xs font-bold text-brand hover:border-brand cursor-pointer"
+                    >
+                      BKT Math
+                    </button>
+                  </div>
                 </li>
               )
             })}

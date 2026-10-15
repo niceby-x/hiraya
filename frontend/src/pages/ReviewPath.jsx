@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import SkillRing from '../components/SkillRing.jsx'
 import StudentPill from '../components/StudentPill.jsx'
-import { bandFor, percent } from '../lib/mastery.js'
+import { bandFor, formatPercent, percent } from '../lib/mastery.js'
 import { candidatePath, getCompetency, skippedPrerequisites } from '../lib/path.js'
 import { useLearner, useSettings } from '../lib/store.js'
 
@@ -23,16 +23,18 @@ export default function ReviewPath() {
     <div className="st-page">
       <div>
         <h1 className="st-title">My review path</h1>
-        <p className="st-sub">Suggested order to reach {target.name} (mastery goal: {percent(theta)}%)</p>
+        <p className="st-sub">
+          Dependency-ordered remediation path to reach {target.name} ({percent(theta)}% mastery threshold)
+        </p>
       </div>
 
       <div className="st-path-summary">
         <div className="st-path-stat">
-          <span>Focus Goal</span>
-          <strong>{target.short} ({percent(learner.mastery[targetId])}%)</strong>
+          <span>Focus Goal ({target.code})</span>
+          <strong>{target.short} ({formatPercent(learner.mastery[targetId], theta)})</strong>
         </div>
         <div className="st-path-stat">
-          <span>Skills to Review</span>
+          <span>Candidate Prerequisite Gaps</span>
           <strong>{gaps.length} skill{gaps.length === 1 ? '' : 's'} below {percent(theta)}%</strong>
         </div>
         <div className="st-path-stat">
@@ -42,20 +44,20 @@ export default function ReviewPath() {
       </div>
 
       <section className="st-card st-pad" aria-labelledby="how-made">
-        <h2 id="how-made" className="st-how-title">How this order was made</h2>
+        <h2 id="how-made" className="st-how-title">How this dependency order was made</h2>
         <ol className="st-how">
           <li>
             <b>1</b>
-            <span>Start from your goal: {target.name}.</span>
+            <span>Start from your target competency: {target.name}.</span>
           </li>
           <li>
             <b>2</b>
-            <span>Check every skill it depends on, step by step.</span>
+            <span>Traverse backward through the teacher-validated prerequisite graph (DAG).</span>
           </li>
           <li>
             <b>3</b>
             <span>
-              Keep the ones below your mastery goal of {percent(theta)}% and put them in order, so each skill comes after the skills it builds on.
+              Keep prerequisites with a BKT mastery estimate below {percent(theta)}% and order them from earliest foundation to target.
             </span>
           </li>
         </ol>
@@ -65,8 +67,8 @@ export default function ReviewPath() {
         <section className="st-card st-pad">
           <p className="st-empty">
             {status === 'target-met'
-              ? `✓ You have reached your mastery goal of ${percent(theta)}% for ${target.name}. No review path is needed for this goal.`
-              : `There is no mastery score for ${target.name} yet, so a review path can't be shown.`}
+              ? `✓ Your BKT mastery estimate has reached the ${percent(theta)}% threshold for ${target.name}. No review path is needed for this goal.`
+              : `There is no mastery estimate for ${target.name} yet, so a review path can't be shown.`}
           </p>
         </section>
       ) : (
@@ -88,15 +90,41 @@ export default function ReviewPath() {
                   </div>
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div className="st-step-head">
-                      <h3 className="st-step-name">{c.name}</h3>
+                      <h3 className="st-step-name">
+                        {c.name}{' '}
+                        {c.code && <small style={{ fontSize: '.8rem', opacity: 0.7 }}>({c.code})</small>}
+                      </h3>
                       <StudentPill band={band}>{label}</StudentPill>
                     </div>
                     <p className="st-step-now">
-                      {percent(p)}% now · {away} more point{away === 1 ? '' : 's'} to reach your {percent(theta)}% goal
+                      {formatPercent(p, theta)} BKT estimate · {away} more percentage point{away === 1 ? '' : 's'} to reach {percent(theta)}% threshold
                     </p>
                     <div className="st-step-bar" aria-hidden="true">
                       <div className="st-step-bar-fill" style={{ width: `${Math.min(100, percent(p))}%` }} />
                     </div>
+
+                    {c.resource && (
+                      <div
+                        style={{
+                          marginTop: '.85rem',
+                          padding: '.75rem .95rem',
+                          borderRadius: '.8rem',
+                          background: 'var(--st-inset)',
+                          border: '1px solid var(--st-line)',
+                          fontSize: '.85rem',
+                          lineHeight: 1.45,
+                        }}
+                      >
+                        <div style={{ fontWeight: 700, color: 'var(--st-aqua)' }}>
+                          Recommended Resource: {c.resource.title}
+                        </div>
+                        <p style={{ margin: '.25rem 0 0', opacity: 0.88 }}>{c.resource.summary}</p>
+                        <p style={{ margin: '.3rem 0 0', fontFamily: 'monospace', fontSize: '.8rem', opacity: 0.8 }}>
+                          Example: {c.resource.example}
+                        </p>
+                      </div>
+                    )}
+
                     <p className="st-chips">
                       <b>Builds on</b>
                       {c.prereqs.length > 0 ? (
@@ -104,7 +132,7 @@ export default function ReviewPath() {
                           const pr = getCompetency(prId)
                           return (
                             <Link key={prId} to={`/student/practice?skill=${prId}`} className="st-chip">
-                              {pr.short} ({percent(learner.mastery[prId])}%)
+                              {pr.short} ({formatPercent(learner.mastery[prId], theta)})
                             </Link>
                           )
                         })
@@ -148,7 +176,7 @@ export default function ReviewPath() {
                 <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M3.5 8.5l3 3 6-7" />
                 </svg>
-                {getCompetency(id).name} · {percent(learner.mastery[id])}%
+                {getCompetency(id).name} · {formatPercent(learner.mastery[id], theta)}
               </li>
             ))}
           </ul>

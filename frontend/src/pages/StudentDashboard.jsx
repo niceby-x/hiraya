@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import SkillRing from '../components/SkillRing.jsx'
 import StudentPill from '../components/StudentPill.jsx'
 import { competencies } from '../data/mock.js'
-import { bandFor, percent } from '../lib/mastery.js'
+import { bandFor, formatPercent, percent } from '../lib/mastery.js'
 import { candidatePath, getCompetency, remediationPath } from '../lib/path.js'
 import { resetLearners, useLearner, useSettings } from '../lib/store.js'
 
@@ -36,12 +36,13 @@ export default function StudentDashboard() {
   const { status } = candidatePath(learner.mastery, targetId, theta)
   const first = path.length > 0 ? getCompetency(path[0]) : null
   const toReview = Math.max(path.length - 1, 0)
+
   const bands = competencies.map((c) => bandFor(learner.mastery[c.id], theta))
   const masteredCount = bands.filter((b) => b === 'mastered').length
 
   const legend = [
-    { band: 'mastered', label: 'Mastered', text: `${percent(theta)}% or higher` },
-    { band: 'gap', label: 'Needs review', text: `below ${percent(theta)}%` },
+    { band: 'mastered', label: 'Mastered', text: `${percent(theta)}% or higher estimate` },
+    { band: 'gap', label: 'Needs review', text: `estimate below ${percent(theta)}%` },
     { band: 'next', label: 'Review next', text: 'the skill to start with' },
     { band: 'focus', label: 'Focus topic', text: 'the skill you are working toward' },
   ]
@@ -51,7 +52,6 @@ export default function StudentDashboard() {
     if (path[0] === id) return 'next'
     return band
   }
-
   const pillLabelFor = (id, band) => {
     if (id === targetId) return 'Focus topic'
     if (path[0] === id) return 'Review next'
@@ -71,17 +71,17 @@ export default function StudentDashboard() {
       <div className="st-greet">
         <div>
           <h1 className="st-title">Hello, {learner.name}</h1>
-          <p className="st-sub">Grade 7 Mathematics · Focus topic: {target.name} · Mastery goal: {percent(theta)}%</p>
+          <p className="st-sub">Grade 7 MATATAG Mathematics · Focus topic: {target.name} · Mastery threshold: {percent(theta)}%</p>
         </div>
         <div className="st-tally">
           <p>
-            <strong>{masteredCount}</strong> of {competencies.length} skills mastered (goal: {percent(theta)}%)
+            <strong>{masteredCount}</strong> of {competencies.length} skills mastered ({percent(theta)}% line)
           </p>
           <ul className="st-segs" aria-hidden="true">
             {bands.map((b, i) => (
               <li
                 key={competencies[i].id}
-                title={`${competencies[i].name}: ${percent(learner.mastery[competencies[i].id])}%`}
+                title={`${competencies[i].name}: ${formatPercent(learner.mastery[competencies[i].id], theta)} BKT estimate`}
                 className={b === 'mastered' ? 'is-ok' : b === 'gap' ? 'is-warn' : 'is-low'}
               />
             ))}
@@ -93,13 +93,13 @@ export default function StudentDashboard() {
         <section className="st-hero" aria-labelledby="start-here">
           <span className="st-here">
             <i aria-hidden="true" />
-            Recommended next step
+            Recommended next step · {first.code}
           </span>
           <h2 id="start-here" className="st-hero-title">{first.name}</h2>
           <p className="st-hero-text">
             {first.id === targetId
-              ? `You have reached your mastery goal of ${percent(theta)}% on all the earlier skills! You are ready to practice your focus topic.`
-              : `${toReview} earlier skill${toReview === 1 ? '' : 's'} to review before ${target.name}. Later skills build on this one, so it comes first.`}
+              ? `Your BKT mastery estimates meet the ${percent(theta)}% threshold on all prerequisite skills! You are ready to practice your focus topic.`
+              : `${toReview} prerequisite skill${toReview === 1 ? '' : 's'} to review before ${target.name}. Later skills build on this one, so it comes first.`}
           </p>
 
           <ol className="st-route" aria-label="Your review route">
@@ -117,9 +117,9 @@ export default function StudentDashboard() {
                   <Link
                     to={`/student/practice?skill=${id}`}
                     className="st-stop-link"
-                    title={`Practice ${comp.name} (mastery score ${percent(learner.mastery[id])}%)`}
+                    title={`Practice ${comp.name} (BKT mastery estimate ${formatPercent(learner.mastery[id], theta)})`}
                   >
-                    <span className="st-stop-pct">{percent(learner.mastery[id])}%</span>
+                    <span className="st-stop-pct">{formatPercent(learner.mastery[id], theta)}</span>
                     <span className="st-node" aria-hidden="true" />
                     <span className="st-stop-label">{comp.short}</span>
                     <span className="st-stop-role">
@@ -144,8 +144,8 @@ export default function StudentDashboard() {
         <section className="st-card st-pad">
           <p className="st-empty">
             {status === 'target-met'
-              ? `✓ You have reached your mastery goal of ${percent(theta)}% for ${target.name}! No review path is needed for this goal.`
-              : `There is no mastery score for ${target.name} yet, so a review path can't be shown.`}
+              ? `✓ Your BKT mastery estimate has reached the ${percent(theta)}% threshold for ${target.name}! No review path is needed for this goal.`
+              : `There is no mastery estimate for ${target.name} yet, so a review path can't be shown.`}
           </p>
         </section>
       )}
@@ -153,9 +153,9 @@ export default function StudentDashboard() {
       <section aria-labelledby="my-skills" className="st-page">
         <div className="st-filter-head">
           <div>
-            <h2 id="my-skills" className="st-h2">My skills</h2>
+            <h2 id="my-skills" className="st-h2">My skills (BKT mastery estimates)</h2>
             <p className="st-note" style={{ marginTop: '.35rem' }}>
-              Each ring fills to your mastery score. The small tick marks your mastery goal of {percent(theta)}%.
+              Each ring shows your estimated probability of mastery (not a raw test score). The tick marks the {percent(theta)}% mastery threshold.
             </p>
           </div>
           <div className="st-filters" role="group" aria-label="Filter skills">
@@ -208,18 +208,21 @@ export default function StudentDashboard() {
                     <li key={id}>
                       <Link
                         to={`/student/practice?skill=${id}`}
-                        aria-label={`Practice ${c.name}. ${pillLabelFor(id, band)}. Mastery score ${percent(p)} percent${band === 'mastered' ? ', goal reached' : `, ${away} more point${away === 1 ? '' : 's'} to reach ${percent(theta)} percent`}.`}
+                        aria-label={`Practice ${c.name}. ${pillLabelFor(id, band)}. BKT mastery estimate ${formatPercent(p, theta)}${band === 'mastered' ? ', threshold reached' : `, ${away} more point${away === 1 ? '' : 's'} to reach${percent(theta)} percent`}.`}
                         className={`st-card st-skill ${path[0] === id ? 'is-next' : ''} ${id === targetId ? 'is-focus' : ''}`}
                       >
                         <SkillRing p={p} theta={theta} size={64} animate delay={delay} />
                         <span className="st-skill-body">
-                          <p className="st-skill-name">{c.name}</p>
+                          <p className="st-skill-name">
+                            {c.name}{' '}
+                            {c.code && <small style={{ opacity: 0.65, fontWeight: 600 }}>({c.code})</small>}
+                          </p>
                           <span className="st-skill-meta">
                             <StudentPill band={pillBand}>{pillLabelFor(id, band)}</StudentPill>
                             <span>
                               {band === 'mastered'
-                                ? 'Goal reached'
-                                : `${away} more point${away === 1 ? '' : 's'} to reach ${percent(theta)}%`}
+                                ? 'Meets threshold'
+                                : `${away} more pt${away === 1 ? '' : 's'} to ${percent(theta)}%`}
                             </span>
                           </span>
                           <p className="st-skill-prereq">
