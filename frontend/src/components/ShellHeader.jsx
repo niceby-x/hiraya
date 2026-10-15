@@ -71,13 +71,13 @@ export default function ShellHeader({
   const navStyle = edges.start || edges.end ? { maskImage: fade, WebkitMaskImage: fade } : undefined
 
   return (
-    <header className={`on-dark sticky top-0 z-30 border-b border-white/12 bg-night/95 px-4 py-2.5 text-white sm:px-8 ${className}`}>
+    <header className={`on-dark relative z-30 border-b border-white/12 bg-night/95 px-4 py-2.5 text-white sm:px-8 xl:sticky xl:top-0 ${className}`}>
       <div className="mx-auto flex max-w-295 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-6">
-        <Link to={homeTo} className="flex shrink-0 items-center gap-2 py-1 group sm:gap-2.5">
+        <Link to={homeTo} className="group flex shrink-0 items-center gap-2 py-1 pointer-coarse:min-h-11 sm:gap-2.5">
           <Logo size={32} className="text-aqua transition-transform duration-200 group-hover:scale-105 max-sm:h-7 max-sm:w-7" />
           <div className="flex items-baseline gap-2">
             <span className="font-display text-lg font-bold tracking-widest text-white sm:text-xl">HIRAYA</span>
-            <span className="rounded-full border border-aqua/30 bg-aqua/10 px-1.5 py-0.5 text-xs sm:px-2 font-bold tracking-wide text-aqua uppercase">
+            <span className="rounded-full border border-aqua/30 bg-aqua/10 px-1.5 py-0.5 text-xs sm:px-2 font-bold max-[359px]:hidden tracking-wide text-aqua uppercase">
               {badge}
             </span>
           </div>
@@ -87,7 +87,7 @@ export default function ShellHeader({
           ref={navRef}
           style={navStyle}
           aria-label={navLabel}
-          className="order-last flex w-full gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:order-none sm:w-auto sm:flex-1 sm:pb-0"
+          className="order-last flex w-full gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden xl:order-none xl:w-auto xl:flex-1 xl:pb-0"
         >
           {links.map((link) => (
             <NavLink
@@ -107,13 +107,13 @@ export default function ShellHeader({
           ))}
         </nav>
 
-        <div className="ml-auto flex shrink-0 items-center gap-2 text-sm sm:ml-0 sm:gap-2.5">
+        <div className="ml-auto flex shrink-0 items-center gap-2 text-sm sm:gap-2.5">
           {extra}
           <button
             type="button"
             onClick={resetLearners}
             title={resetTitle}
-            className="hidden cursor-pointer items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-2.5 py-1.5 text-xs font-bold text-white/80 transition-colors hover:border-aqua/40 hover:bg-white/10 hover:text-white md:inline-flex"
+            className="hidden cursor-pointer items-center gap-1.5 pointer-coarse:min-h-11 pointer-coarse:px-3.5 rounded-lg border border-white/15 bg-white/5 px-2.5 py-1.5 text-xs font-bold text-white/80 transition-colors hover:border-aqua/40 hover:bg-white/10 hover:text-white md:inline-flex"
           >
             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M3 12a9 9 0 1 0 3-6.7L3 8" />

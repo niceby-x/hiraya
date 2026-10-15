@@ -51,6 +51,10 @@ function PracticeSession({ competency, items: bank }) {
   const [items, setItems] = useState(() => shuffleItems(bank))
   const [missed, setMissed] = useState([])
   const optionRefs = useRef([])
+  const questionRef = useRef(null)
+  const nextRowRef = useRef(null)
+  const nextBtnRef = useRef(null)
+  const shownIndex = useRef(0)
 
   const currentMastery = learner.mastery[competency.id]
   const isNowMastered = currentMastery >= theta
@@ -88,6 +92,25 @@ function PracticeSession({ competency, items: bank }) {
     setPicked(n)
     optionRefs.current[n]?.focus()
   }
+
+  // On a phone the feedback and the Next button land below the fold. After Submit, bring them
+  // into view and put focus on Next, so the answer, the score change and the next step are seen.
+  useEffect(() => {
+    if (!submitted) return
+    const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    nextBtnRef.current?.focus({ preventScroll: true })
+    nextRowRef.current?.scrollIntoView({ block: 'end', behavior: calm ? 'auto' : 'smooth' })
+  }, [submitted])
+
+  // Moving to the next question: start at the top of the new question and move focus to it.
+  useEffect(() => {
+    if (shownIndex.current === index) return
+    shownIndex.current = index
+    const el = questionRef.current
+    if (!el) return
+    el.focus({ preventScroll: true })
+    el.scrollIntoView({ block: 'start', behavior: 'auto' })
+  }, [index])
 
   useEffect(() => {
     if (!q) return undefined
@@ -229,7 +252,7 @@ function PracticeSession({ competency, items: bank }) {
           </ol>
         </div>
 
-        <h2 id="practice-question" className="st-q">{q.prompt}</h2>
+        <h2 id="practice-question" ref={questionRef} tabIndex={-1} className="st-q">{q.prompt}</h2>
 
         <div role="radiogroup" aria-labelledby="practice-question" className="st-opts">
           {q.options.map((option, i) => {
@@ -312,13 +335,13 @@ function PracticeSession({ competency, items: bank }) {
           )}
         </div>
 
-        <div className="st-next">
+        <div className="st-next" ref={nextRowRef}>
           {!submitted ? (
             <button type="button" className="st-btn st-btn--primary" onClick={submit} disabled={picked === null}>
               Submit answer
             </button>
           ) : (
-            <button type="button" className="st-btn st-btn--primary" onClick={next}>
+            <button type="button" ref={nextBtnRef} className="st-btn st-btn--primary" onClick={next}>
               {isLast ? 'See results' : 'Next question'}
             </button>
           )}
