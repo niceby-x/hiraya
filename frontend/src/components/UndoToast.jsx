@@ -6,7 +6,7 @@ export default function UndoToast({ toast, onDismiss }) {
     <div
       role="status"
       aria-live="polite"
-      className="pointer-events-none fixed inset-x-4 bottom-4 z-40 flex justify-center"
+      className="pointer-events-none fixed inset-x-4 bottom-4 max-xl:bottom-[calc(5.25rem+env(safe-area-inset-bottom,0px))] z-40 flex justify-center"
     >
       {toast && (
         <div className="pointer-events-auto flex w-full max-w-xl items-center gap-3 rounded-2xl border border-brand/40 bg-panel p-3.5 text-sm shadow-2xl">

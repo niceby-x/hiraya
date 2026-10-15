@@ -1,6 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import KnowledgeBackdrop from './KnowledgeBackdrop.jsx'
-import ShellHeader from './ShellHeader.jsx'
+import ShellHeader, { bottomNavInset } from './ShellHeader.jsx'
 import SkipLink from './SkipLink.jsx'
 import { useRouteA11y } from '../lib/routeA11y.js'
 import { useTheme } from '../lib/useTheme.js'
@@ -19,7 +19,7 @@ export default function AppShell({ links, userLabel, home }) {
   const navLinks = links.map((link) => ({ ...link, search: link.keepSearch ? search : '' }))
 
   return (
-    <div className="tc-root" data-theme={theme}>
+    <div className={`tc-root ${bottomNavInset}`} data-theme={theme}>
       <SkipLink mainRef={mainRef} />
       <KnowledgeBackdrop pulse={key} dim={!isDark} />
 

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import KnowledgeBackdrop from './KnowledgeBackdrop.jsx'
-import ShellHeader from './ShellHeader.jsx'
+import ShellHeader, { bottomNavInset } from './ShellHeader.jsx'
 import SkipLink from './SkipLink.jsx'
 import { competencies } from '../data/mock.js'
 import { percent } from '../lib/mastery.js'
@@ -35,7 +35,7 @@ export default function StudentShell({ userLabel, home }) {
   const displayLabel = learner ? `${learner.name} · Grade 7` : userLabel
 
   return (
-    <div className="st-root" data-theme={theme}>
+    <div className={`st-root ${bottomNavInset}`} data-theme={theme}>
       <SkipLink mainRef={mainRef} />
       <KnowledgeBackdrop pulse={`${key}:${lit}`} dim={!isDark} />
 
@@ -56,6 +56,7 @@ export default function StudentShell({ userLabel, home }) {
         userIcon={userIcon}
         userLabel={displayLabel}
         userPillClass="lg:flex"
+        spreadTabs
       />
 
       <main ref={mainRef} className="st-main">
