@@ -222,7 +222,7 @@ export default function PaperAssessment() {
                     type="button"
                     onClick={() => handleItemCountChange(n)}
                     className={`rounded-lg px-3.5 py-1.5 text-sm font-bold transition-all cursor-pointer ${
-                      itemCount === n ? 'bg-brand text-white shadow-xs' : 'text-muted hover:text-ink'
+                      itemCount === n ? 'bg-brand text-on-brand shadow-xs' : 'text-muted hover:text-ink'
                     }`}
                   >
                     {n} items
@@ -246,7 +246,7 @@ export default function PaperAssessment() {
                     type="button"
                     onClick={() => updateContext({ theta: o })}
                     className={`rounded-lg px-3.5 py-1.5 text-sm font-bold transition-all cursor-pointer ${
-                      theta === o ? 'bg-brand text-white shadow-xs' : 'text-muted hover:text-ink'
+                      theta === o ? 'bg-brand text-on-brand shadow-xs' : 'text-muted hover:text-ink'
                     }`}
                   >
                     {percent(o)}%
@@ -270,7 +270,7 @@ export default function PaperAssessment() {
         <Card className="border-mastered/40 bg-mastered-soft/35">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-mastered text-white px-3 py-0.5 text-xs font-bold">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-mastered text-on-mastered px-3 py-0.5 text-xs font-bold">
                 ✓ BKT Estimates Updated
               </span>
               <h2 className="mt-2 font-display text-xl font-bold text-ink">

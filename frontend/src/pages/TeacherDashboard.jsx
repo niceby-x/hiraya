@@ -194,7 +194,7 @@ const update = (change) =>
                     aria-checked={theta === o}
                     onClick={() => update({ theta: o })}
                     className={`rounded-lg px-4 py-1.5 text-sm font-bold transition-all cursor-pointer ${
-                      theta === o ? 'bg-brand text-white shadow-xs' : 'text-muted hover:text-ink'
+                      theta === o ? 'bg-brand text-on-brand shadow-xs' : 'text-muted hover:text-ink'
                     }`}
                   >
                     {percent(o)}%
@@ -207,7 +207,7 @@ const update = (change) =>
               <button
                 type="button"
                 onClick={() => openCompareWith(learners[0].id)}
-                className="inline-flex items-center gap-2 rounded-xl border border-brand/30 bg-brand-soft px-4 py-2.5 text-sm font-bold text-brand transition-colors hover:bg-brand hover:text-white cursor-pointer"
+                className="inline-flex items-center gap-2 rounded-xl border border-brand/30 bg-brand-soft px-4 py-2.5 text-sm font-bold text-brand transition-colors hover:bg-brand hover:text-on-brand cursor-pointer"
               >
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />
@@ -349,7 +349,7 @@ const update = (change) =>
                   <button
                     type="button"
                     onClick={() => setQuery('')}
-                    className="rounded-xl border border-brand/30 bg-brand-soft px-3.5 py-2 text-sm font-bold text-brand transition-colors hover:bg-brand hover:text-white cursor-pointer"
+                    className="rounded-xl border border-brand/30 bg-brand-soft px-3.5 py-2 text-sm font-bold text-brand transition-colors hover:bg-brand hover:text-on-brand cursor-pointer"
                   >
                     Clear search
                   </button>
@@ -366,7 +366,7 @@ const update = (change) =>
 
             <div className="mt-4 overflow-x-auto pb-2">
               <div className="grid min-w-195 items-center gap-2" style={gridStyle}>
-                <div className="sticky left-0 z-10 bg-white/95 py-2 pr-2 backdrop-blur-xs">
+                <div className="sticky left-0 z-10 bg-panel/95 py-2 pr-2 backdrop-blur-xs">
                   <p className="text-xs font-bold tracking-wider text-muted uppercase">Learner</p>
                 </div>
 
@@ -391,7 +391,7 @@ const update = (change) =>
 
                 {rows.map(({ learner: l, status, gaps }) => (
                   <Fragment key={l.id}>
-                    <div className="sticky left-0 z-10 flex flex-col justify-center rounded-lg bg-white/95 py-2 pr-3 backdrop-blur-xs">
+                    <div className="sticky left-0 z-10 flex flex-col justify-center rounded-lg bg-panel/95 py-2 pr-3 backdrop-blur-xs">
                       <Link
                         to={learnerLink({ learnerId: l.id, target: targetId, theta })}
                         className="font-bold text-brand hover:underline flex items-center gap-1"
@@ -626,7 +626,7 @@ const update = (change) =>
                       )}
                       <Link
                         to={learnerLink({ learnerId: learner.id, target: targetId, theta })}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-brand/30 bg-brand-soft px-3.5 py-2 text-sm font-bold text-brand transition-colors hover:bg-brand hover:text-white"
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-brand/30 bg-brand-soft px-3.5 py-2 text-sm font-bold text-brand transition-colors hover:bg-brand hover:text-on-brand"
                       >
                         Open learner view
                         <span className="sr-only"> for {learner.name}</span>

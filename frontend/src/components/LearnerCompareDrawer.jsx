@@ -246,7 +246,7 @@ export default function LearnerCompareDrawer({
                 <ol className="mt-2 space-y-1 text-xs">
                   {path.map((id, idx) => (
                     <li key={id} className="flex items-center gap-2">
-                      <span className="grid h-4.5 w-4.5 shrink-0 place-items-center rounded-full bg-brand text-[10px] font-bold text-white">
+                      <span className="grid h-4.5 w-4.5 shrink-0 place-items-center rounded-full bg-brand text-[10px] font-bold text-on-brand">
                         {idx + 1}
                       </span>
                       <span className="truncate font-medium">{getCompetency(id).short}</span>

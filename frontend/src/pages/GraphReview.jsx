@@ -105,8 +105,8 @@ function MiniGraphPreview({ activeLink, ratings }) {
                   isTo
                     ? 'fill-brand-soft stroke-brand'
                     : isFrom
-                      ? 'fill-white stroke-brand'
-                      : 'fill-white stroke-line'
+                      ? 'fill-panel stroke-brand'
+                      : 'fill-panel stroke-line'
                 }
               />
               <text x={x} y={y - 2} textAnchor="middle" className="fill-ink text-sm font-bold">

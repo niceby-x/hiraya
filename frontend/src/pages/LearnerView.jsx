@@ -278,7 +278,7 @@ export default function LearnerView() {
                     type="button"
                     onClick={() => updateContext({ theta: o })}
                     className={`rounded-lg px-3 py-1 text-sm font-bold transition-colors cursor-pointer ${
-                      theta === o ? 'bg-brand text-white' : 'text-muted hover:text-ink'
+                      theta === o ? 'bg-brand text-on-brand' : 'text-muted hover:text-ink'
                     }`}
                   >
                     {percent(o)}%
@@ -293,7 +293,7 @@ export default function LearnerView() {
                 onClick={() =>
                   setCompareOtherId(learners.find((l) => l.id !== learner.id)?.id ?? learner.id)
                 }
-                className="rounded-xl border border-brand/30 bg-brand-soft px-3.5 py-2 text-sm font-bold text-brand transition-colors hover:bg-brand hover:text-white cursor-pointer"
+                className="rounded-xl border border-brand/30 bg-brand-soft px-3.5 py-2 text-sm font-bold text-brand transition-colors hover:bg-brand hover:text-on-brand cursor-pointer"
               >
                 Compare learner
               </button>
@@ -425,7 +425,7 @@ export default function LearnerView() {
                   {step >= 0 && (
                     <g>
                       <circle cx={left + 4} cy={top + 4} r={14} className="fill-brand stroke-white" strokeWidth="2" />
-                      <text x={left + 4} y={top + 9} textAnchor="middle" className="fill-white text-sm font-bold">
+                      <text x={left + 4} y={top + 9} textAnchor="middle" className="fill-on-brand text-sm font-bold">
                         {step + 1}
                       </text>
                     </g>
@@ -487,7 +487,7 @@ export default function LearnerView() {
                 >
                   <span
                     className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-display font-bold ${
-                      isFirst ? 'bg-brand text-white shadow-sm' : 'border-2 border-brand text-brand'
+                      isFirst ? 'bg-brand text-on-brand shadow-sm' : 'border-2 border-brand text-brand'
                     }`}
                   >
                     {i + 1}
@@ -499,7 +499,7 @@ export default function LearnerView() {
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-display text-lg font-bold text-ink">{c.name}</p>
                       {isFirst && (
-                        <span className="rounded-full bg-brand px-2.5 py-0.5 text-xs font-bold text-white">
+                        <span className="rounded-full bg-brand px-2.5 py-0.5 text-xs font-bold text-on-brand">
                           Start here
                         </span>
                       )}

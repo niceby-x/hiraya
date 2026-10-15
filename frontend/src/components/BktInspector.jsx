@@ -129,7 +129,7 @@ export default function BktInspector({ learner, skillId, theta, onClose }) {
               <div className="rounded-xl border border-mastered/30 bg-mastered-soft/45 p-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-mastered-ink">If Next Answer is Correct</span>
-                  <span className="rounded-full bg-mastered text-white px-2 py-0.5 text-[11px] font-bold tabular-nums">
+                  <span className="rounded-full bg-mastered text-on-mastered px-2 py-0.5 text-[11px] font-bold tabular-nums">
                     +{ ((nextRight - prior) * 100).toFixed(1) }%
                   </span>
                 </div>
@@ -142,7 +142,7 @@ export default function BktInspector({ learner, skillId, theta, onClose }) {
                 <button
                   type="button"
                   onClick={() => recordResponse(learner.id, skillId, true)}
-                  className="mt-2.5 w-full rounded-lg bg-mastered px-3 py-1.5 text-xs font-bold text-white transition-opacity hover:opacity-90 cursor-pointer"
+                  className="mt-2.5 w-full rounded-lg bg-mastered px-3 py-1.5 text-xs font-bold text-on-mastered transition-opacity hover:opacity-90 cursor-pointer"
                 >
                   Simulate +1 Correct Answer
                 </button>
@@ -151,7 +151,7 @@ export default function BktInspector({ learner, skillId, theta, onClose }) {
               <div className="rounded-xl border border-low/30 bg-low-soft/45 p-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-low-ink">If Next Answer is Wrong</span>
-                  <span className="rounded-full bg-low text-white px-2 py-0.5 text-[11px] font-bold tabular-nums">
+                  <span className="rounded-full bg-low text-on-low px-2 py-0.5 text-[11px] font-bold tabular-nums">
                     { ((nextWrong - prior) * 100).toFixed(1) }%
                   </span>
                 </div>
@@ -164,7 +164,7 @@ export default function BktInspector({ learner, skillId, theta, onClose }) {
                 <button
                   type="button"
                   onClick={() => recordResponse(learner.id, skillId, false)}
-                  className="mt-2.5 w-full rounded-lg bg-low px-3 py-1.5 text-xs font-bold text-white transition-opacity hover:opacity-90 cursor-pointer"
+                  className="mt-2.5 w-full rounded-lg bg-low px-3 py-1.5 text-xs font-bold text-on-low transition-opacity hover:opacity-90 cursor-pointer"
                 >
                   Simulate +1 Wrong Answer
                 </button>
