@@ -20,7 +20,7 @@ const cellStyles = {
   none: 'bg-line text-ink border border-line',
 }
 
-const marker = { meets: '✓', below: '▲', none: '' }
+const marker = { meets: '✓', below: '▼', none: '' }
 const statusText = { meets: 'meets the threshold', below: 'below the threshold', none: 'no data' }
 
 // Short note under a learner's name: their candidate-gap count for the selected target.
@@ -101,7 +101,6 @@ export default function TeacherDashboard() {
   const learners = useLearners()
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState('roster')
-
   // Interactive BKT Inspector state: { learnerId, skillId } | null
   const [inspected, setInspected] = useState(null)
   // Quick-Compare Drawer state: { a: string, b: string } | null
@@ -149,13 +148,13 @@ export default function TeacherDashboard() {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full bg-brand-soft px-3 py-1 text-xs font-bold text-brand">
               <span className="h-2 w-2 rounded-full bg-brand" aria-hidden="true" />
-              Grade 7 Mathematics • Sample Cohort
+              Grade 7 MATATAG Mathematics · Sample Cohort
             </div>
             <h1 className="mt-2.5 font-display text-3xl font-bold tracking-tight sm:text-4xl">
               Class overview
             </h1>
             <p className="mt-1.5 max-w-2xl text-sm text-muted">
-              Showing <strong className="text-ink">{target.name}</strong> ({target.strand}) as the target competency at a{' '}
+              Showing <strong className="text-ink">{target.name}</strong> ({target.code ? `${target.code} · ` : ''}{target.strand}) as the target competency at a{' '}
               <strong className="text-ink">{percent(theta)}%</strong> mastery threshold.
             </p>
           </div>
@@ -173,7 +172,7 @@ export default function TeacherDashboard() {
               >
                 {competencies.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.short} — {c.name}
+                    {c.short} ({c.code ?? c.id.toUpperCase()}) — {c.name}
                   </option>
                 ))}
               </select>
@@ -209,7 +208,7 @@ export default function TeacherDashboard() {
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-line/70 pt-3.5 text-xs text-muted">
           <span>
-            Mastery figures are BKT posterior estimates P(Lₙ). Click any skill percentage cell below to inspect its BKT parameters and next-answer predictions.
+            Mastery figures are BKT posterior estimates P(Lₙ), not raw examination scores. Click any skill percentage cell below to inspect its BKT parameters and next-answer predictions.
           </span>
           <Link to="/teacher/graph" className="font-bold text-brand hover:underline">
             Validate prerequisite links →
@@ -358,7 +357,6 @@ export default function TeacherDashboard() {
                 <div className="sticky left-0 z-10 bg-panel/95 py-2 pr-2 backdrop-blur-xs">
                   <p className="text-xs font-bold tracking-wider text-muted uppercase">Learner</p>
                 </div>
-
                 {columns.map((c) => {
                   const isTarget = c.id === targetId
                   return (
@@ -371,8 +369,8 @@ export default function TeacherDashboard() {
                       <p className={`text-sm font-bold ${isTarget ? 'text-brand' : 'text-ink'}`}>
                         {c.short}
                       </p>
-                      <span className={`block text-xs font-bold ${isTarget ? 'text-brand' : 'text-muted'}`}>
-                        {isTarget ? '★ Target' : c.id.toUpperCase()}
+                      <span className={`block text-[10px] font-bold ${isTarget ? 'text-brand' : 'text-muted'}`}>
+                        {isTarget ? '★ Target' : c.code ?? c.id.toUpperCase()}
                       </span>
                     </div>
                   )
@@ -399,7 +397,6 @@ export default function TeacherDashboard() {
                         {gapNote(status, gaps)}
                       </span>
                     </div>
-
                     {columns.map((c) => {
                       const p = l.mastery?.[c.id]
                       const s = statusFor(p, theta)
@@ -443,7 +440,7 @@ export default function TeacherDashboard() {
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <span className="inline-block h-3 w-3 rounded-xs bg-gap-soft border border-gap/40" />
-                <strong>▲ Below threshold:</strong> estimate &lt; {percent(theta)}%
+                <strong>▼ Below threshold:</strong> estimate &lt; {percent(theta)}%
               </span>
               <span className="ml-auto">Click any cell to inspect BKT math, or click a learner&apos;s name to open their full graph.</span>
             </div>
@@ -455,7 +452,7 @@ export default function TeacherDashboard() {
               <div>
                 <div className="flex items-center justify-between gap-2">
                   <span className="rounded-full bg-brand-soft px-3 py-1 text-xs font-bold text-brand">
-                    Target-Specific
+                    Target-Specific ({target.code ?? target.short})
                   </span>
                   <span className="text-xs font-bold text-muted">
                     {summary.prerequisites.length} prerequisite{summary.prerequisites.length === 1 ? '' : 's'}
@@ -488,7 +485,21 @@ export default function TeacherDashboard() {
                               <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand/12 text-xs font-bold text-brand">
                                 {idx + 1}
                               </span>
-                              <p className="font-bold">{competency.name}</p>
+                              <div>
+                                <p className="font-bold">
+                                  {competency.name}{' '}
+                                  {competency.code && (
+                                    <span className="ml-1 text-xs font-semibold text-muted">
+                                      ({competency.code})
+                                    </span>
+                                  )}
+                                </p>
+                                {competency.resource && (
+                                  <p className="text-xs text-muted">
+                                    Resource: {competency.resource.title}
+                                  </p>
+                                )}
+                              </div>
                             </div>
                             <span className="rounded-full bg-gap-soft px-2.5 py-0.5 text-xs font-bold text-gap-ink tabular-nums">
                               {count} of {learners.length} learners
@@ -538,6 +549,11 @@ export default function TeacherDashboard() {
                           <div>
                             <p className="font-bold">
                               {competency.name}
+                              {competency.code && (
+                                <span className="ml-1.5 text-xs font-semibold text-muted">
+                                  ({competency.code})
+                                </span>
+                              )}
                               {competency.id === targetId && (
                                 <span className="ml-2 rounded-full bg-brand-soft px-2 py-0.5 text-xs font-bold text-brand">
                                   Target
@@ -571,13 +587,14 @@ export default function TeacherDashboard() {
           <Card>
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <h2 className="font-display text-2xl font-bold">Learners and the target ({target.short})</h2>
+                <h2 className="font-display text-2xl font-bold">
+                  Learners and the target ({target.short}{target.code ? ` · ${target.code}` : ''})
+                </h2>
                 <p className="mt-1 text-sm text-muted">
                   A learner whose target estimate already meets {percent(theta)}% requires no remediation path for this target.
                 </p>
               </div>
             </div>
-
             <ul className="mt-4 divide-y divide-line">
               {rows.map(({ learner, status, gaps, path }) => {
                 const p = learner.mastery?.[targetId]
@@ -589,7 +606,6 @@ export default function TeacherDashboard() {
                     : status === 'target-met'
                       ? 'Target meets the threshold; no remediation path needed'
                       : 'No mastery data for this target'
-
                 return (
                   <li key={learner.id} className="flex flex-wrap items-center gap-4 py-3.5 transition-colors hover:bg-brand-soft/25 px-2 rounded-xl">
                     <MasteryRing p={p} theta={theta} size={48} />
@@ -631,7 +647,6 @@ export default function TeacherDashboard() {
                 )
               })}
             </ul>
-
             {rows.length === 0 && (
               <p className="mt-4 text-muted">No learners match &ldquo;{query}&rdquo;. Clear the search to see the whole class.</p>
             )}

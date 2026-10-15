@@ -309,8 +309,13 @@ export default function PaperAssessment() {
               <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-soft px-3 py-1 text-xs font-bold text-brand">
                 Classroom Paper-to-BKT Bridge
               </span>
-              <span className="text-xs font-bold text-muted">
-                P(G)={bktParams.guess.toFixed(2)} · P(S)={bktParams.slip.toFixed(2)} · P(T)={bktParams.learn.toFixed(2)}
+              {target.code && (
+                <span className="rounded-full border border-line bg-surface px-2.5 py-0.5 text-xs font-bold text-muted">
+                  {target.code}
+                </span>
+              )}
+              <span className="text-xs font-bold text-muted tabular-nums">
+                P(L₀)={(bktParams.init ?? 0.5).toFixed(2)} · P(T)={bktParams.learn.toFixed(2)} · P(G)={bktParams.guess.toFixed(2)} · P(S)={bktParams.slip.toFixed(2)}
               </span>
             </div>
             <h1 className="mt-2 font-display text-3xl font-bold tracking-tight sm:text-4xl">
@@ -318,7 +323,7 @@ export default function PaperAssessment() {
             </h1>
             <p className="mt-1.5 max-w-2xl text-sm text-muted">
               Encode item-by-item results from printed quizzes or seatwork for{' '}
-              <strong className="text-ink">{target.name}</strong>. Each marked item runs a sequential
+              <strong className="text-ink">{target.name}</strong> ({target.code ?? target.short}). Each marked item runs a sequential
               Bayesian Knowledge Tracing update in memory.
             </p>
           </div>
@@ -339,7 +344,7 @@ export default function PaperAssessment() {
               >
                 {competencies.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.short} — {c.name}
+                    {c.short} ({c.code ?? c.id.toUpperCase()}) — {c.name}
                   </option>
                 ))}
               </select>
@@ -424,10 +429,10 @@ export default function PaperAssessment() {
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
               <div>
                 <h2 className="font-display text-lg font-bold">
-                  Reference item key for {target.short} ({skillQuestions.length} sample items)
+                  Reference item key for {target.short} · {target.code} ({skillQuestions.length} sample items)
                 </h2>
                 <p className="text-xs text-muted">
-                  Optional reference if your printed worksheet uses HIRAYA&apos;s benchmark items.
+                  Optional reference showing the competency-mapped items if your printed worksheet uses HIRAYA&apos;s benchmark items.
                 </p>
               </div>
               <span className="shrink-0 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-bold whitespace-nowrap text-brand group-open:bg-brand-soft">
@@ -437,7 +442,12 @@ export default function PaperAssessment() {
             <ol className="mt-4 grid gap-3 border-t border-line pt-4 sm:grid-cols-3">
               {skillQuestions.slice(0, itemCount).map((q, idx) => (
                 <li key={q.id} className="rounded-xl border border-line bg-white p-3.5 text-sm">
-                  <p className="text-xs font-bold text-brand uppercase">Item Q{idx + 1}</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs font-bold text-brand uppercase">Item Q{idx + 1} ({q.id})</p>
+                    <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-bold text-brand">
+                      {target.code ?? target.short}
+                    </span>
+                  </div>
                   <p className="mt-1 font-bold text-ink">{q.prompt}</p>
                   <p className="mt-2 text-xs text-mastered-ink font-bold">
                     Key: {['A', 'B', 'C', 'D'][q.answer]}. {q.options[q.answer]}
@@ -488,6 +498,7 @@ export default function PaperAssessment() {
         <p className="mt-4 text-xs text-muted pointer-coarse:hidden">
           <strong className="text-ink">Keyboard:</strong> arrow keys move between cells · <kbd>1</kbd> or <kbd>C</kbd> = correct · <kbd>0</kbd> or <kbd>X</kbd> = wrong · <kbd>Backspace</kbd> = blank. After a mark, focus moves to the next question.
         </p>
+
         <p className="sr-only" role="status" aria-live="polite">
           {announce}
         </p>
@@ -497,14 +508,17 @@ export default function PaperAssessment() {
             <thead>
               <tr className="border-b border-line text-xs font-bold tracking-wider text-muted uppercase">
                 <th scope="col" className="sticky left-0 z-10 bg-panel py-3 pr-4">Learner</th>
-                <th className="py-3 px-3 text-center">Prior P(L)</th>
+                <th className="py-3 px-3 text-center">Prior P(Lₙ₋₁)</th>
                 {Array.from({ length: itemCount }, (_, i) => (
                   <th key={i} className="py-3 px-2 text-center">
-                    Q{i + 1}
+                    <span className="block text-ink">Q{i + 1}</span>
+                    <span className="block text-[10px] font-semibold tracking-normal text-muted">
+                      {target.code ?? target.short}
+                    </span>
                   </th>
                 ))}
                 <th className="py-3 px-3 text-center">Quick fill</th>
-                <th className="py-3 pl-4 text-right">Preview After P(L)</th>
+                <th className="py-3 pl-4 text-right">Preview After P(Lₙ)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line">
@@ -568,7 +582,7 @@ export default function PaperAssessment() {
                           onFocus={() => setActiveCol(idx)}
                           onClick={() => toggleItem(l.id, idx)}
                           onKeyDown={(e) => handleCellKey(e, rowIdx, idx, l.id)}
-                          aria-label={`${l.name} Question ${idx + 1}: ${canMark ? markLabel(mark) : 'no starting estimate'}`}
+                          aria-label={`${l.name} Question ${idx + 1} (${target.short}): ${canMark ? markLabel(mark) : 'no starting estimate'}`}
                           className={`h-10 w-12 rounded-xl border font-display text-sm font-bold transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 ${
                             mark === true
                               ? 'border-mastered bg-mastered-soft text-mastered-ink shadow-2xs'
@@ -653,11 +667,10 @@ export default function PaperAssessment() {
                 Ready to update <strong className="text-ink">{pendingLearnerCount}</strong> learner
                 {pendingLearnerCount === 1 ? '' : 's'} (<strong className="text-ink">{totalMarkedItems}</strong>{' '}
                 marked item{totalMarkedItems === 1 ? '' : 's'}) on{' '}
-                <strong className="text-ink">{target.short}</strong>.
+                <strong className="text-ink">{target.short} ({target.code})</strong>.
               </>
             )}
           </p>
-
           <div className="flex flex-wrap gap-3">
             <button
               type="button"
