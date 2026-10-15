@@ -61,7 +61,7 @@ export default function StudentShell({ userLabel, home }) {
 
           <nav
             aria-label="Student navigation"
-            className="order-last flex w-full gap-1.5 overflow-x-auto pb-1 sm:order-none sm:w-auto sm:flex-1 sm:pb-0"
+            className="order-last flex w-full gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:order-none sm:w-auto sm:flex-1 sm:pb-0"
           >
             {links.map((link) => (
               <NavLink
@@ -88,7 +88,7 @@ export default function StudentShell({ userLabel, home }) {
             <button
               type="button"
               onClick={resetLearners}
-              title="Reset sample BKT mastery data to initial values"
+              title="Reset the sample mastery scores to their starting values"
               className="hidden rounded-lg border border-white/15 bg-white/5 px-2.5 py-1.5 text-xs font-bold text-white/80 transition-colors hover:border-aqua/40 hover:bg-white/10 hover:text-white md:inline-flex items-center gap-1.5 cursor-pointer"
             >
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

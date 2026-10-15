@@ -10,6 +10,7 @@ import Card from '../components/Card.jsx'
 import Notice from '../components/Notice.jsx'
 import StatusPill from '../components/StatusPill.jsx'
 import MasteryRing from '../components/MasteryRing.jsx'
+import SegmentedControl from '../components/SegmentedControl.jsx'
 import BktInspector from '../components/BktInspector.jsx'
 import LearnerCompareDrawer from '../components/LearnerCompareDrawer.jsx'
 
@@ -181,26 +182,13 @@ const update = (change) =>
               <p id="theta-label" className="mb-1.5 text-xs font-bold tracking-wider text-muted uppercase">
                 Mastery threshold (θ)
               </p>
-              <div
-                role="radiogroup"
-                aria-labelledby="theta-label"
-                className="inline-flex rounded-xl border border-line bg-white p-1 shadow-2xs"
-              >
-                {THRESHOLD_OPTIONS.map((o) => (
-                  <button
-                    key={o}
-                    type="button"
-                    role="radio"
-                    aria-checked={theta === o}
-                    onClick={() => update({ theta: o })}
-                    className={`rounded-lg px-4 py-1.5 text-sm font-bold transition-all cursor-pointer ${
-                      theta === o ? 'bg-brand text-on-brand shadow-xs' : 'text-muted hover:text-ink'
-                    }`}
-                  >
-                    {percent(o)}%
-                  </button>
-                ))}
-              </div>
+              <SegmentedControl
+                value={theta}
+                options={THRESHOLD_OPTIONS}
+                onChange={(o) => update({ theta: o })}
+                getLabel={(o) => `${percent(o)}%`}
+                labelledBy="theta-label"
+              />
             </div>
 
             {learners.length >= 2 && (
@@ -420,6 +408,12 @@ const update = (change) =>
                           key={c.id}
                           type="button"
                           onClick={() => setInspected({ learnerId: l.id, skillId: c.id })}
+                          aria-haspopup="dialog"
+                          aria-label={
+                            s === 'none'
+                              ? `${l.name}, ${c.name}: no data`
+                              : `${l.name}, ${c.name}: ${formatPercent(p, theta)}, ${statusText[s]}`
+                          }
                           title={`${l.name} — ${c.name}: ${formatPercent(p, theta)} (${statusText[s]}). Click to inspect BKT parameters.`}
                           className={`relative rounded-xl py-3 text-center text-sm font-bold tabular-nums transition-transform hover:-translate-y-0.5 cursor-pointer ${
                             cellStyles[s]
@@ -427,7 +421,6 @@ const update = (change) =>
                         >
                           {marker[s] && <span aria-hidden="true" className="mr-0.5 text-xs">{marker[s]}</span>}
                           {formatPercent(p, theta)}
-                          <span className="sr-only"> {statusText[s]}</span>
                         </button>
                       )
                     })}
@@ -598,7 +591,7 @@ const update = (change) =>
 
                 return (
                   <li key={learner.id} className="flex flex-wrap items-center gap-4 py-3.5 transition-colors hover:bg-brand-soft/25 px-2 rounded-xl">
-                    <MasteryRing p={p ?? 0} theta={theta} size={48} />
+                    <MasteryRing p={p} theta={theta} size={48} />
                     <div className="min-w-36">
                       <p className="font-bold text-ink">{learner.name}</p>
                       <p className="text-xs font-bold text-muted tabular-nums">

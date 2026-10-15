@@ -24,7 +24,7 @@ export default function ReviewPath() {
     <div className="st-page">
       <div>
         <h1 className="st-title">My review path</h1>
-        <p className="st-sub">Suggested topological order to reach {target.name} ({percent(theta)}% line)</p>
+        <p className="st-sub">Suggested order to reach {target.name} (mastery goal: {percent(theta)}%)</p>
       </div>
 
       <div className="st-path-summary">
@@ -33,12 +33,12 @@ export default function ReviewPath() {
           <strong>{target.short} ({percent(learner.mastery[targetId])}%)</strong>
         </div>
         <div className="st-path-stat">
-          <span>Prerequisite Gaps</span>
+          <span>Skills to Review</span>
           <strong>{gaps.length} skill{gaps.length === 1 ? '' : 's'} below {percent(theta)}%</strong>
         </div>
         <div className="st-path-stat">
           <span>Already Mastered</span>
-          <strong>{skipped.length} prerequisite{skipped.length === 1 ? '' : 's'} skipped</strong>
+          <strong>{skipped.length} earlier skill{skipped.length === 1 ? '' : 's'} skipped</strong>
         </div>
       </div>
 
@@ -56,7 +56,7 @@ export default function ReviewPath() {
           <li>
             <b>3</b>
             <span>
-              Keep the ones below {percent(theta)}% and list them so each skill comes after the skills it builds on.
+              Keep the ones below your mastery goal of {percent(theta)}% and put them in order, so each skill comes after the skills it builds on.
             </span>
           </li>
         </ol>
@@ -66,8 +66,8 @@ export default function ReviewPath() {
         <section className="st-card st-pad">
           <p className="st-empty">
             {status === 'target-met'
-              ? `✓ You have reached the ${percent(theta)}% mastery line for ${target.name}. No review path is needed for this goal.`
-              : `There is no mastery estimate for ${target.name} yet, so a review path can't be shown.`}
+              ? `✓ You have reached your mastery goal of ${percent(theta)}% for ${target.name}. No review path is needed for this goal.`
+              : `There is no mastery score for ${target.name} yet, so a review path can't be shown.`}
           </p>
         </section>
       ) : (
@@ -93,7 +93,7 @@ export default function ReviewPath() {
                       <span className={`st-pill st-pill--${pillClass[band]}`}>{label}</span>
                     </div>
                     <p className="st-step-now">
-                      {percent(p)}% now · {away} more point{away === 1 ? '' : 's'} to reach {percent(theta)}% line
+                      {percent(p)}% now · {away} more point{away === 1 ? '' : 's'} to reach your {percent(theta)}% goal
                     </p>
                     <div className="st-step-bar" aria-hidden="true">
                       <div className="st-step-bar-fill" style={{ width: `${Math.min(100, percent(p))}%` }} />

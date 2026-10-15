@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom'
 import SkillRing from '../components/SkillRing.jsx'
 import { questions } from '../data/questions.js'
 import { getCompetency, remediationPath } from '../lib/path.js'
 import { percent } from '../lib/mastery.js'
+import { missedEntry, nextRadioIndex, shuffleItems } from '../lib/practice.js'
 import { recordResponse, useLearner, useSettings } from '../lib/store.js'
 
 const letters = ['A', 'B', 'C', 'D']
@@ -36,7 +37,7 @@ function optionClass({ submitted, isPicked, isAnswer }) {
   return 'is-dim'
 }
 
-function PracticeSession({ competency, items }) {
+function PracticeSession({ competency, items: bank }) {
   const { learnerId, targetId, theta } = useSettings()
   const learner = useLearner(learnerId)
   const outlet = useOutletContext()
@@ -45,6 +46,10 @@ function PracticeSession({ competency, items }) {
   const [submitted, setSubmitted] = useState(false)
   const [correctCount, setCorrectCount] = useState(0)
   const [change, setChange] = useState(null)
+  // Questions and answer options are shuffled for each round so a repeat round is not identical.
+  const [items, setItems] = useState(() => shuffleItems(bank))
+  const [missed, setMissed] = useState([])
+  const optionRefs = useRef([])
 
   const currentMastery = learner.mastery[competency.id]
   const isNowMastered = currentMastery >= theta
@@ -62,6 +67,8 @@ function PracticeSession({ competency, items }) {
     if (isCorrect) {
       setCorrectCount((c) => c + 1)
       outlet?.celebrate?.()
+    } else {
+      setMissed((list) => [...list, missedEntry(q, picked)])
     }
     setChange(recordResponse(learner.id, competency.id, isCorrect))
   }
@@ -70,6 +77,15 @@ function PracticeSession({ competency, items }) {
     setIndex((i) => i + 1)
     setPicked(null)
     setSubmitted(false)
+  }
+
+  // Arrow keys move between the answer choices, like a native radio group.
+  function handleOptionKey(e, i) {
+    const n = nextRadioIndex(i, e.key, q.options.length)
+    if (n === -1) return
+    e.preventDefault()
+    setPicked(n)
+    optionRefs.current[n]?.focus()
   }
 
   useEffect(() => {
@@ -103,12 +119,12 @@ function PracticeSession({ competency, items }) {
         <Back />
         <h1 className="st-title">{competency.name}</h1>
         <p className="st-sub">
-          {competency.strand} · Goal: {percent(theta)}% mastery
+          {competency.strand} · Mastery goal: {percent(theta)}%
         </p>
       </div>
       <div className="st-ph-ring">
         <SkillRing p={currentMastery} theta={theta} size={72} />
-        <div>Your mastery</div>
+        <div>Your mastery score</div>
       </div>
     </div>
   )
@@ -130,7 +146,7 @@ function PracticeSession({ competency, items }) {
         {header}
         <section className="st-card st-pad st-done">
           <span className={`st-pill st-pill--${isNowMastered ? 'ok' : 'warn'}`}>
-            {isNowMastered ? `✓ Reached ${percent(theta)}% Mastery Line` : `${percent(currentMastery)}% Current Estimate`}
+            {isNowMastered ? `✓ Mastery goal reached (${percent(theta)}%)` : `Your mastery score: ${percent(currentMastery)}%`}
           </span>
           <h2 className="st-h2" style={{ marginTop: '.75rem' }}>Practice complete</h2>
           <p className="st-score" style={{ marginTop: '1rem' }}>
@@ -140,9 +156,30 @@ function PracticeSession({ competency, items }) {
           <p className="st-sub" style={{ marginTop: '.75rem' }}>answered correctly</p>
           <p className="st-note" style={{ margin: '.75rem auto 0', maxWidth: '32rem' }}>
             {isNowMastered
-              ? `Great job! Your mastery estimate for ${competency.name} is now ${percent(currentMastery)}%, which meets the ${percent(theta)}% threshold.`
-              : `Your mastery estimate is now ${percent(currentMastery)}%. Practice another round to reach the ${percent(theta)}% mastery line.`}
+              ? `Great job! Your mastery score for ${competency.name} is now ${percent(currentMastery)}%. That reaches your mastery goal of ${percent(theta)}%.`
+              : `Your mastery score is now ${percent(currentMastery)}%. Practice another round to reach your mastery goal of ${percent(theta)}%.`}
           </p>
+          {missed.length > 0 && (
+            <section className="st-missed" aria-labelledby="missed-title">
+              <h3 id="missed-title" className="st-missed-title">
+                Questions to look at again ({missed.length})
+              </h3>
+              <ul>
+                {missed.map((m) => (
+                  <li key={m.id} className="st-missed-item">
+                    <p className="st-missed-q">{m.prompt}</p>
+                    <p>
+                      Your answer: <b>{m.picked}</b>
+                    </p>
+                    <p>
+                      Correct answer: <b>{m.correct}</b>
+                    </p>
+                    <p className="st-missed-why">{m.explanation}</p>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
           <div className="st-actions">
             {isNowMastered && nextRecommended ? (
               <Link to={`/student/practice?skill=${nextRecommended.id}`} className="st-btn st-btn--primary">
@@ -153,10 +190,13 @@ function PracticeSession({ competency, items }) {
                 type="button"
                 className="st-btn st-btn--primary"
                 onClick={() => {
+                  setItems(shuffleItems(bank))
                   setIndex(0)
                   setPicked(null)
                   setSubmitted(false)
                   setCorrectCount(0)
+                  setMissed([])
+                  setChange(null)
                 }}
               >
                 Practice again
@@ -188,19 +228,24 @@ function PracticeSession({ competency, items }) {
           </ol>
         </div>
 
-        <h2 className="st-q">{q.prompt}</h2>
+        <h2 id="practice-question" className="st-q">{q.prompt}</h2>
 
-        <div role="radiogroup" aria-label="Answer choices" className="st-opts">
+        <div role="radiogroup" aria-labelledby="practice-question" className="st-opts">
           {q.options.map((option, i) => {
             const state = optionClass({ submitted, isPicked: picked === i, isAnswer: q.answer === i })
             return (
               <button
                 key={option}
+                ref={(el) => {
+                  optionRefs.current[i] = el
+                }}
                 type="button"
                 role="radio"
                 aria-checked={picked === i}
+                tabIndex={picked === i || (picked === null && i === 0) ? 0 : -1}
                 disabled={submitted}
                 onClick={() => setPicked(i)}
+                onKeyDown={(e) => handleOptionKey(e, i)}
                 className={`st-opt ${state}`}
               >
                 <span className="st-letter">{letters[i]}</span>
@@ -223,7 +268,7 @@ function PracticeSession({ competency, items }) {
                 </p>
                 {change && (
                   <span className={`st-delta ${deltaPts >= 0 ? 'is-up' : 'is-down'}`}>
-                    {deltaPts >= 0 ? `+${deltaPts}%` : `${deltaPts}%`} BKT update
+                    {deltaPts >= 0 ? `+${deltaPts}%` : `${deltaPts}%`} to your score
                   </span>
                 )}
               </div>
@@ -231,7 +276,7 @@ function PracticeSession({ competency, items }) {
               {change && (
                 <div className="st-meter">
                   <div className="st-meter-row">
-                    <span>Your {competency.short} mastery</span>
+                    <span>Your {competency.short} mastery score</span>
                     <span>
                       {percent(change.before)}% → {percent(change.after)}%
                     </span>
@@ -239,7 +284,7 @@ function PracticeSession({ competency, items }) {
                   <div
                     className="st-track"
                     role="img"
-                    aria-label={`Mastery moved from ${percent(change.before)} to ${percent(change.after)} percent. Mastery line ${percent(theta)} percent.`}
+                    aria-label={`Mastery score moved from ${percent(change.before)} to ${percent(change.after)} percent. Mastery goal ${percent(theta)} percent.`}
                   >
                     <div
                       className="st-track-fill"
@@ -247,14 +292,14 @@ function PracticeSession({ competency, items }) {
                     />
                     <span className="st-line95" style={{ left: `${percent(theta)}%` }} />
                     <span className="st-line95-label" style={{ left: `${percent(theta)}%` }}>
-                      {percent(theta)}% line
+                      Goal {percent(theta)}%
                     </span>
                   </div>
                 </div>
               )}
               {crossedThreshold && (
                 <div className="st-mastered-banner">
-                  <span>✓ You crossed the {percent(theta)}% mastery line for {competency.short}!</span>
+                  <span>✓ You reached your mastery goal of {percent(theta)}% for {competency.short}!</span>
                   {nextRecommended && (
                     <Link to={`/student/practice?skill=${nextRecommended.id}`} className="st-btn st-btn--sm st-btn--primary">
                       Jump to {nextRecommended.short}
@@ -277,7 +322,7 @@ function PracticeSession({ competency, items }) {
             </button>
           )}
           <span className="st-kbd-hint">
-            Tip: Press <kbd>A</kbd>–<kbd>D</kbd> to choose, <kbd>Enter</kbd> to continue
+            Tip: Press <kbd>A</kbd>–<kbd>D</kbd> or use the arrow keys to choose, <kbd>Enter</kbd> to continue
           </span>
         </div>
       </section>

@@ -3,13 +3,26 @@ import { bandFor, percent } from '../lib/mastery.js'
 
 const stroke = { mastered: 'stroke-mastered', gap: 'stroke-gap', low: 'stroke-low' }
 
-// Ring filled to the mastery estimate; the tick marks the mastery line.
+// Ring filled to the mastery estimate; the tick marks the mastery threshold.
+// When there is no estimate (undefined, null, NaN) it draws an empty dashed ring with "–",
+// so missing data is never shown as 0%.
 export default function MasteryRing({ p, theta = THRESHOLD, size = 56 }) {
   const r = 20
   const c = 2 * Math.PI * r
+  const hasData = typeof p === 'number' && Number.isFinite(p)
+
+  if (!hasData) {
+    return (
+      <svg width={size} height={size} viewBox="0 0 48 48" role="img" className="shrink-0" aria-label="No mastery estimate yet">
+        <circle cx="24" cy="24" r={r} fill="none" strokeWidth="3" strokeDasharray="3 4" className="stroke-muted/60" />
+        <text x="24" y="28" textAnchor="middle" className="fill-muted text-[14px] font-bold">–</text>
+      </svg>
+    )
+  }
+
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" role="img" className="shrink-0"
-      aria-label={`${percent(p)} percent. Mastery line ${percent(theta)} percent.`}>
+      aria-label={`${percent(p)} percent. Threshold ${percent(theta)} percent.`}>
       <circle cx="24" cy="24" r={r} fill="none" strokeWidth="5" className="stroke-line" />
       <circle cx="24" cy="24" r={r} fill="none" strokeWidth="5" strokeLinecap="round" className={stroke[bandFor(p, theta)]}
         strokeDasharray={`${c * p} ${c}`} transform="rotate(-90 24 24)" />

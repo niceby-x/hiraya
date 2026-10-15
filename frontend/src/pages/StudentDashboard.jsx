@@ -76,11 +76,11 @@ export default function StudentDashboard() {
       <div className="st-greet">
         <div>
           <h1 className="st-title">Hello, {learner.name}</h1>
-          <p className="st-sub">Grade 7 Mathematics · Goal: {target.name} ({percent(theta)}% line)</p>
+          <p className="st-sub">Grade 7 Mathematics · Focus topic: {target.name} · Mastery goal: {percent(theta)}%</p>
         </div>
         <div className="st-tally">
           <p>
-            <strong>{masteredCount}</strong> of {competencies.length} skills mastered ({percent(theta)}% line)
+            <strong>{masteredCount}</strong> of {competencies.length} skills mastered (goal: {percent(theta)}%)
           </p>
           <ul className="st-segs" aria-hidden="true">
             {bands.map((b, i) => (
@@ -103,8 +103,8 @@ export default function StudentDashboard() {
           <h2 id="start-here" className="st-hero-title">{first.name}</h2>
           <p className="st-hero-text">
             {first.id === targetId
-              ? `All prerequisite skills meet the ${percent(theta)}% line! You are ready to practice your focus topic.`
-              : `${toReview} prerequisite skill${toReview === 1 ? '' : 's'} to review before ${target.name}. Later skills build on this one, so it comes first.`}
+              ? `You have reached your mastery goal of ${percent(theta)}% on all the earlier skills! You are ready to practice your focus topic.`
+              : `${toReview} earlier skill${toReview === 1 ? '' : 's'} to review before ${target.name}. Later skills build on this one, so it comes first.`}
           </p>
 
           <ol className="st-route" aria-label="Your review route">
@@ -122,7 +122,7 @@ export default function StudentDashboard() {
                   <Link
                     to={`/student/practice?skill=${id}`}
                     className="st-stop-link"
-                    title={`Practice ${comp.name} (${percent(learner.mastery[id])}% mastery)`}
+                    title={`Practice ${comp.name} (mastery score ${percent(learner.mastery[id])}%)`}
                   >
                     <span className="st-stop-pct">{percent(learner.mastery[id])}%</span>
                     <span className="st-node" aria-hidden="true" />
@@ -149,8 +149,8 @@ export default function StudentDashboard() {
         <section className="st-card st-pad">
           <p className="st-empty">
             {status === 'target-met'
-              ? `✓ You have reached the ${percent(theta)}% mastery line for ${target.name}! No review path is needed for this goal.`
-              : `There is no mastery estimate for ${target.name} yet, so a review path can't be shown.`}
+              ? `✓ You have reached your mastery goal of ${percent(theta)}% for ${target.name}! No review path is needed for this goal.`
+              : `There is no mastery score for ${target.name} yet, so a review path can't be shown.`}
           </p>
         </section>
       )}
@@ -160,13 +160,14 @@ export default function StudentDashboard() {
           <div>
             <h2 id="my-skills" className="st-h2">My skills</h2>
             <p className="st-note" style={{ marginTop: '.35rem' }}>
-              Each ring fills to your BKT mastery estimate. The tick marks the {percent(theta)}% mastery line.
+              Each ring fills to your mastery score. The small tick marks your mastery goal of {percent(theta)}%.
             </p>
           </div>
           <div className="st-filters" role="group" aria-label="Filter skills">
             <button
               type="button"
               onClick={() => setFilter('all')}
+              aria-pressed={filter === 'all'}
               className={`st-filter-btn ${filter === 'all' ? 'is-active' : ''}`}
             >
               All ({competencies.length})
@@ -174,6 +175,7 @@ export default function StudentDashboard() {
             <button
               type="button"
               onClick={() => setFilter('path')}
+              aria-pressed={filter === 'path'}
               className={`st-filter-btn ${filter === 'path' ? 'is-active' : ''}`}
             >
               On my path ({path.length})
@@ -181,6 +183,7 @@ export default function StudentDashboard() {
             <button
               type="button"
               onClick={() => setFilter('mastered')}
+              aria-pressed={filter === 'mastered'}
               className={`st-filter-btn ${filter === 'mastered' ? 'is-active' : ''}`}
             >
               Mastered ({masteredCount})
@@ -210,7 +213,7 @@ export default function StudentDashboard() {
                     <li key={id}>
                       <Link
                         to={`/student/practice?skill=${id}`}
-                        aria-label={`Practice ${c.name}`}
+                        aria-label={`Practice ${c.name}. ${pillLabelFor(id, band)}. Mastery score ${percent(p)} percent${band === 'mastered' ? ', goal reached' : `, ${away} more point${away === 1 ? '' : 's'} to reach ${percent(theta)} percent`}.`}
                         className={`st-card st-skill ${path[0] === id ? 'is-next' : ''} ${id === targetId ? 'is-focus' : ''}`}
                       >
                         <SkillRing p={p} theta={theta} size={64} animate delay={delay} />
@@ -220,8 +223,8 @@ export default function StudentDashboard() {
                             <Pill band={pillBand}>{pillLabelFor(id, band)}</Pill>
                             <span>
                               {band === 'mastered'
-                                ? 'At or above the line'
-                                : `${away} more pt${away === 1 ? '' : 's'} to ${percent(theta)}%`}
+                                ? 'Goal reached'
+                                : `${away} more point${away === 1 ? '' : 's'} to reach ${percent(theta)}%`}
                             </span>
                           </span>
                           <p className="st-skill-prereq">

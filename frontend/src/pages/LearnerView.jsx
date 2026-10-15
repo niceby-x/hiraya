@@ -4,6 +4,7 @@ import StatusPill from '../components/StatusPill.jsx'
 import MasteryRing from '../components/MasteryRing.jsx'
 import BktInspector from '../components/BktInspector.jsx'
 import LearnerCompareDrawer from '../components/LearnerCompareDrawer.jsx'
+import SegmentedControl from '../components/SegmentedControl.jsx'
 import { competencies } from '../data/mock.js'
 import { NODE, positions, VIEW } from '../data/graphLayout.js'
 import { formatPercent, percent, statusFor } from '../lib/mastery.js'
@@ -63,7 +64,7 @@ function LearnerPicker({ state, learners, target, theta, invalid, backLink }) {
                   replace
                   className="flex items-center gap-4 rounded-xl border border-line bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-brand hover:shadow-md"
                 >
-                  <MasteryRing p={p ?? 0} theta={theta} size={52} />
+                  <MasteryRing p={p} theta={theta} size={52} />
                   <div className="min-w-0 flex-1">
                     <p className="font-display text-lg font-bold text-ink">{l.name}</p>
                     <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -92,6 +93,10 @@ function LearnerPicker({ state, learners, target, theta, invalid, backLink }) {
 export default function LearnerView() {
   const [params, setParams] = useSearchParams()
   const [hoveredNode, setHoveredNode] = useState(null)
+  const [focusedNode, setFocusedNode] = useState(null)
+  // Last node opened. Keeps its links highlighted after the dialog closes, which is the
+  // only highlight a touch screen can show (there is no hover).
+  const [pinnedNode, setPinnedNode] = useState(null)
   const [inspectedSkill, setInspectedSkill] = useState(null)
   const [compareOtherId, setCompareOtherId] = useState(null)
 
@@ -176,7 +181,8 @@ export default function LearnerView() {
   }
 
   const drawEdge = (e) => {
-    const isConnectedToHover = hoveredNode && (e.from === hoveredNode || e.to === hoveredNode)
+    const activeNode = hoveredNode ?? focusedNode ?? pinnedNode
+    const isConnectedToHover = activeNode && (e.from === activeNode || e.to === activeNode)
     return (
       <path
         key={e.key}
@@ -189,6 +195,11 @@ export default function LearnerView() {
         markerEnd={`url(#${e.onPath || isConnectedToHover ? 'arrow-brand' : 'arrow-gray'})`}
       />
     )
+  }
+
+  const openNode = (id) => {
+    setPinnedNode(id)
+    setInspectedSkill(id)
   }
 
   const gapCount = result.gaps.length
@@ -214,7 +225,7 @@ export default function LearnerView() {
             </Link>
 
             <div className="mt-3 flex flex-wrap items-center gap-4">
-              <MasteryRing p={mastery[targetId] ?? 0} theta={theta} size={64} />
+              <MasteryRing p={mastery[targetId]} theta={theta} size={64} />
               <div>
                 <div className="flex flex-wrap items-center gap-2.5">
                   <h1 className="font-display text-3xl font-bold sm:text-4xl">{learner.name}</h1>
@@ -270,21 +281,17 @@ export default function LearnerView() {
             </div>
 
             <div>
-              <p className="mb-1 text-xs font-bold tracking-wider text-muted uppercase">Threshold</p>
-              <div className="inline-flex rounded-xl border border-line bg-white p-1 shadow-2xs">
-                {THRESHOLD_OPTIONS.map((o) => (
-                  <button
-                    key={o}
-                    type="button"
-                    onClick={() => updateContext({ theta: o })}
-                    className={`rounded-lg px-3 py-1 text-sm font-bold transition-colors cursor-pointer ${
-                      theta === o ? 'bg-brand text-on-brand' : 'text-muted hover:text-ink'
-                    }`}
-                  >
-                    {percent(o)}%
-                  </button>
-                ))}
-              </div>
+              <p id="learner-theta-label" className="mb-1 text-xs font-bold tracking-wider text-muted uppercase">
+                Threshold
+              </p>
+              <SegmentedControl
+                value={theta}
+                options={THRESHOLD_OPTIONS}
+                onChange={(o) => updateContext({ theta: o })}
+                getLabel={(o) => `${percent(o)}%`}
+                labelledBy="learner-theta-label"
+                size="sm"
+              />
             </div>
 
             {learners.length >= 2 && (
@@ -330,8 +337,8 @@ export default function LearnerView() {
         <div className="tc-graph-surface mt-5 overflow-x-auto rounded-2xl border border-line p-4">
           <svg
             viewBox={`0 0 ${VIEW.w} ${VIEW.h}`}
-            role="img"
-            aria-label={`Prerequisite graph for ${learner.name}, target ${target.name}`}
+            role="group"
+            aria-label={`Prerequisite graph for ${learner.name}, target ${target.name}. Each skill is a button that opens its BKT details.`}
             className="h-auto w-full min-w-225"
           >
             <defs>
@@ -375,16 +382,48 @@ export default function LearnerView() {
               return (
                 <g
                   key={c.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-haspopup="dialog"
+                  aria-label={`${c.name}: ${
+                    s === 'none' ? 'no data' : `${formatPercent(p, theta)}, ${s === 'meets' ? 'meets' : 'below'} the threshold`
+                  }${isTarget ? ', target competency' : ''}${step >= 0 ? `, review step ${step + 1}` : ''}${
+                    relevant.has(c.id) ? '' : ', not a prerequisite of the target'
+                  }. Opens BKT details.`}
                   onMouseEnter={() => setHoveredNode(c.id)}
                   onMouseLeave={() => setHoveredNode(null)}
-                  onClick={() => setInspectedSkill(c.id)}
-                  className={`cursor-pointer transition-opacity duration-200 ${
-                    relevant.has(c.id) ? '' : 'opacity-45 hover:opacity-90'
+                  onFocus={(e) => {
+                    // Only draw the focus ring for keyboard focus, not for a mouse click.
+                    if (e.currentTarget.matches(':focus-visible')) setFocusedNode(c.id)
+                  }}
+                  onBlur={() => setFocusedNode(null)}
+                  onClick={() => openNode(c.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      openNode(c.id)
+                    }
+                  }}
+                  className={`cursor-pointer outline-none transition-opacity duration-200 ${
+                    relevant.has(c.id) ? '' : 'opacity-45 hover:opacity-90 focus:opacity-90'
                   }`}
                 >
                   <title>{`${c.name}: ${formatPercent(p, theta)}${
                     s === 'none' ? '' : s === 'meets' ? ' (meets the threshold)' : ' (below the threshold)'
                   } — Click to inspect BKT parameters`}</title>
+
+                  {focusedNode === c.id && (
+                    <rect
+                      x={left - 8}
+                      y={top - 8}
+                      width={NODE.w + 16}
+                      height={NODE.h + 16}
+                      rx={18}
+                      fill="none"
+                      strokeWidth={3.5}
+                      className="stroke-ink"
+                    />
+                  )}
 
                   {isTarget && (
                     <rect
@@ -446,7 +485,7 @@ export default function LearnerView() {
             <span>estimate below {percent(theta)}%</span>
           </div>
           <span className="text-xs">
-            Click any skill node in the graph to inspect its BKT parameters and simulate answers.
+            Click, tap, or focus a skill node and press Enter to inspect its BKT parameters.
           </span>
         </div>
         {hasUnrelated && (
@@ -493,7 +532,7 @@ export default function LearnerView() {
                     {i + 1}
                   </span>
 
-                  <MasteryRing p={p ?? 0} theta={theta} size={48} />
+                  <MasteryRing p={p} theta={theta} size={48} />
 
                   <div className="min-w-48 flex-1">
                     <div className="flex flex-wrap items-center gap-2">

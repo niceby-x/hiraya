@@ -31,6 +31,27 @@ export function recordResponse(learnerId, skillId, correct) {
   return { before, after }
 }
 
+// Puts skills back to the values they had before a recorded change (undo).
+// `changes` is { [learnerId]: { before, after } }. A learner is only restored while their
+// estimate is still the value that change produced, so an undo can never overwrite
+// something recorded afterwards. Returns which learners were restored and which skipped.
+export function undoMasteryChange(skillId, changes) {
+  const restored = []
+  const skipped = []
+  state = state.map((learner) => {
+    const change = changes[learner.id]
+    if (!change) return learner
+    if (learner.mastery[skillId] !== change.after) {
+      skipped.push(learner.id)
+      return learner
+    }
+    restored.push(learner.id)
+    return { ...learner, mastery: { ...learner.mastery, [skillId]: change.before } }
+  })
+  if (restored.length > 0) emit()
+  return { restored, skipped }
+}
+
 export function updateSettings(patch) {
   const next = { ...settings, ...patch }
   if (

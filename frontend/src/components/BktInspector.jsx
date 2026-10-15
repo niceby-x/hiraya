@@ -1,11 +1,15 @@
+import { useState } from 'react'
 import { paramsFor } from '../data/bktParams.js'
 import { observe, predictCorrect, updateMastery } from '../lib/bkt.js'
 import { formatPercent, percent, statusFor } from '../lib/mastery.js'
 import { getCompetency } from '../lib/path.js'
-import { recordResponse } from '../lib/store.js'
+import { recordResponse, undoMasteryChange } from '../lib/store.js'
 import StatusPill from './StatusPill.jsx'
 
 export default function BktInspector({ learner, skillId, theta, onClose }) {
+  // { learnerId, skillId, correct, before, after, undone } for the last demo action in this dialog.
+  const [demo, setDemo] = useState(null)
+
   if (!learner || !skillId) return null
 
   const competency = getCompetency(skillId)
@@ -22,6 +26,16 @@ export default function BktInspector({ learner, skillId, theta, onClose }) {
   const nextWrong = hasPrior ? updateMastery(prior, false, params) : null
 
   const fmtDec = (n) => (typeof n === 'number' ? `${(n * 100).toFixed(1)}%` : '—')
+
+  const runDemo = (correct) => {
+    const change = recordResponse(learner.id, skillId, correct)
+    setDemo({ learnerId: learner.id, skillId, correct, ...change, undone: false })
+  }
+  const undoDemo = () => {
+    undoMasteryChange(skillId, { [learner.id]: { before: demo.before, after: demo.after } })
+    setDemo({ ...demo, undone: true })
+  }
+  const lastDemo = demo && demo.learnerId === learner.id && demo.skillId === skillId ? demo : null
 
   return (
     <div
@@ -139,13 +153,6 @@ export default function BktInspector({ learner, skillId, theta, onClose }) {
                 <p className="text-xs text-muted tabular-nums">
                   2. After Learn P(Lₙ): <strong className="text-mastered-ink">{fmtDec(nextRight)}</strong>
                 </p>
-                <button
-                  type="button"
-                  onClick={() => recordResponse(learner.id, skillId, true)}
-                  className="mt-2.5 w-full rounded-lg bg-mastered px-3 py-1.5 text-xs font-bold text-on-mastered transition-opacity hover:opacity-90 cursor-pointer"
-                >
-                  Simulate +1 Correct Answer
-                </button>
               </div>
 
               <div className="rounded-xl border border-low/30 bg-low-soft/45 p-3">
@@ -161,21 +168,60 @@ export default function BktInspector({ learner, skillId, theta, onClose }) {
                 <p className="text-xs text-muted tabular-nums">
                   2. After Learn P(Lₙ): <strong className="text-low-ink">{fmtDec(nextWrong)}</strong>
                 </p>
-                <button
-                  type="button"
-                  onClick={() => recordResponse(learner.id, skillId, false)}
-                  className="mt-2.5 w-full rounded-lg bg-low px-3 py-1.5 text-xs font-bold text-on-low transition-opacity hover:opacity-90 cursor-pointer"
-                >
-                  Simulate +1 Wrong Answer
-                </button>
               </div>
             </div>
           </div>
         )}
 
-        <p className="mt-4 border-t border-line pt-3 text-[11px] text-muted">
-          Simulating an answer updates in-memory BKT state across both Teacher and Student views. Use <strong>Reset demo</strong> in the top bar to restore initial values.
-        </p>
+        {hasPrior && (
+          <div className="mt-4 rounded-xl border-2 border-dashed border-gap/60 bg-gap-soft/40 p-3.5">
+            <p className="flex flex-wrap items-center gap-2 text-sm font-bold text-gap-ink">
+              <span className="rounded-full bg-gap px-2 py-0.5 text-xs font-bold text-white">DEMO ONLY</span>
+              Changes the shared sample data
+            </p>
+            <p className="mt-1.5 text-sm text-ink">
+              Recording a demo answer changes {learner.name}&apos;s {competency.short} estimate for everyone using this
+              prototype, including the student view. Use Undo here, or <strong>Reset demo</strong> in the top bar, to
+              restore it.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => runDemo(true)}
+                className="rounded-lg border-2 border-mastered bg-white px-3.5 py-2 text-sm font-bold text-mastered-ink transition-colors hover:bg-mastered-soft cursor-pointer"
+              >
+                Record a correct answer (demo)
+              </button>
+              <button
+                type="button"
+                onClick={() => runDemo(false)}
+                className="rounded-lg border-2 border-low bg-white px-3.5 py-2 text-sm font-bold text-low-ink transition-colors hover:bg-low-soft cursor-pointer"
+              >
+                Record a wrong answer (demo)
+              </button>
+            </div>
+            <div role="status" aria-live="polite">
+              {lastDemo && (
+                <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-medium text-ink">
+                  <span>
+                    {lastDemo.undone
+                      ? `Undone: back to ${formatPercent(lastDemo.before, theta)}.`
+                      : `Recorded a ${lastDemo.correct ? 'correct' : 'wrong'} answer: ${formatPercent(lastDemo.before, theta)} → ${formatPercent(lastDemo.after, theta)}.`}
+                  </span>
+                  {!lastDemo.undone && (
+                    <button
+                      type="button"
+                      onClick={undoDemo}
+                      className="rounded-lg border border-line bg-white px-2.5 py-1 text-xs font-bold text-brand hover:border-brand cursor-pointer"
+                    >
+                      Undo
+                    </button>
+                  )}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

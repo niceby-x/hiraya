@@ -8,7 +8,7 @@ export default function SkillRing({ p, theta = THRESHOLD, size = 64, animate = f
   const c = 2 * Math.PI * r
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" role="img" className={`st-ring st-ring--${bandFor(p, theta)}`}
-      aria-label={`${percent(p)} percent. Mastery line ${percent(theta)} percent.`}>
+      aria-label={`Mastery score ${percent(p)} percent. Mastery goal ${percent(theta)} percent.`}>
       <circle cx="24" cy="24" r={r} fill="none" strokeWidth="4.5" className="st-ring-track" />
       <circle cx="24" cy="24" r={r} fill="none" strokeWidth="4.5" strokeLinecap="round" className={`st-ring-fill ${animate ? 'is-animated' : ''}`}
         strokeDasharray={`${c * p} ${c}`} transform="rotate(-90 24 24)" style={{ '--c': c, '--d': `${delay}ms` }} />

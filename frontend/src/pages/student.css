@@ -66,7 +66,7 @@
 .st-back svg { width: 1rem; height: 1rem; transition: transform .15s; }
 .st-back:hover svg { transform: translateX(-3px); }
 .st-h2 { margin: 0; font-family: var(--font-display, system-ui, sans-serif); font-size: 1.4rem; font-weight: 700; }
-.st-note { margin: 0; font-size: .85rem; color: rgb(var(--st-fg) / .6); }
+.st-note { margin: 0; font-size: .85rem; color: rgb(var(--st-fg) / .72); }
 .st-note button { padding: 0; font: inherit; font-weight: 700; color: var(--st-aqua); text-decoration: underline; background: none; border: 0; cursor: pointer; }
 .st-card { min-width: 0; border-radius: 1.25rem; border: 1px solid var(--st-line); box-shadow: 0 20px 50px rgb(var(--st-shadow) / .28);
   background-color: var(--st-card);
@@ -135,7 +135,7 @@
 .st-stop { position: relative; flex: 1; min-width: 6.75rem; text-align: center; }
 .st-stop-link { display: block; padding: .35rem .25rem; border-radius: .75rem; transition: transform .15s, background .15s; }
 .st-stop-link:hover { transform: translateY(-2px); background: rgb(255 255 255 / .06); }
-.st-stop-pct { display: block; height: 1.1rem; margin-bottom: .45rem; font-size: .8rem; font-weight: 700; font-variant-numeric: tabular-nums; color: rgb(var(--st-fg) / .65); }
+.st-stop-pct { display: block; height: 1.1rem; margin-bottom: .45rem; font-size: .8rem; font-weight: 700; font-variant-numeric: tabular-nums; color: rgb(var(--st-fg) / .78); }
 .st-stop.is-first .st-stop-pct, .st-stop.is-last .st-stop-pct { color: rgb(var(--st-fg)); }
 .st-seg { position: absolute; top: calc(1.9rem + 12px); left: 50%; width: 100%; height: 4px; margin-top: -2px; border-radius: 4px; transform-origin: left; background: var(--st-aqua); box-shadow: 0 0 10px rgb(var(--st-aqua-rgb) / .55);
   animation: st-draw .5s ease calc(var(--i) * 170ms + 250ms) backwards; pointer-events: none; }
@@ -158,7 +158,7 @@
 .st-filter-btn.is-active { color: var(--st-on-aqua); background: var(--st-aqua); box-shadow: 0 4px 12px rgb(var(--st-aqua-rgb) / .3); }
 
 .st-strand { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin: 0 0 .85rem; }
-.st-strand span { font-size: .85rem; font-weight: 600; color: rgb(var(--st-fg) / .62); }
+.st-strand span { font-size: .85rem; font-weight: 600; color: rgb(var(--st-fg) / .72); }
 .st-grid { display: grid; gap: .9rem; margin: 0; padding: 0; list-style: none; grid-template-columns: 1fr; }
 @media (min-width: 700px) { .st-grid { grid-template-columns: 1fr 1fr; } }
 .st-skill { position: relative; display: flex; align-items: center; gap: 1rem; height: 100%; padding: 1.05rem 1.15rem; box-sizing: border-box; transition: border-color .2s, transform .2s, box-shadow .2s; }
@@ -168,7 +168,7 @@
 .st-skill-body { min-width: 0; flex: 1; }
 .st-skill-name { margin: 0; font-weight: 700; line-height: 1.25; }
 .st-skill-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .6rem; margin-top: .45rem; font-size: .83rem; color: rgb(var(--st-fg) / .74); }
-.st-skill-prereq { margin: .38rem 0 0; font-size: .75rem; color: rgb(var(--st-fg) / .55); }
+.st-skill-prereq { margin: .38rem 0 0; font-size: .75rem; color: rgb(var(--st-fg) / .72); }
 .st-skill-go { flex-shrink: 0; width: 1.1rem; height: 1.1rem; color: rgb(var(--st-fg) / .58); transition: color .2s, transform .2s; }
 .st-skill:hover .st-skill-go { color: var(--st-aqua); transform: translateX(3px); }
 .st-legend { display: flex; flex-wrap: wrap; gap: .75rem 2rem; margin: 0; padding: 0; list-style: none; font-size: .85rem; color: rgb(var(--st-fg) / .74); }
@@ -177,7 +177,7 @@
 /* ---------- Review path ---------- */
 .st-path-summary { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
 .st-path-stat { padding: 1rem 1.15rem; border-radius: 1rem; background: var(--st-inset); border: 1px solid var(--st-line); }
-.st-path-stat span { display: block; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: rgb(var(--st-fg) / .62); }
+.st-path-stat span { display: block; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: rgb(var(--st-fg) / .72); }
 .st-path-stat strong { display: block; margin-top: .25rem; font-family: var(--font-display, system-ui, sans-serif); font-size: 1.5rem; color: rgb(var(--st-fg)); }
 
 .st-how { display: grid; gap: 1rem; margin: 0; padding: 0; list-style: none; }
@@ -220,7 +220,7 @@ a.st-chip:hover { border-color: var(--st-aqua); background: rgb(var(--st-aqua-rg
 /* ---------- Practice ---------- */
 .st-practice { max-width: 46rem; margin: 0 auto; width: 100%; }
 .st-ph { display: flex; align-items: flex-end; justify-content: space-between; gap: 1.5rem; margin-bottom: 1.5rem; }
-.st-ph-ring { text-align: center; font-size: .75rem; font-weight: 600; color: rgb(var(--st-fg) / .65); }
+.st-ph-ring { text-align: center; font-size: .75rem; font-weight: 600; color: rgb(var(--st-fg) / .72); }
 .st-steps { display: flex; align-items: center; gap: 1rem; }
 .st-steps p { margin: 0; font-size: .88rem; font-weight: 700; color: rgb(var(--st-fg) / .74); white-space: nowrap; }
 .st-steps ol { display: flex; flex: 1; gap: .35rem; margin: 0; padding: 0; list-style: none; }
@@ -268,13 +268,20 @@ a.st-chip:hover { border-color: var(--st-aqua); background: rgb(var(--st-aqua-rg
 .st-line95-label { position: absolute; top: 1rem; transform: translateX(-50%); font-size: .7rem; font-weight: 700; color: rgb(var(--st-fg) / .74); white-space: nowrap; }
 
 .st-next { margin-top: 1.5rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }
-.st-kbd-hint { font-size: .78rem; color: rgb(var(--st-fg) / .52); }
+.st-kbd-hint { font-size: .78rem; color: rgb(var(--st-fg) / .72); }
 .st-kbd-hint kbd { padding: .12rem .4rem; border-radius: .35rem; font-family: inherit; font-size: .72rem; font-weight: 700; background: rgb(var(--st-fg) / .1); border: 1px solid rgb(var(--st-fg) / .18); }
 
 .st-done { text-align: center; }
 .st-score { margin: 0; font-family: var(--font-display, system-ui, sans-serif); font-size: clamp(3rem, 9vw, 4.5rem); font-weight: 700; line-height: 1; color: var(--st-aqua); text-shadow: 0 0 30px rgb(var(--st-aqua-rgb) / .45); }
 .st-score small { font-size: .4em; color: rgb(var(--st-fg) / .74); text-shadow: none; }
 .st-done .st-actions { justify-content: center; }
+.st-missed { margin: 1.75rem auto 0; max-width: 34rem; text-align: left; }
+.st-missed-title { margin: 0 0 .75rem; font-family: var(--font-display, system-ui, sans-serif); font-size: 1.05rem; font-weight: 700; }
+.st-missed ul { display: grid; gap: .75rem; margin: 0; padding: 0; list-style: none; }
+.st-missed-item { padding: .9rem 1.05rem; border-radius: .9rem; background: var(--st-inset); border: 1px solid var(--st-line); border-left: 4px solid var(--st-low); }
+.st-missed-item p { margin: .25rem 0 0; font-size: .92rem; line-height: 1.45; color: rgb(var(--st-fg) / .88); }
+.st-missed-item .st-missed-q { margin: 0; font-weight: 700; color: rgb(var(--st-fg)); }
+.st-missed-item .st-missed-why { color: rgb(var(--st-fg) / .78); }
 
 @media (prefers-reduced-motion: reduce) {
   .st-here i, .st-seg, .st-node, .st-ring-fill.is-animated, .st-fb, .st-track-fill { animation: none; }

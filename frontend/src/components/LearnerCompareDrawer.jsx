@@ -46,7 +46,7 @@ export default function LearnerCompareDrawer({
       onClick={onClose}
     >
       <div
-        className="tc-card flex h-full w-full max-w-2xl flex-col overflow-y-auto border-l border-brand/30 p-6 shadow-2xl"
+        className="tc-card flex h-full w-full max-w-2xl flex-col overflow-y-auto border-l border-brand/30 p-4 shadow-2xl sm:p-6"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drawer Header */}
@@ -73,31 +73,36 @@ export default function LearnerCompareDrawer({
         </div>
 
         {/* Learner Selectors & Target Summary */}
-        <div className="mt-5 grid grid-cols-2 gap-4">
+        <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
           {[
-            { label: 'Learner A', learner: learnerA, path: pathA, onChange: onSelectA },
-            { label: 'Learner B', learner: learnerB, path: pathB, onChange: onSelectB },
-          ].map(({ label, learner, path, onChange }) => {
+            { label: 'Learner A', learner: learnerA, otherId: learnerB?.id, path: pathA, onChange: onSelectA },
+            { label: 'Learner B', learner: learnerB, otherId: learnerA?.id, path: pathB, onChange: onSelectB },
+          ].map(({ label, learner, otherId, path, onChange }) => {
             const p = learner?.mastery?.[targetId]
             return (
               <div key={label} className="rounded-2xl border border-line bg-white p-4">
-                <label className="block text-[11px] font-bold tracking-wider text-muted uppercase">
+                <label
+                  htmlFor={`compare-${label.replace(' ', '-').toLowerCase()}`}
+                  className="block text-[11px] font-bold tracking-wider text-muted uppercase"
+                >
                   {label}
                 </label>
                 <select
+                  id={`compare-${label.replace(' ', '-').toLowerCase()}`}
                   value={learner?.id ?? ''}
                   onChange={(e) => onChange(e.target.value)}
                   className="mt-1 block w-full rounded-xl border border-line bg-surface/60 px-3 py-2 text-sm font-bold"
                 >
                   {learners.map((l) => (
-                    <option key={l.id} value={l.id}>
+                    // The other learner is disabled so A and B can never be the same person.
+                    <option key={l.id} value={l.id} disabled={l.id === otherId}>
                       {l.name}
                     </option>
                   ))}
                 </select>
 
                 <div className="mt-3 flex items-center gap-3">
-                  <MasteryRing p={p ?? 0} theta={theta} size={48} />
+                  <MasteryRing p={p} theta={theta} size={48} />
                   <div>
                     <p className="text-xs text-muted">Target ({target.short})</p>
                     <p className="font-display text-lg font-bold tabular-nums">
@@ -180,8 +185,8 @@ export default function LearnerCompareDrawer({
           <ul className="mt-3 divide-y divide-line rounded-2xl border border-line bg-white px-4">
             {orderedIds.map((id) => {
               const c = getCompetency(id)
-              const pA = learnerA?.mastery?.[id] ?? 0
-              const pB = learnerB?.mastery?.[id] ?? 0
+              const pA = learnerA?.mastery?.[id]
+              const pB = learnerB?.mastery?.[id]
               const sA = statusFor(pA, theta)
               const sB = statusFor(pB, theta)
 
@@ -205,13 +210,13 @@ export default function LearnerCompareDrawer({
                       { name: learnerB.name, p: pB, s: sB },
                     ].map((row) => (
                       <div key={row.name} className="flex items-center gap-2.5 text-xs">
-                        <span className="w-20 truncate font-medium text-muted">{row.name}</span>
+                        <span className="w-24 shrink-0 truncate font-medium text-muted">{row.name}</span>
                         <div className="relative h-2.5 flex-1 overflow-hidden rounded-full bg-line">
                           <div
                             className={`h-full rounded-full transition-all duration-300 ${
-                              row.s === 'meets' ? 'bg-mastered' : 'bg-gap'
+                              row.s === 'meets' ? 'bg-mastered' : row.s === 'below' ? 'bg-gap' : 'bg-line'
                             }`}
-                            style={{ width: `${Math.min(100, Math.round(row.p * 100))}%` }}
+                            style={{ width: row.s === 'none' ? '0%' : `${Math.min(100, Math.round(row.p * 100))}%` }}
                           />
                           <span
                             className="absolute top-0 bottom-0 w-0.5 bg-ink/70"
@@ -231,7 +236,7 @@ export default function LearnerCompareDrawer({
         </div>
 
         {/* Remediation Path Comparison */}
-        <div className="mt-6 grid grid-cols-2 gap-4">
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
           {[
             { learner: learnerA, path: pathA.path },
             { learner: learnerB, path: pathB.path },
