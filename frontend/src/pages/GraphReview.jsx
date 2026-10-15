@@ -262,7 +262,7 @@ export default function GraphReview() {
     <div className="flex flex-col gap-7">
       {header}
 
-      <div className="grid gap-7 lg:grid-cols-[1fr_340px]">
+      <div className="grid grid-cols-1 gap-7 lg:grid-cols-[minmax(0,1fr)_340px]">
         <Card>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-xs font-bold tracking-wider text-muted uppercase">

@@ -34,7 +34,8 @@ const gapNote = (status, gaps) =>
         : ''
 
 const gridStyle = {
-  gridTemplateColumns: `150px repeat(${competencies.length}, minmax(82px, 1fr))`,
+  // The learner column is narrower on phones so more skill columns show beside it.
+  gridTemplateColumns: `clamp(112px, 34vw, 150px) repeat(${competencies.length}, minmax(82px, 1fr))`,
 }
 
 function Stat({ label, value, sub, tone = 'brand', icon }) {
@@ -44,12 +45,12 @@ function Stat({ label, value, sub, tone = 'brand', icon }) {
     gap: 'border-t-4 border-t-gap',
   }
   return (
-    <div className={`tc-card rounded-2xl p-5 ${borderColors[tone] ?? borderColors.brand}`}>
+    <div className={`tc-card rounded-2xl p-4 sm:p-5 ${borderColors[tone] ?? borderColors.brand}`}>
       <div className="flex items-start justify-between gap-3">
         <p className="text-xs font-bold tracking-wider text-muted uppercase">{label}</p>
         {icon && <span className="text-brand opacity-80">{icon}</span>}
       </div>
-      <p className="mt-2 font-display text-3xl font-bold tracking-tight">{value}</p>
+      <p className="mt-2 font-display text-2xl font-bold tracking-tight sm:text-3xl">{value}</p>
       {sub && <p className="mt-1 text-xs text-muted">{sub}</p>}
     </div>
   )
@@ -231,7 +232,7 @@ export default function TeacherDashboard() {
       ) : (
         <>
           {/* KPI Bento Grid */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             <Stat
               label="Active Learners"
               value={learners.length}
@@ -297,7 +298,7 @@ export default function TeacherDashboard() {
               </div>
 
               <div className="flex flex-wrap items-end gap-3">
-                <div className="min-w-56">
+                <div className="w-full sm:w-auto sm:min-w-56">
                   <label htmlFor="learner-search" className="mb-1 block text-xs font-bold tracking-wider text-muted uppercase">
                     Search learners
                   </label>
@@ -318,7 +319,7 @@ export default function TeacherDashboard() {
                   </div>
                 </div>
 
-                <div>
+                <div className="w-full sm:w-auto">
                   <label htmlFor="learner-sort" className="mb-1 block text-xs font-bold tracking-wider text-muted uppercase">
                     Order learners by
                   </label>
@@ -326,7 +327,7 @@ export default function TeacherDashboard() {
                     id="learner-sort"
                     value={sort}
                     onChange={(e) => setSort(e.target.value)}
-                    className="block rounded-xl border border-line bg-white px-3.5 py-2 text-sm font-bold shadow-2xs"
+                    className="block w-full rounded-xl border border-line bg-white px-3.5 py-2 text-sm font-bold shadow-2xs"
                   >
                     <option value="roster">Class list order</option>
                     <option value="gaps">Most candidate gaps first</option>

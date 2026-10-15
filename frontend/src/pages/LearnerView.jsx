@@ -243,7 +243,7 @@ export default function LearnerView() {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-end gap-3">
+          <div className="flex max-w-full min-w-0 flex-wrap items-end gap-3">
             <div>
               <label htmlFor="learner" className="mb-1 block text-xs font-bold tracking-wider text-muted uppercase">
                 Learner
@@ -262,7 +262,7 @@ export default function LearnerView() {
               </select>
             </div>
 
-            <div>
+            <div className="max-w-full min-w-0">
               <label htmlFor="target-select" className="mb-1 block text-xs font-bold tracking-wider text-muted uppercase">
                 Target
               </label>
@@ -270,7 +270,7 @@ export default function LearnerView() {
                 id="target-select"
                 value={targetId}
                 onChange={(e) => updateContext({ target: e.target.value })}
-                className="block rounded-xl border border-line bg-white px-3.5 py-2 text-sm font-bold shadow-2xs"
+                className="block max-w-full rounded-xl border border-line bg-white px-3.5 py-2 text-sm font-bold shadow-2xs"
               >
                 {competencies.map((c) => (
                   <option key={c.id} value={c.id}>

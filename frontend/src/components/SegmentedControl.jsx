@@ -46,7 +46,7 @@ export default function SegmentedControl({
             tabIndex={(selected === -1 ? i === 0 : isSelected) ? 0 : -1}
             onClick={() => onChange(option)}
             onKeyDown={(e) => handleKeyDown(e, i)}
-            className={`rounded-lg ${pad} text-sm font-bold transition-all cursor-pointer ${
+            className={`rounded-lg ${pad} text-sm font-bold transition-all cursor-pointer pointer-coarse:min-h-11 ${
               isSelected ? 'bg-brand text-on-brand shadow-xs' : 'text-muted hover:text-ink'
             }`}
           >

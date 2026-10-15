@@ -1,4 +1,5 @@
-import { Link, NavLink } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import Logo from './Logo.jsx'
 import { resetLearners } from '../lib/store.js'
 
@@ -38,21 +39,53 @@ export default function ShellHeader({
   userPillClass,
 }) {
   const themeLabel = isDark ? 'Switch to light mode' : 'Switch to dark mode'
+  const { pathname } = useLocation()
+  const navRef = useRef(null)
+  const [edges, setEdges] = useState({ start: false, end: false })
+
+  // When the tabs do not all fit (phones), fade the cut-off side and keep the current tab in view.
+  useEffect(() => {
+    const nav = navRef.current
+    if (!nav) return undefined
+    const update = () =>
+      setEdges({
+        start: nav.scrollLeft > 2,
+        end: nav.scrollLeft + nav.clientWidth < nav.scrollWidth - 2,
+      })
+    const current = nav.querySelector('[aria-current="page"]')
+    if (current) {
+      const offset = current.getBoundingClientRect().left - nav.getBoundingClientRect().left
+      nav.scrollLeft += offset - (nav.clientWidth - current.offsetWidth) / 2
+    }
+    update()
+    nav.addEventListener('scroll', update, { passive: true })
+    const ro = new ResizeObserver(update)
+    ro.observe(nav)
+    return () => {
+      nav.removeEventListener('scroll', update)
+      ro.disconnect()
+    }
+  }, [pathname])
+
+  const fade = `linear-gradient(to right, ${edges.start ? 'transparent, #000 28px' : '#000, #000'}, ${edges.end ? '#000 calc(100% - 28px), transparent' : '#000, #000'})`
+  const navStyle = edges.start || edges.end ? { maskImage: fade, WebkitMaskImage: fade } : undefined
 
   return (
     <header className={`on-dark sticky top-0 z-30 border-b border-white/12 bg-night/95 px-4 py-2.5 text-white sm:px-8 ${className}`}>
-      <div className="mx-auto flex max-w-295 flex-wrap items-center gap-x-6 gap-y-2">
-        <Link to={homeTo} className="flex shrink-0 items-center gap-2.5 py-1 group">
-          <Logo size={32} className="text-aqua transition-transform duration-200 group-hover:scale-105" />
+      <div className="mx-auto flex max-w-295 flex-wrap items-center gap-x-2 gap-y-2 sm:gap-x-6">
+        <Link to={homeTo} className="flex shrink-0 items-center gap-2 py-1 group sm:gap-2.5">
+          <Logo size={32} className="text-aqua transition-transform duration-200 group-hover:scale-105 max-sm:h-7 max-sm:w-7" />
           <div className="flex items-baseline gap-2">
-            <span className="font-display text-xl font-bold tracking-widest text-white">HIRAYA</span>
-            <span className="rounded-full border border-aqua/30 bg-aqua/10 px-2 py-0.5 text-xs font-bold tracking-wide text-aqua uppercase">
+            <span className="font-display text-lg font-bold tracking-widest text-white sm:text-xl">HIRAYA</span>
+            <span className="rounded-full border border-aqua/30 bg-aqua/10 px-1.5 py-0.5 text-xs sm:px-2 font-bold tracking-wide text-aqua uppercase">
               {badge}
             </span>
           </div>
         </Link>
 
         <nav
+          ref={navRef}
+          style={navStyle}
           aria-label={navLabel}
           className="order-last flex w-full gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:order-none sm:w-auto sm:flex-1 sm:pb-0"
         >
@@ -62,7 +95,7 @@ export default function ShellHeader({
               to={{ pathname: link.to, search: link.search ?? '' }}
               end={link.end}
               className={({ isActive }) =>
-                `relative whitespace-nowrap rounded-lg px-3.5 py-2 text-sm transition-colors ${
+                `relative whitespace-nowrap rounded-lg px-3.5 py-2 text-sm transition-colors pointer-coarse:py-3 ${
                   isActive
                     ? 'bg-aqua/15 font-bold text-white shadow-[inset_0_-2px_0_0_#66e5d3]'
                     : 'font-medium text-white/75 hover:bg-white/10 hover:text-white'
@@ -74,7 +107,7 @@ export default function ShellHeader({
           ))}
         </nav>
 
-        <div className="ml-auto flex shrink-0 items-center gap-2.5 text-sm sm:ml-0">
+        <div className="ml-auto flex shrink-0 items-center gap-2 text-sm sm:ml-0 sm:gap-2.5">
           {extra}
           <button
             type="button"
@@ -94,7 +127,7 @@ export default function ShellHeader({
             onClick={onToggleTheme}
             aria-label={themeLabel}
             title={themeLabel}
-            className="grid h-8.5 w-8.5 cursor-pointer place-items-center rounded-full border border-white/15 bg-white/8 text-white/85 transition-colors hover:bg-white/15 hover:text-white"
+            className="grid h-8.5 w-8.5 cursor-pointer place-items-center rounded-full pointer-coarse:h-11 pointer-coarse:w-11 border border-white/15 bg-white/8 text-white/85 transition-colors hover:bg-white/15 hover:text-white"
           >
             <ThemeIcon dark={isDark} />
           </button>
@@ -106,7 +139,7 @@ export default function ShellHeader({
 
           <Link
             to="/"
-            className="rounded-lg px-2.5 py-1.5 font-bold text-aqua transition-colors hover:bg-aqua/10 hover:underline"
+            className="rounded-lg px-2 py-1.5 font-bold text-aqua sm:px-2.5 transition-colors hover:bg-aqua/10 hover:underline pointer-coarse:py-3"
           >
             Sign out
           </Link>

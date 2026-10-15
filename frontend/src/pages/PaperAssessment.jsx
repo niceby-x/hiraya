@@ -430,7 +430,7 @@ export default function PaperAssessment() {
                   Optional reference if your printed worksheet uses HIRAYA&apos;s benchmark items.
                 </p>
               </div>
-              <span className="rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-bold text-brand group-open:bg-brand-soft">
+              <span className="shrink-0 rounded-lg border border-line bg-white px-3 py-1.5 text-xs font-bold whitespace-nowrap text-brand group-open:bg-brand-soft">
                 Toggle answer key
               </span>
             </summary>
@@ -485,7 +485,7 @@ export default function PaperAssessment() {
           </div>
         </div>
 
-        <p className="mt-4 text-xs text-muted">
+        <p className="mt-4 text-xs text-muted pointer-coarse:hidden">
           <strong className="text-ink">Keyboard:</strong> arrow keys move between cells · <kbd>1</kbd> or <kbd>C</kbd> = correct · <kbd>0</kbd> or <kbd>X</kbd> = wrong · <kbd>Backspace</kbd> = blank. After a mark, focus moves to the next question.
         </p>
         <p className="sr-only" role="status" aria-live="polite">
