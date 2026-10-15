@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import KnowledgeBackdrop from './KnowledgeBackdrop.jsx'
 import ShellHeader, { bottomNavInset } from './ShellHeader.jsx'
+import { icons } from './navIcons.jsx'
 import SkipLink from './SkipLink.jsx'
 import { competencies } from '../data/mock.js'
 import { percent } from '../lib/mastery.js'
@@ -11,9 +12,9 @@ import { useTheme } from '../lib/useTheme.js'
 import '../pages/student.css'
 
 const links = [
-  { to: '/student', label: 'My progress', end: true },
-  { to: '/student/practice', label: 'Practice' },
-  { to: '/student/path', label: 'Review path' },
+  { to: '/student', label: 'My progress', end: true, icon: icons.progress },
+  { to: '/student/practice', label: 'Practice', icon: icons.practice },
+  { to: '/student/path', label: 'Review path', icon: icons.path },
 ]
 
 const userIcon = (

@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import AppShell from './components/AppShell.jsx'
+import { icons } from './components/navIcons.jsx'
 import GraphReview from './pages/GraphReview.jsx'
 import LearnerView from './pages/LearnerView.jsx'
 import Login from './pages/Login.jsx'
@@ -12,10 +13,10 @@ import TeacherDashboard from './pages/TeacherDashboard.jsx'
 import { useLearner, useSettings } from './lib/store.js'
 
 const teacherLinks = [
-  { to: '/teacher', label: 'Class overview', end: true, keepSearch: true },
-  { to: '/teacher/learner', label: 'Learner view', keepSearch: true },
-  { to: '/teacher/record', label: 'Record assessment', keepSearch: true },
-  { to: '/teacher/graph', label: 'Prerequisite graph' },
+  { to: '/teacher', label: 'Class overview', shortLabel: 'Class', icon: icons.class, end: true, keepSearch: true },
+  { to: '/teacher/learner', label: 'Learner view', shortLabel: 'Learner', icon: icons.learner, keepSearch: true },
+  { to: '/teacher/record', label: 'Record assessment', shortLabel: 'Record', icon: icons.record, keepSearch: true },
+  { to: '/teacher/graph', label: 'Prerequisite graph', shortLabel: 'Graph', icon: icons.graph },
 ]
 
 function ActiveStudentShell() {

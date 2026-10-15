@@ -290,6 +290,8 @@ a.st-chip:hover { border-color: var(--st-aqua); background: rgb(var(--st-aqua-rg
 
 /* ---------- Phones ---------- */
 @media (max-width: 639px) {
+  /* Scroll Next / feedback clear of the fixed bottom bar. */
+  .st-next { scroll-margin-bottom: 6rem; }
   .st-kbd-hint { display: none; }
   .st-filters { max-width: 100%; }
   .st-filter-btn { padding-inline: .7rem; }

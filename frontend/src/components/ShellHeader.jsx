@@ -3,7 +3,7 @@ import { Link, NavLink, matchPath, useLocation, useNavigate } from 'react-router
 import Logo from './Logo.jsx'
 import { resetLearners } from '../lib/store.js'
 
-export const bottomNavInset = 'pb-16 sm:pb-0'
+export const bottomNavInset = 'pb-20 sm:pb-0'
 
 // 5 copies on mobile so the centered active tab always has continuous neighbors on both sides,
 // even on wider phones or 3-item menus. Copy index 2 is the centered primary set.
@@ -112,6 +112,15 @@ export default function ShellHeader({
         : 'font-medium text-white/75 hover:bg-white/10 hover:text-white'
     }`
 
+  // Phone tab: icon over label, at least 44px tall for touch. Exactly three tabs span the bar
+  // edge to edge (no side padding), so a looping copy of any tab can never show beside itself.
+  const mobileLinkClass = (isActive) =>
+    `relative flex min-h-12 w-[calc((100%-0.5rem)/3)] shrink-0 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1.5 text-xs leading-tight transition-colors ${
+      isActive
+        ? 'bg-aqua/15 font-bold text-aqua shadow-[inset_0_2px_0_0_#66e5d3]'
+        : 'font-medium text-white/75 hover:bg-white/10 hover:text-white'
+    }`
+
   return (
     <>
       <header className="st-topbar on-dark sticky top-0 z-30 border-b border-white/12 bg-night/90 px-4 py-2.5 text-white backdrop-blur-md sm:px-8">
@@ -205,7 +214,7 @@ export default function ShellHeader({
         ref={mobileNavRef}
         aria-label={navLabel}
         onScroll={handleMobileScroll}
-        className="on-dark fixed inset-x-0 bottom-0 z-30 flex gap-1 overflow-x-auto border-t border-white/12 bg-night/90 px-3 py-2 text-white backdrop-blur-md [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:hidden"
+        className="on-dark fixed inset-x-0 bottom-0 z-30 flex gap-1 overflow-x-auto border-t border-white/12 bg-night/90 pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] text-white backdrop-blur-md [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:hidden"
       >
         {Array.from({ length: COPIES }, (_, copyIdx) =>
           links.map((link, itemIdx) => {
@@ -222,9 +231,11 @@ export default function ShellHeader({
                 onClick={() => handleCopyClick(copyIdx)}
                 aria-hidden={!isCenterCopy || undefined}
                 tabIndex={isCenterCopy ? undefined : -1}
-                className={linkClass(isActive)}
+                aria-label={isCenterCopy && link.shortLabel ? link.label : undefined}
+                className={mobileLinkClass(isActive)}
               >
-                {link.label}
+                {link.icon && <span aria-hidden="true">{link.icon}</span>}
+                <span>{link.shortLabel ?? link.label}</span>
               </NavLink>
             )
           }),
