@@ -34,8 +34,8 @@ export default function AppShell({ links, userLabel, home }) {
       <KnowledgeBackdrop pulse={key} />
 
       <header className="on-dark sticky top-0 z-30 border-b border-white/12 bg-night/90 px-4 py-2.5 text-white backdrop-blur-md sm:px-8">
-        <div className="mx-auto flex max-w-295 flex-wrap items-center gap-x-6 gap-y-2">
-          <Link to={{ pathname: home, search }} className="flex items-center gap-2.5 py-1 group">
+        <div className="mx-auto flex max-w-295 flex-wrap items-center gap-x-4 gap-y-2">
+          <Link to={{ pathname: home, search }} className="flex shrink-0 items-center gap-2.5 py-1 group">
             <Logo size={32} className="text-aqua transition-transform duration-200 group-hover:scale-105" />
             <div className="flex items-baseline gap-2">
               <span className="font-display text-xl font-bold tracking-widest text-white">HIRAYA</span>
@@ -47,7 +47,7 @@ export default function AppShell({ links, userLabel, home }) {
 
           <nav
             aria-label="Teacher navigation"
-            className="order-last flex w-full gap-1.5 overflow-x-auto pb-1 sm:order-none sm:w-auto sm:flex-1 sm:pb-0"
+            className="order-last flex w-full gap-1 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:order-none sm:w-auto sm:flex-1 sm:pb-0"
           >
             {links.map((link) => (
               <NavLink
@@ -55,7 +55,7 @@ export default function AppShell({ links, userLabel, home }) {
                 to={{ pathname: link.to, search: link.keepSearch ? search : '' }}
                 end={link.end}
                 className={({ isActive }) =>
-                  `relative whitespace-nowrap rounded-lg px-3.5 py-2 text-sm transition-colors ${
+                  `relative whitespace-nowrap rounded-lg px-3 py-1.5 text-sm transition-colors ${
                     isActive
                       ? 'bg-aqua/15 font-bold text-white shadow-[inset_0_-2px_0_0_#66e5d3]'
                       : 'font-medium text-white/75 hover:bg-white/10 hover:text-white'
@@ -67,7 +67,7 @@ export default function AppShell({ links, userLabel, home }) {
             ))}
           </nav>
 
-          <div className="ml-auto flex items-center gap-3 text-sm sm:ml-0">
+          <div className="ml-auto flex shrink-0 items-center gap-2 text-sm sm:ml-0">
             <button
               type="button"
               onClick={resetLearners}
@@ -100,7 +100,7 @@ export default function AppShell({ links, userLabel, home }) {
               )}
             </button>
 
-            <div className="hidden items-center gap-2 rounded-full border border-white/12 bg-white/5 py-1 pr-3 pl-1.5 lg:flex">
+            <div className="hidden items-center gap-2 rounded-full border border-white/12 bg-white/5 py-1 pr-2.5 pl-1.5 xl:flex">
               <span className="grid h-6 w-6 place-items-center rounded-full bg-aqua/20 text-aqua">
                 <svg viewBox="0 0 48 48" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="6" y="8" width="36" height="32" rx="5" />
@@ -112,10 +112,7 @@ export default function AppShell({ links, userLabel, home }) {
 
             <Link
               to="/"
-              onClick={() => {
-                // Keep pathname awareness clean
-              }}
-              className="rounded-lg px-2.5 py-1.5 font-bold text-aqua transition-colors hover:bg-aqua/10 hover:underline"
+              className="rounded-lg px-2 py-1.5 font-bold text-aqua transition-colors hover:bg-aqua/10 hover:underline"
             >
               Sign out
             </Link>

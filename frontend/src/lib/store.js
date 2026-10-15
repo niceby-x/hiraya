@@ -56,3 +56,30 @@ export const useLearner = (id) => {
   return list.find((l) => l.id === id) ?? list[0]
 }
 export const useSettings = () => useSyncExternalStore(subscribe, getSettingsSnapshot)
+
+export function recordPaperAssessment(skillId, responsesByLearner) {
+  const params = paramsFor(skillId)
+  const changes = {}
+
+  state = state.map((learner) => {
+    const answers = responsesByLearner[learner.id]
+    if (! Array.isArray(answers) || answers.length === 0) return learner
+
+    const before = learner.mastery[skillId]
+    let after = before
+    for (const correct of answers) {
+      if (typeof correct === 'boolean') {
+        after = updateMastery(after, correct, params)
+      }
+    }
+
+    if (after === before) return learner
+    changes[learner.id] = { before, after, count: answers.length }
+    return { ...learner, mastery: { ...learner.mastery, [skillId]: after } }
+  })
+
+  if (Object.keys(changes).length > 0) {
+    emit()
+  }
+  return changes
+}

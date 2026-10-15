@@ -58,6 +58,7 @@ Scripts, run from the project root:
 | `/student/path` | Student | Review path |
 | `/teacher?target=c7&theta=0.95` | Teacher | Class overview with a target competency and a 95% / 98% mastery threshold |
 | `/teacher/learner?learner=l01&target=c7&theta=0.95` | Teacher | Learner view with prerequisite graph. Without a `learner`, it shows a list to choose from |
+| `/teacher/record?target=c7&theta=0.95` | Teacher | Paper-assessment recording sheet with live BKT preview and batch updates |
 | `/teacher/graph` | Teacher | Prerequisite graph review |
 
 ## Project structure
