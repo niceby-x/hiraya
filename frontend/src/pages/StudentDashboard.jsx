@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import SkillRing from '../components/SkillRing.jsx'
+import StudentPill from '../components/StudentPill.jsx'
 import { competencies } from '../data/mock.js'
 import { bandFor, percent } from '../lib/mastery.js'
 import { candidatePath, getCompetency, remediationPath } from '../lib/path.js'
 import { resetLearners, useLearner, useSettings } from '../lib/store.js'
-
-const pillClass = { mastered: 'ok', gap: 'warn', low: 'low', focus: 'focus', next: 'next' }
 
 const Arrow = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
@@ -19,10 +18,6 @@ const Chevron = () => (
     <path d="M9 5l7 7-7 7" />
   </svg>
 )
-
-function Pill({ band, children }) {
-  return <span className={`st-pill st-pill--${pillClass[band]}`}>{children}</span>
-}
 
 const strands = competencies.reduce((groups, c) => {
   const group = groups.find((g) => g.name === c.strand)
@@ -220,7 +215,7 @@ export default function StudentDashboard() {
                         <span className="st-skill-body">
                           <p className="st-skill-name">{c.name}</p>
                           <span className="st-skill-meta">
-                            <Pill band={pillBand}>{pillLabelFor(id, band)}</Pill>
+                            <StudentPill band={pillBand}>{pillLabelFor(id, band)}</StudentPill>
                             <span>
                               {band === 'mastered'
                                 ? 'Goal reached'
@@ -247,7 +242,7 @@ export default function StudentDashboard() {
       <ul className="st-legend" aria-label="Legend">
         {legend.map((item) => (
           <li key={item.label}>
-            <Pill band={item.band}>{item.label}</Pill>
+            <StudentPill band={item.band}>{item.label}</StudentPill>
             <span>{item.text}</span>
           </li>
         ))}

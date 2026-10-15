@@ -1,10 +1,9 @@
 import { Link } from 'react-router-dom'
 import SkillRing from '../components/SkillRing.jsx'
+import StudentPill from '../components/StudentPill.jsx'
 import { bandFor, percent } from '../lib/mastery.js'
 import { candidatePath, getCompetency, skippedPrerequisites } from '../lib/path.js'
 import { useLearner, useSettings } from '../lib/store.js'
-
-const pillClass = { mastered: 'ok', gap: 'warn', low: 'low', focus: 'focus', next: 'next' }
 
 export default function ReviewPath() {
   const { learnerId, targetId, theta } = useSettings()
@@ -90,7 +89,7 @@ export default function ReviewPath() {
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div className="st-step-head">
                       <h3 className="st-step-name">{c.name}</h3>
-                      <span className={`st-pill st-pill--${pillClass[band]}`}>{label}</span>
+                      <StudentPill band={band}>{label}</StudentPill>
                     </div>
                     <p className="st-step-now">
                       {percent(p)}% now · {away} more point{away === 1 ? '' : 's'} to reach your {percent(theta)}% goal

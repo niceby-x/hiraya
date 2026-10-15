@@ -106,26 +106,26 @@ export default function TeacherDashboard() {
   // Quick-Compare Drawer state: { a: string, b: string } | null
   const [comparePair, setComparePair] = useState(null)
 
-const settings = useSettings()
-const effectiveParams = new URLSearchParams(params)
-if (!effectiveParams.has('target')) effectiveParams.set('target', settings.targetId)
-if (!effectiveParams.has('theta')) effectiveParams.set('theta', String(settings.theta))
-if (!effectiveParams.has('learner') && settings.learnerId) effectiveParams.set('learner', settings.learnerId)
+  const settings = useSettings()
+  const effectiveParams = new URLSearchParams(params)
+  if (!effectiveParams.has('target')) effectiveParams.set('target', settings.targetId)
+  if (!effectiveParams.has('theta')) effectiveParams.set('theta', String(settings.theta))
+  if (!effectiveParams.has('learner') && settings.learnerId) effectiveParams.set('learner', settings.learnerId)
 
-const { target: targetId, theta, learnerId, invalid } = readContext(effectiveParams, learners.map((l) => l.id))
-const target = getCompetency(targetId)
-const columns = displayOrder(targetId).map(getCompetency)
+  const { target: targetId, theta, learnerId, invalid } = readContext(effectiveParams, learners.map((l) => l.id))
+  const target = getCompetency(targetId)
+  const columns = displayOrder(targetId).map(getCompetency)
 
-useEffect(() => {
-  updateSettings({
-    targetId,
-    theta,
-    ...(learnerId ? { learnerId } : {}),
-  })
-}, [targetId, theta, learnerId])
+  useEffect(() => {
+    updateSettings({
+      targetId,
+      theta,
+      ...(learnerId ? { learnerId } : {}),
+    })
+  }, [targetId, theta, learnerId])
 
-const update = (change) =>
-  setParams(contextQuery({ target: targetId, theta, learnerId, ...change }), { replace: true })
+  const update = (change) =>
+    setParams(contextQuery({ target: targetId, theta, learnerId, ...change }), { replace: true })
 
   const total = learners.length * competencies.length
   const masteredTotal = masteredCount(learners, theta)
@@ -370,7 +370,7 @@ const update = (change) =>
                       <p className={`text-sm font-bold ${isTarget ? 'text-brand' : 'text-ink'}`}>
                         {c.short}
                       </p>
-                      <span className={`block text-[11px] font-bold ${isTarget ? 'text-brand' : 'text-muted'}`}>
+                      <span className={`block text-xs font-bold ${isTarget ? 'text-brand' : 'text-muted'}`}>
                         {isTarget ? '★ Target' : c.id.toUpperCase()}
                       </span>
                     </div>
@@ -387,7 +387,7 @@ const update = (change) =>
                         {l.name}
                       </Link>
                       <span
-                        className={`mt-0.5 inline-flex w-fit rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                        className={`mt-0.5 inline-flex w-fit rounded-full px-2 py-0.5 text-xs font-bold ${
                           status === 'target-met'
                             ? 'bg-mastered-soft text-mastered-ink'
                             : gaps.length > 0
@@ -538,7 +538,7 @@ const update = (change) =>
                             <p className="font-bold">
                               {competency.name}
                               {competency.id === targetId && (
-                                <span className="ml-2 rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-bold text-brand">
+                                <span className="ml-2 rounded-full bg-brand-soft px-2 py-0.5 text-xs font-bold text-brand">
                                   Target
                                 </span>
                               )}

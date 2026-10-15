@@ -2,11 +2,34 @@ import { useEffect, useRef } from 'react'
 
 const GLYPHS = ['½', 'x²', '−3', '%', 'π', '√', 'Σ', '∠', '0.5', 'y=mx', '÷', '3:4']
 
+// On light pages the network is drawn darker so it shows on a pale background. That used to be a
+// CSS `filter: brightness(.3) saturate(1.6)` on the canvas, which the browser re-applied to the
+// whole screen every frame. The same adjustment is applied once, here, to the drawing colors.
+function dimmed([r, g, b]) {
+  const k = 0.3 // brightness
+  const sat = 1.6 // saturate
+  const [R, G, B] = [r * k, g * k, b * k]
+  const out = [
+    (0.213 + 0.787 * sat) * R + (0.715 - 0.715 * sat) * G + (0.072 - 0.072 * sat) * B,
+    (0.213 - 0.213 * sat) * R + (0.715 + 0.285 * sat) * G + (0.072 - 0.072 * sat) * B,
+    (0.213 - 0.213 * sat) * R + (0.715 - 0.715 * sat) * G + (0.072 + 0.928 * sat) * B,
+  ]
+  return out.map((v) => Math.round(Math.min(255, Math.max(0, v))))
+}
+
+const BASE = { line: [158, 240, 201], halo: [94, 227, 210], bloom: [127, 240, 220], core: [190, 255, 235] }
+const PALETTES = {
+  normal: BASE,
+  dim: Object.fromEntries(Object.entries(BASE).map(([k, v]) => [k, dimmed(v)])),
+}
+const rgba = ([r, g, b], a) => `rgba(${r},${g},${b},${a})`
+
 // Faint network of math nodes. The pointer lights nearby nodes; each `pulse`
 // lights a chain of prerequisites, like a mastery estimate updating.
-export default function KnowledgeBackdrop({ pulse, burst, paused = false }) {
+export default function KnowledgeBackdrop({ pulse, burst, paused = false, dim = false }) {
   const canvas = useRef(null)
   const pausedRef = useRef(false)
+  const dimRef = useRef(dim)
   const kick = useRef(() => {})
   const ripple = useRef(() => {})
 
@@ -44,6 +67,7 @@ export default function KnowledgeBackdrop({ pulse, burst, paused = false }) {
     function frame() {
       // While paused (a busy moment on a phone) the last picture stays up and nothing is redrawn.
       if (pausedRef.current) { raf = requestAnimationFrame(frame); return }
+      const P = dimRef.current ? PALETTES.dim : PALETTES.normal
       ctx.clearRect(0, 0, w, h)
       for (const a of nodes) {
         a.x += a.vx; a.y += a.vy
@@ -56,29 +80,29 @@ export default function KnowledgeBackdrop({ pulse, burst, paused = false }) {
       for (const a of nodes) for (const j of a.near) {
         const b = nodes[j]
         const fade = Math.min(vis(a.x, a.y), vis(b.x, b.y))
-        ctx.strokeStyle = `rgba(158,240,201,${(0.07 + 0.7 * Math.min(a.g, b.g)) * fade})`
+        ctx.strokeStyle = rgba(P.line, (0.07 + 0.7 * Math.min(a.g, b.g)) * fade)
         ctx.lineWidth = 1 + 1.5 * Math.min(a.g, b.g)
         ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke()
       }
       for (const a of nodes) {
         const v = vis(a.x, a.y)
-        ctx.fillStyle = `rgba(94,227,210,${0.07 * v})`
+        ctx.fillStyle = rgba(P.halo, 0.07 * v)
         ctx.beginPath(); ctx.arc(a.x, a.y, 14, 0, 7); ctx.fill()
         if (a.g > 0.02) {
           // soft bloom that fades to nothing, not a solid disc
           const R = 18 + 22 * a.g
           const bloom = ctx.createRadialGradient(a.x, a.y, 0, a.x, a.y, R)
-          bloom.addColorStop(0, `rgba(127,240,220,${0.75 * a.g * v})`)
-          bloom.addColorStop(1, 'rgba(127,240,220,0)')
+          bloom.addColorStop(0, rgba(P.bloom, 0.75 * a.g * v))
+          bloom.addColorStop(1, rgba(P.bloom, 0))
           ctx.fillStyle = bloom
           ctx.beginPath(); ctx.arc(a.x, a.y, R, 0, 7); ctx.fill()
         }
-        ctx.fillStyle = `rgba(190,255,235,${(0.3 + 0.7 * a.g) * v})`
+        ctx.fillStyle = rgba(P.core, (0.3 + 0.7 * a.g) * v)
         ctx.beginPath(); ctx.arc(a.x, a.y, 3 + 2.5 * a.g, 0, 7); ctx.fill()
         if (v > 0.85) {
           // symbols only in the margins, never behind the text
           ctx.font = '600 12px system-ui, sans-serif'
-          ctx.fillStyle = `rgba(190,255,235,${0.2 + 0.5 * a.g})`
+          ctx.fillStyle = rgba(P.core, 0.2 + 0.5 * a.g)
           ctx.fillText(a.label, a.x + 10, a.y - 10)
         }
       }
@@ -116,6 +140,7 @@ export default function KnowledgeBackdrop({ pulse, burst, paused = false }) {
   }, [])
 
   useEffect(() => { pausedRef.current = paused }, [paused])
+  useEffect(() => { dimRef.current = dim }, [dim])
   useEffect(() => { if (pulse) kick.current() }, [pulse])
   useEffect(() => { if (burst) ripple.current(burst.x, burst.y) }, [burst])
 

@@ -127,8 +127,6 @@
 .lg-eye:hover { color: #fff; background: rgb(255 255 255 / .1); }
 .lg-eye[aria-pressed='true'] { color: #7ff0dc; }
 .lg-err { margin: .4rem 0 0 .25rem; font-size: .875rem; color: #ffc0b3; }
-.lg-shake { animation: lg-shake .4s; }
-@keyframes lg-shake { 20%, 60% { transform: translateX(-7px); } 40%, 80% { transform: translateX(7px); } }
 
 .lg-forgot { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .lg-link, .lg-check { font-size: .875rem; font-weight: 400; color: rgb(255 255 255 / .65); }
@@ -166,7 +164,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lg-shake { animation: none; }
   .lg-intro, .lg-roles, .lg-card, .lg-field label, .lg-outline, .lg-outline legend, .lg-field input, .lg-btn svg, .lg-eye, .lg-swap, .lg-lead, .lg-link, .lg-box, .lg-box svg, .lg-swap::after, .lg-primary { transition: none; }
 }
 

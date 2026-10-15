@@ -76,7 +76,7 @@ export default function BktInspector({ learner, skillId, theta, onClose }) {
         {/* Current State & Prediction */}
         <div className="mt-4 grid grid-cols-2 gap-3">
           <div className="rounded-xl border border-line bg-white p-3.5">
-            <p className="text-[11px] font-bold tracking-wider text-muted uppercase">
+            <p className="text-xs font-bold tracking-wider text-muted uppercase">
               Current Mastery P(Lₙ)
             </p>
             <div className="mt-1 flex items-baseline justify-between gap-2">
@@ -85,19 +85,19 @@ export default function BktInspector({ learner, skillId, theta, onClose }) {
               </span>
               <StatusPill band={statusFor(prior, theta)} />
             </div>
-            <p className="mt-1 text-[11px] text-muted tabular-nums">
+            <p className="mt-1 text-xs text-muted tabular-nums">
               Exact prior: {hasPrior ? prior.toFixed(4) : 'No data'} (θ = {percent(theta)}%)
             </p>
           </div>
 
           <div className="rounded-xl border border-line bg-white p-3.5">
-            <p className="text-[11px] font-bold tracking-wider text-muted uppercase">
+            <p className="text-xs font-bold tracking-wider text-muted uppercase">
               Next Correct Pred. P(Cₙ₊₁)
             </p>
             <p className="mt-1 font-display text-2xl font-bold text-brand tabular-nums">
               {fmtDec(pCorrectNext)}
             </p>
-            <p className="mt-1 text-[11px] text-muted">
+            <p className="mt-1 text-xs text-muted">
               P(Lₙ)(1 − S) + (1 − P(Lₙ))G
             </p>
           </div>
@@ -114,21 +114,21 @@ export default function BktInspector({ learner, skillId, theta, onClose }) {
               <p className="mt-0.5 font-display text-lg font-bold text-ink tabular-nums">
                 {params.guess.toFixed(2)}
               </p>
-              <p className="text-[10px] text-muted">Right without mastery</p>
+              <p className="text-xs text-muted">Right without mastery</p>
             </div>
             <div className="rounded-xl border border-line bg-white p-2.5">
               <p className="text-xs font-bold text-muted">Slip P(S)</p>
               <p className="mt-0.5 font-display text-lg font-bold text-ink tabular-nums">
                 {params.slip.toFixed(2)}
               </p>
-              <p className="text-[10px] text-muted">Wrong despite mastery</p>
+              <p className="text-xs text-muted">Wrong despite mastery</p>
             </div>
             <div className="rounded-xl border border-line bg-white p-2.5">
               <p className="text-xs font-bold text-muted">Learn P(T)</p>
               <p className="mt-0.5 font-display text-lg font-bold text-ink tabular-nums">
                 {params.learn.toFixed(2)}
               </p>
-              <p className="text-[10px] text-muted">Transition per item</p>
+              <p className="text-xs text-muted">Transition per item</p>
             </div>
           </div>
         </div>
@@ -143,7 +143,7 @@ export default function BktInspector({ learner, skillId, theta, onClose }) {
               <div className="rounded-xl border border-mastered/30 bg-mastered-soft/45 p-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-mastered-ink">If Next Answer is Correct</span>
-                  <span className="rounded-full bg-mastered text-on-mastered px-2 py-0.5 text-[11px] font-bold tabular-nums">
+                  <span className="rounded-full bg-mastered text-on-mastered px-2 py-0.5 text-xs font-bold tabular-nums">
                     +{ ((nextRight - prior) * 100).toFixed(1) }%
                   </span>
                 </div>
@@ -158,7 +158,7 @@ export default function BktInspector({ learner, skillId, theta, onClose }) {
               <div className="rounded-xl border border-low/30 bg-low-soft/45 p-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-low-ink">If Next Answer is Wrong</span>
-                  <span className="rounded-full bg-low text-on-low px-2 py-0.5 text-[11px] font-bold tabular-nums">
+                  <span className="rounded-full bg-low text-on-low px-2 py-0.5 text-xs font-bold tabular-nums">
                     { ((nextWrong - prior) * 100).toFixed(1) }%
                   </span>
                 </div>

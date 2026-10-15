@@ -83,7 +83,7 @@ export default function LearnerCompareDrawer({
               <div key={label} className="rounded-2xl border border-line bg-white p-4">
                 <label
                   htmlFor={`compare-${label.replace(' ', '-').toLowerCase()}`}
-                  className="block text-[11px] font-bold tracking-wider text-muted uppercase"
+                  className="block text-xs font-bold tracking-wider text-muted uppercase"
                 >
                   {label}
                 </label>
@@ -135,7 +135,7 @@ export default function LearnerCompareDrawer({
             <p className="text-xs font-bold text-gap-ink">
               Shared Prerequisite Gaps ({sharedGaps.length})
             </p>
-            <p className="mt-0.5 text-[11px] text-muted">
+            <p className="mt-0.5 text-xs text-muted">
               Skills below {percent(theta)}% for both learners (ideal for small-group review):
             </p>
             {sharedGaps.length === 0 ? (
@@ -155,7 +155,7 @@ export default function LearnerCompareDrawer({
             <p className="text-xs font-bold text-mastered-ink">
               Peer Pairing Potential
             </p>
-            <p className="mt-0.5 text-[11px] text-muted">
+            <p className="mt-0.5 text-xs text-muted">
               Skills where one learner meets {percent(theta)}% and the other is below:
             </p>
             <div className="mt-2 space-y-1 text-xs">
@@ -196,7 +196,7 @@ export default function LearnerCompareDrawer({
                     <span className="font-bold text-ink">
                       {c.name}{' '}
                       {id === targetId && (
-                        <span className="ml-1 rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-bold text-brand">
+                        <span className="ml-1 rounded-full bg-brand-soft px-2 py-0.5 text-xs font-bold text-brand">
                           Target
                         </span>
                       )}
@@ -251,7 +251,7 @@ export default function LearnerCompareDrawer({
                 <ol className="mt-2 space-y-1 text-xs">
                   {path.map((id, idx) => (
                     <li key={id} className="flex items-center gap-2">
-                      <span className="grid h-4.5 w-4.5 shrink-0 place-items-center rounded-full bg-brand text-[10px] font-bold text-on-brand">
+                      <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand text-xs font-bold text-on-brand">
                         {idx + 1}
                       </span>
                       <span className="truncate font-medium">{getCompetency(id).short}</span>

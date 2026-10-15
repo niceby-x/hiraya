@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import KnowledgeBackdrop from '../components/KnowledgeBackdrop.jsx'
 import AnimatedLogo from '../components/AnimatedLogo.jsx'
+import { useDocumentTitle } from '../lib/routeA11y.js'
 import './login.css'
 
 const SAMPLE_PASSWORD = 'sample1234'
@@ -69,11 +70,28 @@ const leadIcons = {
   ),
 }
 
+const SHAKE = [
+  { transform: 'translateX(0)' },
+  { transform: 'translateX(-7px)', offset: 0.2 },
+  { transform: 'translateX(7px)', offset: 0.4 },
+  { transform: 'translateX(-7px)', offset: 0.6 },
+  { transform: 'translateX(7px)', offset: 0.8 },
+  { transform: 'translateX(0)' },
+]
+
 function Field({ id, label, error, shake, type, icon, ...props }) {
   const [visible, setVisible] = useState(false)
+  const wrap = useRef(null)
   const isPassword = type === 'password'
+
+  // Replay the shake on every failed sign-in. The wrapper is never remounted, so the input keeps focus.
+  useEffect(() => {
+    if (!shake || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    wrap.current?.animate?.(SHAKE, { duration: 400 })
+  }, [shake])
+
   return (
-    <div className={`lg-field ${icon ? 'has-icon' : ''} ${isPassword ? 'has-toggle' : ''} ${shake ? 'lg-shake' : ''}`} key={shake}>
+    <div ref={wrap} className={`lg-field ${icon ? 'has-icon' : ''} ${isPassword ? 'has-toggle' : ''}`}>
       <input id={id} placeholder=" " type={isPassword && visible ? 'text' : type} aria-invalid={Boolean(error)} aria-describedby={error ? `${id}-err` : undefined} {...props} />
       <label htmlFor={id}>{label}</label>
       <fieldset className="lg-outline" aria-hidden="true">
@@ -91,6 +109,7 @@ function Field({ id, label, error, shake, type, icon, ...props }) {
 }
 
 export default function Login() {
+  useDocumentTitle('/')
   const [burst, setBurst] = useState(null)
   const [alt, setAlt] = useState(0) // which headline is showing
   const variantRefs = useRef([])
@@ -151,8 +170,11 @@ export default function Login() {
     if (!username.trim()) next.username = 'Enter your username.'
     if (password !== SAMPLE_PASSWORD) next.password = 'That password does not match.'
     setErrors(next)
-    if (Object.keys(next).length) {
+    const firstInvalid = next.username ? 'username' : next.password ? 'password' : null
+    if (firstInvalid) {
       setShake((n) => n + 1)
+      // Put the cursor in the first field that needs fixing, so keyboard and screen-reader users land on it.
+      e.currentTarget.elements.namedItem(firstInvalid)?.focus()
       return
     }
     navigate(roles[role].to)

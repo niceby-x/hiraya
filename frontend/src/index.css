@@ -87,7 +87,6 @@ body {
   height: 100%;
   pointer-events: none;
   opacity: 0.55;
-  filter: brightness(0.3) saturate(1.6);
 }
 
 /* Light card = the student .st-card: solid white, teal-tinted border, grid lines. */
@@ -145,12 +144,10 @@ body {
 
 .tc-root[data-theme="dark"] .lg-canvas {
   opacity: 0.85;
-  filter: none;
 }
 
 .tc-root[data-theme="dark"] .tc-card {
-  backdrop-filter: blur(12px);
-  background-color: rgba(19, 59, 65, 0.88);
+  background-color: rgba(19, 59, 65, 0.92);
   border-color: rgba(94, 227, 210, 0.18);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.32);
   background-image:

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom'
 import SkillRing from '../components/SkillRing.jsx'
+import StudentPill from '../components/StudentPill.jsx'
 import { questions } from '../data/questions.js'
 import { getCompetency, remediationPath } from '../lib/path.js'
 import { percent } from '../lib/mastery.js'
@@ -145,9 +146,9 @@ function PracticeSession({ competency, items: bank }) {
       <div className="st-practice">
         {header}
         <section className="st-card st-pad st-done">
-          <span className={`st-pill st-pill--${isNowMastered ? 'ok' : 'warn'}`}>
+          <StudentPill band={isNowMastered ? 'mastered' : 'gap'}>
             {isNowMastered ? `✓ Mastery goal reached (${percent(theta)}%)` : `Your mastery score: ${percent(currentMastery)}%`}
-          </span>
+          </StudentPill>
           <h2 className="st-h2" style={{ marginTop: '.75rem' }}>Practice complete</h2>
           <p className="st-score" style={{ marginTop: '1rem' }}>
             {correctCount}

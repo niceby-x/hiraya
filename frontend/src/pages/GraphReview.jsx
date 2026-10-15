@@ -285,12 +285,12 @@ export default function GraphReview() {
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <div className="rounded-xl border border-line bg-white px-4 py-2.5">
-              <span className="block text-[10px] font-bold tracking-wider text-muted uppercase">Prerequisite ({from.short})</span>
+              <span className="block text-xs font-bold tracking-wider text-muted uppercase">Prerequisite ({from.short})</span>
               <span className="font-bold text-ink">{from.name}</span>
             </div>
             <span className="text-2xl font-bold text-brand" aria-hidden="true">→</span>
             <div className="rounded-xl border border-brand/30 bg-brand-soft px-4 py-2.5">
-              <span className="block text-[10px] font-bold tracking-wider text-brand uppercase">Dependent Skill ({to.short})</span>
+              <span className="block text-xs font-bold tracking-wider text-brand uppercase">Dependent Skill ({to.short})</span>
               <span className="font-bold text-brand">{to.name}</span>
             </div>
           </div>
